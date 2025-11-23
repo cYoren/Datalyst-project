@@ -13,7 +13,7 @@ export default async function DataPage() {
 
     const entries = await prisma.habitEntry.findMany({
         where: {
-            habitId: { in: habits.map(h => h.id) }
+            habitId: { in: habits.map((h: any) => h.id) }
         },
         include: { subvariableEntries: true },
         orderBy: { logicalDate: 'desc' },
