@@ -59,6 +59,7 @@ model User {
   // Relations
   habits         Habit[]
   habitEntries   HabitEntry[]
+  habitTemplates HabitTemplate[]
   sessionLogs    AppSessionLog[]
   userEvents     UserEvent[]
   
@@ -68,6 +69,7 @@ model User {
 model Habit {
   id          String   @id @default(cuid())
   userId      String
+  templateId  String?  // Optional reference to template used
   
   // Basic Info
   name        String
@@ -76,7 +78,7 @@ model Habit {
   icon        String   @default("🎯")      // Emoji or icon identifier
   
   // Schedule configuration (JSON)
-  // Example: { "daysOfWeek": [1,2,3,4,5], "frequency": "daily" }
+  // Example: { "daysOfWeek": [1,2,3,4,5], "frequency": "daily", "logLimit": "unlimited" }
   schedule    String   @default("{}") // JSON string
   
   // Soft delete
@@ -88,11 +90,47 @@ model Habit {
   
   // Relations
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template       HabitTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
   subvariables   Subvariable[]
   entries        HabitEntry[]
   
   @@index([userId])
   @@index([userId, archived])
+  @@index([templateId])
+}
+
+model HabitTemplate {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Template Info
+  name        String
+  description String?
+  color       String   @default("#3b82f6")
+  icon        String   @default("🎯")
+  
+  // Default schedule configuration (JSON)
+  defaultSchedule String @default("{}")
+  
+  // Subvariable template configuration (JSON array)
+  // Example: [{ "name": "Pages", "type": "NUMERIC", "unit": "pages", "metadata": {}, "order": 0 }]
+  subvariableTemplate String @default("[]")
+  
+  // Usage tracking
+  useCount    Int      @default(0)
+  lastUsedAt  DateTime?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habits      Habit[]
+  
+  @@index([userId])
+  @@index([userId, name])
+  @@index([userId, useCount])
 }
 
 model Subvariable {
