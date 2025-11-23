@@ -1,0 +1,211 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum SubvariableType {
+  NUMERIC          // Continuous or discrete numeric values
+  SCALE_0_10       // Self-evaluation scales from 0 to 10
+  BOOLEAN          // Binary yes/no (stored as 1/0)
+  CATEGORY         // Categorical values
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum EventType {
+  HABIT_CREATED
+  HABIT_UPDATED
+  HABIT_DELETED
+  ENTRY_CREATED
+  ENTRY_UPDATED
+  ENTRY_DELETED
+  SUBVARIABLE_CREATED
+  SUBVARIABLE_UPDATED
+}
+
+// ========================================
+// MODELS
+// ========================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  passwordHash String?
+  
+  // Preferences
+  timezone  String   @default("America/Sao_Paulo")
+  locale    String   @default("pt-BR")
+  theme     Theme    @default(SYSTEM)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  habits         Habit[]
+  habitEntries   HabitEntry[]
+  sessionLogs    AppSessionLog[]
+  userEvents     UserEvent[]
+  
+  @@index([email])
+}
+
+model Habit {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Basic Info
+  name        String
+  description String?
+  color       String   @default("#3b82f6") // Hex color
+  icon        String   @default("🎯")      // Emoji or icon identifier
+  
+  // Schedule configuration (JSON)
+  // Example: { "daysOfWeek": [1,2,3,4,5], "frequency": "daily" }
+  schedule    String   @default("{}") // JSON string
+  
+  // Soft delete
+  archived    Boolean  @default(false)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subvariables   Subvariable[]
+  entries        HabitEntry[]
+  
+  @@index([userId])
+  @@index([userId, archived])
+}
+
+model Subvariable {
+  id       String          @id @default(cuid())
+  habitId  String
+  
+  // Basic Info
+  name     String
+  type     SubvariableType
+  unit     String?         // e.g., "kg", "km", "minutes"
+  
+  // Metadata (JSON)
+  // For SCALE_0_10: { "min": 0, "max": 10, "labels": ["Baixo", "Alto"] }
+  // For CATEGORY: { "options": ["Option1", "Option2"] }
+  metadata String          @default("{}")
+  
+  // Order in the UI
+  order    Int             @default(0)
+  
+  // Active status (soft delete)
+  active   Boolean         @default(true)
+  
+  // Timestamps
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  
+  // Relations
+  habit    Habit           @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  entries  SubvariableEntry[]
+  
+  @@index([habitId])
+  @@index([habitId, active])
+}
+
+model HabitEntry {
+  id           String   @id @default(cuid())
+  habitId      String
+  userId       String
+  
+  // Timing
+  timestamp    DateTime @default(now())  // When it was actually registered
+  logicalDate  DateTime                  // The date this entry refers to (YYYY-MM-DD)
+  
+  // Optional note from user
+  note         String?
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  habit        Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subvariableEntries SubvariableEntry[]
+  
+  @@index([habitId])
+  @@index([userId])
+  @@index([logicalDate])
+  @@index([userId, logicalDate])
+}
+
+model SubvariableEntry {
+  id            String   @id @default(cuid())
+  habitEntryId  String
+  subvariableId String
+  
+  // Values
+  numericValue  Float           // Standardized numeric value (even for boolean: 0 or 1)
+  rawValue      String?         // Original value if needed (for categories, text, etc.)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  habitEntry    HabitEntry   @relation(fields: [habitEntryId], references: [id], onDelete: Cascade)
+  subvariable   Subvariable  @relation(fields: [subvariableId], references: [id], onDelete: Cascade)
+  
+  @@index([habitEntryId])
+  @@index([subvariableId])
+}
+
+model AppSessionLog {
+  id        String   @id @default(cuid())
+  userId    String
+  
+  // Session info
+  timestamp DateTime @default(now())
+  origin    String   @default("web")  // "web", "mobile-web", etc.
+  duration  Int?                      // Duration in seconds (if trackable)
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model UserEvent {
+  id         String    @id @default(cuid())
+  userId     String
+  
+  // Event details
+  eventType  EventType
+  entityId   String?   // ID of the entity affected (habitId, entryId, etc.)
+  metadata   String    @default("{}")  // JSON with additional context
+  
+  // Timestamp
+  timestamp  DateTime  @default(now())
+  
+  // Relations
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([eventType])
+  @@index([userId, timestamp])
+}
