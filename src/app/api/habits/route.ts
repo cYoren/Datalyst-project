@@ -9,6 +9,7 @@ const USER_ID = 'default-user-id';
 
 const createHabitBodySchema = createHabitSchema.extend({
     subvariables: z.array(createSubvariableSchema.omit({ habitId: true })).optional(),
+    templateId: z.string().optional(), // Optional template to use
 });
 
 export async function GET() {

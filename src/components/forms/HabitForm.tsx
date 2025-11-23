@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import { TemplateSelector } from '@/components/habits/TemplateSelector';
 import { SubvariableType } from '@prisma/client';
 import { Plus, Trash2, GripVertical, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ interface HabitFormProps {
 }
 
 export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProps) => {
+    const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [name, setName] = useState(initialData?.name || '');
     const [description, setDescription] = useState(initialData?.description || '');
     const [color, setColor] = useState(initialData?.color || '#3b82f6');
@@ -23,7 +25,9 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
     // Schedule State
     let parsedSchedule = {};
     try {
-        parsedSchedule = initialData?.schedule ? JSON.parse(initialData.schedule) : {};
+        parsedSchedule = initialData?.schedule ?
+            (typeof initialData.schedule === 'string' ? JSON.parse(initialData.schedule) : initialData.schedule)
+            : {};
     } catch (e) {
         console.error('Failed to parse initial schedule', e);
     }
@@ -33,6 +37,35 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
     const [logLimit, setLogLimit] = useState<'unlimited' | 'daily'>(initialSchedule.logLimit || 'unlimited');
 
     const [subvariables, setSubvariables] = useState<any[]>(initialData?.subvariables || []);
+
+    // Auto-populate from template
+    useEffect(() => {
+        if (selectedTemplate) {
+            // Only update if not in edit mode (no initialData)
+            if (!initialData) {
+                setName(selectedTemplate.name);
+                if (selectedTemplate.description) setDescription(selectedTemplate.description);
+                setColor(selectedTemplate.color);
+                setIcon(selectedTemplate.icon);
+
+                if (selectedTemplate.defaultSchedule) {
+                    if (selectedTemplate.defaultSchedule.frequency) {
+                        setFrequency(selectedTemplate.defaultSchedule.frequency);
+                    }
+                    if (selectedTemplate.defaultSchedule.daysOfWeek) {
+                        setDaysOfWeek(selectedTemplate.defaultSchedule.daysOfWeek);
+                    }
+                    if (selectedTemplate.defaultSchedule.logLimit) {
+                        setLogLimit(selectedTemplate.defaultSchedule.logLimit);
+                    }
+                }
+
+                if (selectedTemplate.subvariableTemplate && selectedTemplate.subvariableTemplate.length > 0) {
+                    setSubvariables(selectedTemplate.subvariableTemplate);
+                }
+            }
+        }
+    }, [selectedTemplate, initialData]);
 
     const addSubvariable = (type: SubvariableType) => {
         let metadata = {};
@@ -90,13 +123,14 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
             logLimit
         };
 
-        const body = {
+        const body: any = {
             name,
             description,
             color,
             icon,
             schedule,
             subvariables: subvariables.map((s: any) => ({
+                id: s.id, // Include ID if editing
                 name: s.name,
                 type: s.type,
                 unit: s.unit,
@@ -104,6 +138,11 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                 order: s.order
             }))
         };
+
+        // Include templateId only if creating (not editing) and template is selected
+        if (!initialData && selectedTemplate) {
+            body.templateId = selectedTemplate.id;
+        }
 
         onSubmit(body);
     };
@@ -122,6 +161,16 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
 
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Template Selector - Only show when creating new habit */}
+            {!initialData && (
+                <section className="space-y-4">
+                    <TemplateSelector
+                        onSelect={setSelectedTemplate}
+                        selectedTemplate={selectedTemplate}
+                    />
+                </section>
+            )}
+
             {/* Basic Info */}
             <section className="space-y-4">
                 <h3 className="text-lg font-semibold text-[var(--text-primary)]">Informações Básicas</h3>

@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Check, Plus, ArrowRight } from 'lucide-react';
+import { Check, Plus, ArrowRight, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HabitCardProps {
@@ -13,6 +14,13 @@ interface HabitCardProps {
 }
 
 export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardProps) => {
+    const router = useRouter();
+
+    const handleEdit = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent triggering onRegister
+        router.push(`/habits/${habit.id}/edit`);
+    };
+
     return (
         <Card
             className={cn(
@@ -52,8 +60,21 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                     </div>
                 </div>
 
-                {/* Action Indicator */}
-                <div className="flex items-center">
+                {/* Action Indicators */}
+                <div className="flex items-center gap-2">
+                    {/* Edit Button - Always visible */}
+                    <button
+                        onClick={handleEdit}
+                        className={cn(
+                            "h-10 w-10 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100",
+                            "bg-[var(--color-slate-100)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-200)] hover:text-[var(--text-primary)]"
+                        )}
+                        title="Editar hábito"
+                    >
+                        <Edit2 className="h-4 w-4" />
+                    </button>
+
+                    {/* Completion Indicator */}
                     {isCompleted ? (
                         <div className="h-10 w-10 rounded-full bg-[var(--color-success)]/10 text-[var(--color-success)] flex items-center justify-center animate-scale-in">
                             <Check className="h-5 w-5" />

@@ -4,13 +4,18 @@ import { z } from 'zod';
 import { SubvariableType } from '@prisma/client';
 import { TemplateService } from './template.service';
 
+type SubvariableInput = Omit<z.infer<typeof createSubvariableSchema>, 'habitId'> & {
+    id?: string; // Optional ID for existing subvariables
+};
+
 type CreateHabitInput = z.infer<typeof createHabitSchema> & {
-    subvariables: Omit<z.infer<typeof createSubvariableSchema>, 'habitId'>[];
+    subvariables: SubvariableInput[];
     templateId?: string; // Optional template to use
 };
 
 type UpdateHabitInput = z.infer<typeof updateHabitSchema> & {
-    subvariables?: Omit<z.infer<typeof createSubvariableSchema>, 'habitId'>[];
+    subvariables?: SubvariableInput[];
+    archived?: boolean;
 };
 
 export class HabitService {
@@ -85,26 +90,87 @@ export class HabitService {
     }
 
     /**
-     * Updates an existing habit
+     * Updates an existing habit and optionally its subvariables
      */
     static async updateHabit(userId: string, habitId: string, data: UpdateHabitInput) {
         // Verify ownership
         const existing = await prisma.habit.findUnique({
             where: { id: habitId },
+            include: {
+                subvariables: true
+            }
         });
 
         if (!existing || existing.userId !== userId) {
             throw new Error('Habit not found or access denied');
         }
 
-        const updateData: any = { ...data };
-        if (data.schedule) {
-            updateData.schedule = JSON.stringify(data.schedule);
-        }
+        return await prisma.$transaction(async (tx) => {
+            // Update habit basic fields
+            const updateData: any = {};
+            if (data.name !== undefined) updateData.name = data.name;
+            if (data.description !== undefined) updateData.description = data.description;
+            if (data.color !== undefined) updateData.color = data.color;
+            if (data.icon !== undefined) updateData.icon = data.icon;
+            if (data.archived !== undefined) updateData.archived = data.archived;
+            if (data.schedule) {
+                updateData.schedule = JSON.stringify(data.schedule);
+            }
 
-        return await prisma.habit.update({
-            where: { id: habitId },
-            data: updateData,
+            const updatedHabit = await tx.habit.update({
+                where: { id: habitId },
+                data: updateData,
+            });
+
+            // Handle subvariables update if provided
+            if (data.subvariables !== undefined) {
+                const existingSubIds = existing.subvariables.map(s => s.id);
+                const providedSubs = data.subvariables;
+
+                // Track which existing subs are still present
+                const providedSubIds = providedSubs
+                    .filter((s: any) => s.id)
+                    .map((s: any) => s.id);
+
+                // Soft delete subvariables that are no longer in the list
+                const subsToDeactivate = existingSubIds.filter(id => !providedSubIds.includes(id));
+                if (subsToDeactivate.length > 0) {
+                    await tx.subvariable.updateMany({
+                        where: { id: { in: subsToDeactivate } },
+                        data: { active: false }
+                    });
+                }
+
+                // Update or create subvariables
+                for (const [index, sub] of providedSubs.entries()) {
+                    const subData: any = {
+                        name: sub.name,
+                        type: sub.type as SubvariableType,
+                        unit: sub.unit,
+                        metadata: JSON.stringify(sub.metadata || {}),
+                        order: index,
+                        active: true,
+                    };
+
+                    if (sub.id && existingSubIds.includes(sub.id)) {
+                        // Update existing subvariable
+                        await tx.subvariable.update({
+                            where: { id: sub.id },
+                            data: subData,
+                        });
+                    } else {
+                        // Create new subvariable
+                        await tx.subvariable.create({
+                            data: {
+                                ...subData,
+                                habitId: habitId,
+                            },
+                        });
+                    }
+                }
+            }
+
+            return updatedHabit;
         });
     }
 

@@ -63,12 +63,30 @@ export default function DashboardPage() {
         const habit = habits.find(h => h.id === habitId);
         if (!habit) return false;
 
-        const schedule = habit.schedule || {};
-        const logLimit = schedule.logLimit || 'unlimited'; // Default to unlimited if not set
+        // Parse schedule safely
+        let schedule: any = {};
+        try {
+            schedule = typeof habit.schedule === 'string'
+                ? JSON.parse(habit.schedule)
+                : habit.schedule;
+        } catch (e) {
+            console.error('Failed to parse schedule for habit', habitId, e);
+            schedule = habit.schedule || {};
+        }
 
-        if (logLimit === 'unlimited') return false;
+        const logLimit = schedule.logLimit || 'unlimited';
 
-        return entries.some((e: any) => e.habitId === habitId);
+        // If unlimited, never mark as completed (can always log more)
+        if (logLimit === 'unlimited') {
+            return false;
+        }
+
+        // If daily limit, check if any entry exists for today
+        if (logLimit === 'daily') {
+            return entries.some((e: any) => e.habitId === habitId);
+        }
+
+        return false;
     };
 
     if (loading) {
