@@ -39,7 +39,7 @@ export class HabitService {
             // Merge template data with provided data (provided data takes precedence)
             finalHabitData = {
                 name: habitData.name || template.name,
-                description: habitData.description || template.description,
+                description: habitData.description || template.description || undefined,
                 color: habitData.color || template.color,
                 icon: habitData.icon || template.icon,
                 schedule: habitData.schedule || template.defaultSchedule,

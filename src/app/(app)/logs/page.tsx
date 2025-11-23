@@ -22,8 +22,8 @@ export default async function LogsPage() {
 
     // Combine and sort
     const allLogs = [
-        ...events.map(e => ({ ...e, type: 'EVENT', sortTime: e.timestamp })),
-        ...sessions.map(s => ({ ...s, type: 'SESSION', sortTime: s.timestamp }))
+        ...events.map((e: any) => ({ ...e, type: 'EVENT', sortTime: e.timestamp })),
+        ...sessions.map((s: any) => ({ ...s, type: 'SESSION', sortTime: s.timestamp }))
     ].sort((a, b) => b.sortTime.getTime() - a.sortTime.getTime());
 
     return (

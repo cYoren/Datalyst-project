@@ -209,7 +209,7 @@ export class TemplateService {
                 userId,
                 name: {
                     contains: query,
-                    mode: 'insensitive',
+                    mode: 'insensitive', // Works with PostgreSQL
                 },
             },
             orderBy: [

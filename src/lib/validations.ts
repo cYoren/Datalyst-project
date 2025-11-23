@@ -29,7 +29,7 @@ export const createSubvariableSchema = z.object({
     name: z.string().min(1, 'Nome é obrigatório').max(100),
     type: z.enum(['NUMERIC', 'SCALE_0_10', 'BOOLEAN', 'CATEGORY']),
     unit: z.string().max(50).optional(),
-    metadata: z.record(z.any()).optional(),
+    metadata: z.record(z.string(), z.any()).optional(),
     order: z.number().int().min(0).default(0),
 });
 
