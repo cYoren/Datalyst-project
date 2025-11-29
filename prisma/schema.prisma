@@ -45,7 +45,11 @@ enum EventType {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  name      String?
   passwordHash String?
+  
+  // Onboarding
+  onboardingCompleted Boolean @default(false)
   
   // Preferences
   timezone  String   @default("America/Sao_Paulo")

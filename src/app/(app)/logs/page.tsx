@@ -30,7 +30,7 @@ export default async function LogsPage() {
         <div className="space-y-8 pb-20">
             <header className="animate-fade-in">
                 <h1 className="text-4xl font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-3">
-                    <ScrollText className="h-10 w-10 text-[var(--color-accent)]" />
+                    <ScrollText className="h-10 w-10 text-[var(--color-accent)]" suppressHydrationWarning />
                     Logs do Sistema
                 </h1>
                 <p className="text-[var(--text-secondary)] mt-2 text-lg">
@@ -45,9 +45,9 @@ export default async function LogsPage() {
                             <div className="flex items-start gap-3">
                                 <div className="mt-1">
                                     {log.type === 'EVENT' ? (
-                                        <Activity className="h-5 w-5 text-blue-500" />
+                                        <Activity className="h-5 w-5 text-blue-500" suppressHydrationWarning />
                                     ) : (
-                                        <Clock className="h-5 w-5 text-green-500" />
+                                        <Clock className="h-5 w-5 text-green-500" suppressHydrationWarning />
                                     )}
                                 </div>
                                 <div>

@@ -71,17 +71,17 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                         )}
                         title="Editar hábito"
                     >
-                        <Edit2 className="h-4 w-4" />
+                        <Edit2 className="h-4 w-4" suppressHydrationWarning />
                     </button>
 
                     {/* Completion Indicator */}
                     {isCompleted ? (
                         <div className="h-10 w-10 rounded-full bg-[var(--color-success)]/10 text-[var(--color-success)] flex items-center justify-center animate-scale-in">
-                            <Check className="h-5 w-5" />
+                            <Check className="h-5 w-5" suppressHydrationWarning />
                         </div>
                     ) : (
                         <div className="h-10 w-10 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] flex items-center justify-center group-hover:bg-[var(--color-accent)] group-hover:text-white transition-all">
-                            <Plus className="h-5 w-5" />
+                            <Plus className="h-5 w-5" suppressHydrationWarning />
                         </div>
                     )}
                 </div>

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { TemplateService } from '@/services/template.service';
+import { getAuthenticatedUser } from '@/lib/ensure-user';
 import { z } from 'zod';
-
-const USER_ID = 'default-user-id';
 
 const updateTemplateSchema = z.object({
     name: z.string().min(1).optional(),
@@ -18,8 +17,13 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const user = await getAuthenticatedUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id } = await params;
-        const template = await TemplateService.getTemplateById(USER_ID, id);
+        const template = await TemplateService.getTemplateById(user.id, id);
         if (!template) {
             return NextResponse.json({ error: 'Template not found' }, { status: 404 });
         }
@@ -35,11 +39,16 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const user = await getAuthenticatedUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id } = await params;
         const json = await request.json();
         const body = updateTemplateSchema.parse(json);
 
-        const template = await TemplateService.updateTemplate(USER_ID, id, body);
+        const template = await TemplateService.updateTemplate(user.id, id, body);
         return NextResponse.json(template);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -55,8 +64,13 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const user = await getAuthenticatedUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id } = await params;
-        await TemplateService.deleteTemplate(USER_ID, id);
+        await TemplateService.deleteTemplate(user.id, id);
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting template:', error);

@@ -202,7 +202,7 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
                 <div className="p-6 border-b border-[var(--color-border)] flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-[var(--text-primary)]">Histórico Detalhado</h3>
                     <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-4 w-4 mr-2" suppressHydrationWarning />
                         Exportar CSV
                     </Button>
                 </div>

@@ -1,13 +1,55 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Calendar, BarChart2, PlusCircle, Settings, ScrollText, BarChart3, Microscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { UserMenu } from '@/components/ui/UserMenu';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const [user, setUser] = useState<{ email?: string; name?: string } | null>(null);
+
+    useEffect(() => {
+        const loadUser = async () => {
+            try {
+                // Try fetching full profile from API (Database)
+                const res = await fetch('/api/user');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.email) {
+                        setUser({
+                            email: data.email,
+                            name: data.name || data.email.split('@')[0]
+                        });
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('API user fetch failed, falling back to auth session:', error);
+            }
+
+            // Fallback: Get basic user info from Supabase Auth (Session)
+            // This ensures the Logout button is visible even if the Database is down
+            try {
+                const { createClient } = await import('@/lib/supabase/client');
+                const supabase = createClient();
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+
+                if (authUser?.email) {
+                    setUser({
+                        email: authUser.email,
+                        name: authUser.email.split('@')[0]
+                    });
+                }
+            } catch (authError) {
+                console.error('Auth session fetch failed:', authError);
+            }
+        };
+
+        loadUser();
+    }, []);
 
     const navItems = [
         { href: '/dashboard', icon: Calendar, label: 'Dashboard' },
@@ -43,17 +85,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                         : "text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] hover:text-[var(--text-primary)]"
                                 )}
                             >
-                                <item.icon className="h-5 w-5" />
+                                <item.icon className="h-5 w-5" suppressHydrationWarning />
                                 {item.label}
                             </Link>
                         );
                     })}
                 </nav>
+
+                {/* User Menu for Desktop */}
+                {user && <UserMenu user={user} variant="desktop" />}
             </aside>
 
             {/* Mobile Bottom Nav */}
             <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-[var(--bg-card)] border-t border-[var(--color-slate-200)] flex justify-around p-2 z-40 pb-safe">
-                {navItems.map(item => {
+                {navItems.slice(0, 4).map(item => {
                     const isActive = pathname === item.href;
                     return (
                         <Link
@@ -67,11 +112,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                     : "text-[var(--text-tertiary)]"
                             )}
                         >
-                            <item.icon className={cn("h-6 w-6 mb-1", isActive && "fill-current opacity-20")} />
+                            <item.icon className={cn("h-6 w-6 mb-1", isActive && "fill-current opacity-20")} suppressHydrationWarning />
                             <span className="text-[10px] font-medium">{item.label}</span>
                         </Link>
                     );
                 })}
+                {/* User Menu for Mobile */}
+                {user && <UserMenu user={user} variant="mobile" />}
             </nav>
 
             {/* Main Content */}

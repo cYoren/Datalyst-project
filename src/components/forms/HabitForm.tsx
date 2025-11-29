@@ -302,7 +302,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                     {subvariables.map((sub, index) => (
                         <Card key={index} className="p-4 flex gap-4 items-start relative group">
                             <div className="mt-3 text-[var(--text-tertiary)]">
-                                <GripVertical className="h-5 w-5" />
+                                <GripVertical className="h-5 w-5" suppressHydrationWarning />
                             </div>
 
                             <div className="flex-1 space-y-3">
@@ -353,7 +353,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                                 onClick={() => removeSubvariable(index)}
                                 className="p-2 text-[var(--text-tertiary)] hover:text-[var(--color-error)] transition-colors"
                             >
-                                <Trash2 className="h-5 w-5" />
+                                <Trash2 className="h-5 w-5" suppressHydrationWarning />
                             </button>
                         </Card>
                     ))}
@@ -361,16 +361,16 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
 
                 <div className="flex gap-2 flex-wrap">
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.NUMERIC)}>
-                        <Plus className="h-4 w-4 mr-1" /> Numérico
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Numérico
                     </Button>
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.SCALE_0_10)}>
-                        <Plus className="h-4 w-4 mr-1" /> Escala 0-10
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Escala 0-10
                     </Button>
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.BOOLEAN)}>
-                        <Plus className="h-4 w-4 mr-1" /> Sim/Não
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Sim/Não
                     </Button>
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.CATEGORY)}>
-                        <Plus className="h-4 w-4 mr-1" /> Categoria
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Categoria
                     </Button>
                 </div>
             </section>

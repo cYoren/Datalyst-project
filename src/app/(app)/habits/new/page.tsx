@@ -18,10 +18,17 @@ export default function NewHabitPage() {
             });
 
             if (!res.ok) {
-                const json = await res.json();
-                const errorMessage = json.error ? JSON.stringify(json.error) : 'Erro ao criar hábito';
-                alert(errorMessage);
-                throw new Error(errorMessage);
+                // Check if response is JSON before trying to parse it
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const json = await res.json();
+                    const errorMessage = json.error ? JSON.stringify(json.error) : 'Erro ao criar hábito';
+                    alert(errorMessage);
+                    throw new Error(errorMessage);
+                } else {
+                    alert('Erro ao criar hábito: Servidor retornou erro inesperado');
+                    throw new Error('Server returned non-JSON error');
+                }
             }
 
             router.push('/dashboard');

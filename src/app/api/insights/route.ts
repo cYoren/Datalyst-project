@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server';
 import { StatsService } from '@/services/stats.service';
-
-const USER_ID = 'default-user-id';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
     try {
-        // In a real app, we might cache this response or run it in a background job
-        const correlations = await StatsService.calculateGlobalCorrelations(USER_ID);
+        const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        // We can add more global insights here
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Calculate correlations (in production, cache this or run in background)
+        const correlations = await StatsService.calculateGlobalCorrelations(user.id);
 
         return NextResponse.json({
             correlations: correlations.slice(0, 10), // Top 10
             generatedAt: new Date()
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error generating insights:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

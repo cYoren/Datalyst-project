@@ -30,6 +30,13 @@ export default function EditHabitPage({ params }: { params: Promise<{ id: string
                 if (!res.ok) {
                     throw new Error('Habit not found');
                 }
+
+                // Check if response is JSON
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Invalid response format');
+                }
+
                 const data = await res.json();
                 setHabit(data);
             } catch (error) {
@@ -56,10 +63,17 @@ export default function EditHabitPage({ params }: { params: Promise<{ id: string
             });
 
             if (!res.ok) {
-                const json = await res.json();
-                const errorMessage = json.error ? JSON.stringify(json.error) : 'Erro ao atualizar hábito';
-                alert(errorMessage);
-                throw new Error(errorMessage);
+                // Check if response is JSON before trying to parse it
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const json = await res.json();
+                    const errorMessage = json.error ? JSON.stringify(json.error) : 'Erro ao atualizar hábito';
+                    alert(errorMessage);
+                    throw new Error(errorMessage);
+                } else {
+                    alert('Erro ao atualizar hábito: Servidor retornou erro inesperado');
+                    throw new Error('Server returned non-JSON error');
+                }
             }
 
             router.push('/dashboard');

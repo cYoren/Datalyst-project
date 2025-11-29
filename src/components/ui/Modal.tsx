@@ -45,7 +45,7 @@ export const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
                         onClick={onClose}
                         className="p-2 rounded-full hover:bg-[var(--color-slate-100)] text-[var(--text-secondary)]"
                     >
-                        <X className="h-5 w-5" />
+                        <X className="h-5 w-5" suppressHydrationWarning />
                     </button>
                 </div>
 

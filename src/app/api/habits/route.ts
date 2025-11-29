@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
 import { HabitService } from '@/services/habit.service';
 import { createHabitSchema, createSubvariableSchema } from '@/lib/validations';
-import { prisma } from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/lib/ensure-user';
 import { z } from 'zod';
-
-// Mock user ID for MVP (In a real app, get from session)
-const USER_ID = 'default-user-id';
 
 const createHabitBodySchema = createHabitSchema.extend({
     subvariables: z.array(createSubvariableSchema.omit({ habitId: true })).optional(),
-    templateId: z.string().optional(), // Optional template to use
+    templateId: z.string().optional(),
 });
 
 export async function GET() {
     try {
-        const habits = await HabitService.getUserHabits(USER_ID);
+        const user = await getAuthenticatedUser();
+
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const habits = await HabitService.getUserHabits(user.id);
         return NextResponse.json(habits);
     } catch (error) {
         console.error('Error fetching habits:', error);
@@ -22,24 +25,19 @@ export async function GET() {
     }
 }
 
+
 export async function POST(request: Request) {
     try {
+        const user = await getAuthenticatedUser();
+
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const json = await request.json();
         const body = createHabitBodySchema.parse(json);
 
-        // Ensure user exists (Temporary for MVP)
-        // This prevents Foreign Key constraint errors if the database is empty
-        let user = await prisma.user.findUnique({ where: { id: USER_ID } });
-        if (!user) {
-            await prisma.user.create({
-                data: {
-                    id: USER_ID,
-                    email: 'demo@datalyst.app',
-                }
-            });
-        }
-
-        const habit = await HabitService.createHabit(USER_ID, {
+        const habit = await HabitService.createHabit(user.id, {
             ...body,
             subvariables: body.subvariables || []
         });
@@ -53,3 +51,4 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+

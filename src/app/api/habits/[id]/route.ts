@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
 import { HabitService } from '@/services/habit.service';
 import { updateHabitSchema } from '@/lib/validations';
+import { getAuthenticatedUser } from '@/lib/ensure-user';
 import { z } from 'zod';
-
-const USER_ID = 'default-user-id';
 
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const user = await getAuthenticatedUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id } = await params;
-        const habit = await HabitService.getHabitById(USER_ID, id);
+        const habit = await HabitService.getHabitById(user.id, id);
         if (!habit) {
             return NextResponse.json({ error: 'Habit not found' }, { status: 404 });
         }
@@ -26,11 +30,16 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const user = await getAuthenticatedUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id } = await params;
         const json = await request.json();
         const body = updateHabitSchema.parse(json);
 
-        const habit = await HabitService.updateHabit(USER_ID, id, body);
+        const habit = await HabitService.updateHabit(user.id, id, body);
         return NextResponse.json(habit);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -45,8 +54,13 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const user = await getAuthenticatedUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id } = await params;
-        await HabitService.deleteHabit(USER_ID, id);
+        await HabitService.deleteHabit(user.id, id);
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

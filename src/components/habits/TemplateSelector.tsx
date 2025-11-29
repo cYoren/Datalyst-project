@@ -34,10 +34,27 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                     ? `/api/templates?q=${encodeURIComponent(query)}`
                     : '/api/templates';
                 const res = await fetch(url);
+
+                // Check if response is OK and is JSON before parsing
+                if (!res.ok) {
+                    console.error('Failed to fetch templates:', res.status, res.statusText);
+                    setTemplates([]);
+                    return;
+                }
+
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('Response is not JSON:', contentType);
+                    setTemplates([]);
+                    return;
+                }
+
                 const data = await res.json();
-                setTemplates(data);
+                // Ensure data is always an array
+                setTemplates(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error('Failed to fetch templates:', error);
+                setTemplates([]); // Set empty array on error
             } finally {
                 setIsLoading(false);
             }
@@ -78,7 +95,7 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
             </label>
 
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-tertiary)]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-tertiary)]" suppressHydrationWarning />
                 <input
                     type="text"
                     value={query}
@@ -150,12 +167,12 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                                         )}
                                         <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-tertiary)]">
                                             <span className="flex items-center gap-1">
-                                                <Tag className="h-3 w-3" />
+                                                <Tag className="h-3 w-3" suppressHydrationWarning />
                                                 {template.subvariableTemplate.length} variáveis
                                             </span>
                                             {template.useCount > 0 && (
                                                 <span className="flex items-center gap-1">
-                                                    <TrendingUp className="h-3 w-3" />
+                                                    <TrendingUp className="h-3 w-3" suppressHydrationWarning />
                                                     Usado {template.useCount}x
                                                 </span>
                                             )}
@@ -171,7 +188,7 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
             {selectedTemplate && (
                 <div className="mt-3 p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] rounded-lg">
                     <div className="flex items-center gap-2 text-sm">
-                        <Tag className="h-4 w-4 text-[var(--color-accent)]" />
+                        <Tag className="h-4 w-4 text-[var(--color-accent)]" suppressHydrationWarning />
                         <span className="font-medium text-[var(--text-primary)]">
                             Usando template: {selectedTemplate.name}
                         </span>

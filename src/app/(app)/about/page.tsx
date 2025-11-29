@@ -9,7 +9,7 @@ export default function AboutPage() {
         <div className="space-y-10 pb-20 animate-fade-in">
             <header className="space-y-4 text-center max-w-2xl mx-auto">
                 <div className="inline-flex items-center justify-center p-3 bg-[var(--color-bg-subtle)] rounded-full mb-4">
-                    <Microscope className="h-8 w-8 text-[var(--color-accent)]" />
+                    <Microscope className="h-8 w-8 text-[var(--color-accent)]" suppressHydrationWarning />
                 </div>
                 <h1 className="text-4xl font-bold text-[var(--text-primary)] tracking-tight">
                     Cientista de Si Mesmo
@@ -22,7 +22,7 @@ export default function AboutPage() {
             <div className="grid gap-8 max-w-4xl mx-auto">
                 <Card className="p-8 border-l-4 border-l-[var(--color-accent)]">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                        <LineChart className="h-6 w-6 text-[var(--color-accent)]" />
+                        <LineChart className="h-6 w-6 text-[var(--color-accent)]" suppressHydrationWarning />
                         Correlação, não apenas consistência
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
@@ -35,7 +35,7 @@ export default function AboutPage() {
 
                 <Card className="p-8 border-l-4 border-l-[var(--color-warning)]">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                        <Brain className="h-6 w-6 text-[var(--color-warning)]" />
+                        <Brain className="h-6 w-6 text-[var(--color-warning)]" suppressHydrationWarning />
                         Auto-Experimentação
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
@@ -46,7 +46,7 @@ export default function AboutPage() {
 
                 <Card className="p-8 border-l-4 border-l-[var(--color-success)]">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                        <Sparkles className="h-6 w-6 text-[var(--color-success)]" />
+                        <Sparkles className="h-6 w-6 text-[var(--color-success)]" suppressHydrationWarning />
                         Sua Verdade Pessoal
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
