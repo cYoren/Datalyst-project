@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/Button';
 import { Check, Plus, ArrowRight, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { Habit } from '@/types';
+
 interface HabitCardProps {
-    habit: any;
+    habit: Habit;
     onRegister: () => void;
     isCompleted?: boolean;
 }
@@ -55,7 +57,7 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                             {habit.name}
                         </h3>
                         <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-                            {isCompleted ? 'Completed today' : habit.description || `${habit.subvariables.length} variables`}
+                            {isCompleted ? 'Completed today' : habit.description || `${habit.subvariables?.length || 0} variables`}
                         </p>
                     </div>
                 </div>

@@ -63,3 +63,25 @@ export interface RegressionResult {
     equation: string;
     interpretation: string;
 }
+
+export interface HabitEntry {
+    id: string;
+    habitId: string;
+    timestamp: DateString;
+    value?: number;
+    notes?: string;
+    metas?: Record<string, any>;
+}
+
+export interface Habit {
+    id: string;
+    userId: string;
+    name: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    schedule: string | { logLimit?: 'daily' | 'unlimited';[key: string]: any };
+    subvariables?: any[];
+    entries?: HabitEntry[];
+    createdAt?: DateString;
+}

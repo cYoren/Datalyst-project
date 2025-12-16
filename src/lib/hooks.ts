@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { Habit } from '@/types';
 
 // Generic fetcher for SWR
 const fetcher = async (url: string) => {
@@ -28,7 +29,7 @@ const swrConfig = {
 export function useHabits() {
     const { data, error, isLoading, mutate } = useSWR('/api/habits', fetcher, swrConfig);
     return {
-        habits: data || [],
+        habits: (data || []) as Habit[],
         isLoading,
         isError: error,
         refresh: mutate
