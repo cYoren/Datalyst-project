@@ -53,14 +53,14 @@ export default function LoginPage() {
             router.refresh();
         } catch (err: any) {
             // Provide more specific error messages
-            let errorMessage = err.message || 'Erro ao fazer login';
+            let errorMessage = err.message || 'Login failed';
 
             if (err.message?.includes('Invalid login credentials')) {
-                errorMessage = 'Email ou senha incorretos. Verifique suas credenciais.';
+                errorMessage = 'Incorrect email or password. Please check your credentials.';
             } else if (err.message?.includes('Email not confirmed')) {
-                errorMessage = 'Por favor, confirme seu email antes de fazer login.';
+                errorMessage = 'Please confirm your email before logging in.';
             } else if (err.status === 400) {
-                errorMessage = `Erro de autenticação: ${err.message}. Verifique se seu email foi confirmado.`;
+                errorMessage = `Authentication error: ${err.message}. Please check if your email is confirmed.`;
             }
 
             setError(errorMessage);
@@ -86,7 +86,7 @@ export default function LoginPage() {
 
             setMagicLinkSent(true);
         } catch (err: any) {
-            setError(err.message || 'Erro ao enviar link mágico');
+            setError(err.message || 'Error sending magic link');
         } finally {
             setLoading(false);
         }
@@ -107,7 +107,7 @@ export default function LoginPage() {
 
             if (error) throw error;
         } catch (err: any) {
-            setError(err.message || 'Erro ao entrar com Google');
+            setError(err.message || 'Error logging in with Google');
             setLoading(false);
         }
     };
@@ -122,13 +122,13 @@ export default function LoginPage() {
                         </div>
                     </div>
                     <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                        Verifique seu email
+                        Check your email
                     </h2>
                     <p className="text-[var(--text-secondary)] mb-6">
-                        Enviamos um link mágico para <strong>{email}</strong>. Clique no link para fazer login.
+                        We sent a magic link to <strong>{email}</strong>. Click the link to log in.
                     </p>
                     <Button variant="outline" onClick={() => setMagicLinkSent(false)} className="w-full">
-                        Voltar
+                        Back
                     </Button>
                 </Card>
             </div>
@@ -140,10 +140,10 @@ export default function LoginPage() {
             <Card className="w-full max-w-md p-8">
                 <div className="mb-8 text-center">
                     <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-                        Bem-vindo de volta
+                        Welcome back
                     </h1>
                     <p className="text-[var(--text-secondary)]">
-                        Entre para continuar sua jornada
+                        Log in to continue your journey
                     </p>
                 </div>
 
@@ -166,7 +166,7 @@ export default function LoginPage() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="seu@email.com"
+                                placeholder="your@email.com"
                                 required
                                 className="pl-10"
                             />
@@ -175,7 +175,7 @@ export default function LoginPage() {
 
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                            Senha
+                            Password
                         </label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-tertiary)]" suppressHydrationWarning />
@@ -196,7 +196,7 @@ export default function LoginPage() {
                             href="/reset-password"
                             className="text-[var(--color-accent)] hover:underline"
                         >
-                            Esqueceu a senha?
+                            Forgot password?
                         </Link>
                     </div>
 
@@ -204,10 +204,10 @@ export default function LoginPage() {
                         {loading ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" suppressHydrationWarning />
-                                Entrando...
+                                Logging in...
                             </>
                         ) : (
-                            'Entrar'
+                            'Log In'
                         )}
                     </Button>
                 </form>
@@ -218,7 +218,7 @@ export default function LoginPage() {
                     </div>
                     <div className="relative flex justify-center text-sm">
                         <span className="px-4 bg-[var(--color-bg-card)] text-[var(--text-tertiary)]">
-                            ou continue com
+                            or continue with
                         </span>
                     </div>
                 </div>
@@ -259,13 +259,13 @@ export default function LoginPage() {
                     className="w-full mt-3"
                 >
                     <Mail className="h-4 w-4 mr-2" suppressHydrationWarning />
-                    Link mágico (Email)
+                    Magic Link (Email)
                 </Button>
 
                 <p className="mt-8 text-center text-sm text-[var(--text-secondary)]">
-                    Não tem uma conta?{' '}
+                    Don't have an account?{' '}
                     <Link href="/register" className="text-[var(--color-accent)] hover:underline font-medium">
-                        Cadastre-se
+                        Sign up
                     </Link>
                 </p>
             </Card>

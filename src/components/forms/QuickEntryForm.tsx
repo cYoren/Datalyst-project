@@ -110,7 +110,7 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
                                             : "bg-white border-[var(--color-bg-subtle)] text-[var(--text-secondary)] hover:border-[var(--color-accent)]"
                                     )}
                                 >
-                                    Sim
+                                    Yes
                                 </button>
                                 <button
                                     type="button"
@@ -122,7 +122,7 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
                                             : "bg-white border-[var(--color-bg-subtle)] text-[var(--text-secondary)] hover:border-[var(--color-text-tertiary)]"
                                     )}
                                 >
-                                    Não
+                                    No
                                 </button>
                             </div>
                         )}
@@ -131,7 +131,7 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
 
                 <div className="pt-4">
                     <Input
-                        placeholder="Alguma observação sobre hoje?"
+                        placeholder="Any notes for today?"
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         className="bg-[var(--color-bg-subtle)] border-transparent focus:bg-white"
@@ -141,10 +141,10 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
 
             <div className="flex gap-4 pt-2">
                 <Button type="button" variant="ghost" className="flex-1 h-12" onClick={onCancel}>
-                    Cancelar
+                    Cancel
                 </Button>
                 <Button type="submit" className="flex-[2] h-12 text-lg shadow-lg shadow-blue-500/20" isLoading={isSubmitting}>
-                    Salvar Registro
+                    Save Entry
                 </Button>
             </div>
         </form>

@@ -55,7 +55,7 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                             {habit.name}
                         </h3>
                         <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-                            {isCompleted ? 'Concluído hoje' : habit.description || `${habit.subvariables.length} variáveis`}
+                            {isCompleted ? 'Completed today' : habit.description || `${habit.subvariables.length} variables`}
                         </p>
                     </div>
                 </div>
@@ -69,7 +69,7 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                             "h-10 w-10 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100",
                             "bg-[var(--color-slate-100)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-200)] hover:text-[var(--text-primary)]"
                         )}
-                        title="Editar hábito"
+                        title="Edit habit"
                     >
                         <Edit2 className="h-4 w-4" suppressHydrationWarning />
                     </button>

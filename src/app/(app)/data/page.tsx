@@ -1,24 +1,22 @@
-import { prisma } from '@/lib/prisma';
+'use client';
+
 import { DataDashboard } from '@/components/data/DataDashboard';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Loader2 } from 'lucide-react';
+import { useDataPage, useUser } from '@/lib/hooks';
 
-export const dynamic = 'force-dynamic';
+export default function DataPage() {
+    const { user, isLoading: userLoading } = useUser();
+    const { habits, entries, isLoading: dataLoading } = useDataPage();
 
-export default async function DataPage() {
-    const habits = await prisma.habit.findMany({
-        where: { archived: false },
-        include: { subvariables: true },
-        orderBy: { createdAt: 'asc' }
-    });
+    const isLoading = userLoading || dataLoading;
 
-    const entries = await prisma.habitEntry.findMany({
-        where: {
-            habitId: { in: habits.map((h: any) => h.id) }
-        },
-        include: { subvariableEntries: true },
-        orderBy: { logicalDate: 'desc' },
-        take: 1000 // Limit for performance, maybe implement pagination later
-    });
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
+            </div>
+        );
+    }
 
     if (habits.length === 0) {
         return (
@@ -26,10 +24,10 @@ export default async function DataPage() {
                 <header className="animate-fade-in">
                     <h1 className="text-4xl font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-3">
                         <BarChart3 className="h-10 w-10 text-[var(--color-accent)]" suppressHydrationWarning />
-                        Dados Organizados
+                        Data Insights
                     </h1>
                     <p className="text-[var(--text-secondary)] mt-2 text-lg">
-                        Visualize o progresso dos seus hábitos em tabelas e gráficos.
+                        Visualize your habit progress in tables and charts.
                     </p>
                 </header>
 
@@ -39,10 +37,10 @@ export default async function DataPage() {
                             <BarChart3 className="h-10 w-10 text-[var(--text-tertiary)]" suppressHydrationWarning />
                         </div>
                         <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-                            Seus dados aparecerão aqui
+                            Your data will appear here
                         </h2>
                         <p className="text-[var(--text-secondary)]">
-                            Assim que você começar a registrar seus hábitos, nós geraremos gráficos e tabelas detalhadas para você acompanhar seu progresso.
+                            As soon as you start logging your habits, we will generate detailed charts and tables for you to track your progress.
                         </p>
 
                         {/* Mock Graph Preview */}
@@ -52,7 +50,7 @@ export default async function DataPage() {
                                     <div key={i} className="w-full bg-[var(--color-accent)] rounded-t-sm" style={{ height: `${h}%` }}></div>
                                 ))}
                             </div>
-                            <p className="text-xs text-[var(--text-tertiary)] mt-4 font-mono">Exemplo de visualização</p>
+                            <p className="text-xs text-[var(--text-tertiary)] mt-4 font-mono">Visualization example</p>
                         </div>
                     </div>
                 </div>
@@ -65,10 +63,10 @@ export default async function DataPage() {
             <header className="animate-fade-in">
                 <h1 className="text-4xl font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-3">
                     <BarChart3 className="h-10 w-10 text-[var(--color-accent)]" suppressHydrationWarning />
-                    Dados Organizados
+                    Data Insights
                 </h1>
                 <p className="text-[var(--text-secondary)] mt-2 text-lg">
-                    Visualize o progresso dos seus hábitos em tabelas e gráficos.
+                    Visualize your habit progress in tables and charts.
                 </p>
             </header>
 

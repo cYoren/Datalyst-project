@@ -4,7 +4,6 @@ import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
     LineChart,
     Line,
@@ -42,8 +41,8 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
     const chartData = useMemo(() => {
         return habitEntries.map(entry => {
             const dataPoint: any = {
-                date: format(new Date(entry.logicalDate), 'dd/MM'),
-                fullDate: format(new Date(entry.logicalDate), "dd 'de' MMMM"),
+                date: format(new Date(entry.logicalDate), 'MM/dd'),
+                fullDate: format(new Date(entry.logicalDate), "MMM dd"),
             };
 
             entry.subvariableEntries.forEach((sub: any) => {
@@ -63,7 +62,7 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
     if (!selectedHabit) {
         return (
             <div className="text-center py-12 text-[var(--text-tertiary)]">
-                Nenhum hábito encontrado. Crie um hábito para ver os dados.
+                No habit found. Create a habit to view data.
             </div>
         );
     }
@@ -72,7 +71,7 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
         if (!selectedHabit || habitEntries.length === 0) return;
 
         // Headers
-        const headers = ['Data', 'Nota', ...selectedHabit.subvariables.map((s: any) => s.name)];
+        const headers = ['Date', 'Note', ...selectedHabit.subvariables.map((s: any) => s.name)];
 
         // Rows
         const rows = habitEntries.map(entry => {
@@ -189,7 +188,7 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
 
                             {sub.type === 'CATEGORY' && (
                                 <div className="flex items-center justify-center h-full text-[var(--text-tertiary)]">
-                                    Visualização de categorias em breve (ver tabela abaixo)
+                                    Category visualization coming soon (see table below)
                                 </div>
                             )}
                         </div>
@@ -200,28 +199,28 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
             {/* Data Table */}
             <Card className="overflow-hidden">
                 <div className="p-6 border-b border-[var(--color-border)] flex justify-between items-center">
-                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">Histórico Detalhado</h3>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">Detailed History</h3>
                     <Button variant="outline" size="sm" onClick={handleExportCSV}>
                         <Download className="h-4 w-4 mr-2" suppressHydrationWarning />
-                        Exportar CSV
+                        Export CSV
                     </Button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="text-xs text-[var(--text-tertiary)] uppercase bg-[var(--color-bg-subtle)]">
                             <tr>
-                                <th className="px-6 py-3 font-medium">Data</th>
+                                <th className="px-6 py-3 font-medium">Date</th>
                                 {selectedHabit.subvariables.map((sub: any) => (
                                     <th key={sub.id} className="px-6 py-3 font-medium">{sub.name}</th>
                                 ))}
-                                <th className="px-6 py-3 font-medium">Nota</th>
+                                <th className="px-6 py-3 font-medium">Note</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--color-border)]">
                             {habitEntries.map((entry) => (
                                 <tr key={entry.id} className="bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-subtle)] transition-colors">
                                     <td className="px-6 py-4 font-medium text-[var(--text-primary)] whitespace-nowrap">
-                                        {format(new Date(entry.logicalDate), "dd 'de' MMM, yyyy", { locale: ptBR })}
+                                        {format(new Date(entry.logicalDate), "MMM dd, yyyy")}
                                     </td>
                                     {selectedHabit.subvariables.map((sub: any) => {
                                         const subEntry = entry.subvariableEntries.find((s: any) => s.subvariableId === sub.id);
@@ -241,7 +240,7 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
                             {habitEntries.length === 0 && (
                                 <tr>
                                     <td colSpan={selectedHabit.subvariables.length + 2} className="px-6 py-8 text-center text-[var(--text-tertiary)]">
-                                        Nenhum registro encontrado para este hábito.
+                                        No entries found for this habit.
                                     </td>
                                 </tr>
                             )}

@@ -70,9 +70,9 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
     const addSubvariable = (type: SubvariableType) => {
         let metadata = {};
         if (type === SubvariableType.SCALE_0_10) {
-            metadata = { labels: ['Baixo', 'Alto'] };
+            metadata = { labels: ['Low', 'High'] };
         } else if (type === SubvariableType.CATEGORY) {
-            metadata = { options: ['Opção 1', 'Opção 2'] };
+            metadata = { options: ['Option 1', 'Option 2'] };
         }
 
         setSubvariables([
@@ -150,12 +150,12 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
     const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e', '#64748b'];
     const icons = ['🎯', '💪', '🧘', '😴', '📚', '💧', '🥗', '💊', '🎸', '💻', '🧹', '🧠'];
     const weekDays = [
-        { label: 'D', value: 0 },
-        { label: 'S', value: 1 },
+        { label: 'S', value: 0 },
+        { label: 'M', value: 1 },
         { label: 'T', value: 2 },
-        { label: 'Q', value: 3 },
-        { label: 'Q', value: 4 },
-        { label: 'S', value: 5 },
+        { label: 'W', value: 3 },
+        { label: 'T', value: 4 },
+        { label: 'F', value: 5 },
         { label: 'S', value: 6 },
     ];
 
@@ -173,25 +173,25 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
 
             {/* Basic Info */}
             <section className="space-y-4">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Informações Básicas</h3>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Basic Information</h3>
 
                 <Input
-                    label="Nome do Hábito"
+                    label="Habit Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: Academia, Leitura"
+                    placeholder="Ex: Gym, Reading"
                     required
                 />
 
                 <Input
-                    label="Descrição (opcional)"
+                    label="Description (optional)"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Ex: Treino de força 3x na semana"
+                    placeholder="Ex: Strength training 3x/week"
                 />
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--text-secondary)]">Frequência</label>
+                    <label className="text-sm font-medium text-[var(--text-secondary)]">Frequency</label>
                     <div className="flex gap-2">
                         {(['daily', 'weekly'] as const).map((freq) => (
                             <button
@@ -205,7 +205,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                                         : "bg-white border-[var(--color-slate-200)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)]"
                                 )}
                             >
-                                {freq === 'daily' ? 'Todos os dias' : 'Dias específicos'}
+                                {freq === 'daily' ? 'Every day' : 'Specific days'}
                             </button>
                         ))}
                     </div>
@@ -232,7 +232,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--text-secondary)]">Limite de Registros</label>
+                    <label className="text-sm font-medium text-[var(--text-secondary)]">Log Limit</label>
                     <div className="flex gap-2">
                         {(['unlimited', 'daily'] as const).map((limit) => (
                             <button
@@ -246,14 +246,14 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                                         : "bg-white border-[var(--color-slate-200)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)]"
                                 )}
                             >
-                                {limit === 'unlimited' ? 'Sem limite' : 'Uma vez ao dia'}
+                                {limit === 'unlimited' ? 'Unlimited' : 'Once daily'}
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--text-secondary)]">Cor</label>
+                    <label className="text-sm font-medium text-[var(--text-secondary)]">Color</label>
                     <div className="flex flex-wrap gap-2">
                         {colors.map(c => (
                             <button
@@ -271,7 +271,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--text-secondary)]">Ícone</label>
+                    <label className="text-sm font-medium text-[var(--text-secondary)]">Icon</label>
                     <div className="flex flex-wrap gap-2">
                         {icons.map(i => (
                             <button
@@ -295,7 +295,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
             {/* Subvariables */}
             <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">Variáveis para rastrear</h3>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">Variables to track</h3>
                 </div>
 
                 <div className="space-y-3">
@@ -308,7 +308,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                             <div className="flex-1 space-y-3">
                                 <div className="flex gap-3">
                                     <Input
-                                        placeholder="Nome da variável"
+                                        placeholder="Variable name"
                                         value={sub.name}
                                         onChange={(e) => updateSubvariable(index, 'name', e.target.value)}
                                         className="flex-1"
@@ -320,17 +320,17 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                                             onChange={(e) => updateSubvariable(index, 'type', e.target.value)}
                                             className="h-10 w-full rounded-lg border border-[var(--color-slate-200)] px-3 text-sm bg-white focus:ring-2 focus:ring-[var(--color-primary-500)] outline-none"
                                         >
-                                            <option value="NUMERIC">Numérico</option>
-                                            <option value="SCALE_0_10">Escala 0-10</option>
-                                            <option value="BOOLEAN">Sim/Não</option>
-                                            <option value="CATEGORY">Categoria</option>
+                                            <option value="NUMERIC">Numeric</option>
+                                            <option value="SCALE_0_10">Scale 0-10</option>
+                                            <option value="BOOLEAN">Yes/No</option>
+                                            <option value="CATEGORY">Category</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 {sub.type === 'NUMERIC' && (
                                     <Input
-                                        placeholder="Unidade (ex: kg, min)"
+                                        placeholder="Unit (e.g., kg, min)"
                                         value={sub.unit || ''}
                                         onChange={(e) => updateSubvariable(index, 'unit', e.target.value)}
                                     />
@@ -338,9 +338,9 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
 
                                 {sub.type === 'CATEGORY' && (
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-[var(--text-secondary)]">Opções (separadas por vírgula)</label>
+                                        <label className="text-xs font-medium text-[var(--text-secondary)]">Options (comma separated)</label>
                                         <Input
-                                            placeholder="Ex: Feliz, Triste, Ansioso"
+                                            placeholder="Ex: Happy, Sad, Anxious"
                                             value={sub.metadata?.options?.join(', ') || ''}
                                             onChange={(e) => updateSubvariableMetadata(index, 'options', e.target.value.split(',').map((s: string) => s.trim()))}
                                         />
@@ -361,23 +361,23 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
 
                 <div className="flex gap-2 flex-wrap">
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.NUMERIC)}>
-                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Numérico
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Numeric
                     </Button>
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.SCALE_0_10)}>
-                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Escala 0-10
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Scale 0-10
                     </Button>
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.BOOLEAN)}>
-                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Sim/Não
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Yes/No
                     </Button>
                     <Button type="button" variant="secondary" size="sm" onClick={() => addSubvariable(SubvariableType.CATEGORY)}>
-                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Categoria
+                        <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Category
                     </Button>
                 </div>
             </section>
 
             <div className="pt-6 border-t border-[var(--color-slate-200)]">
                 <Button type="submit" size="lg" className="w-full" isLoading={isSubmitting}>
-                    Salvar Hábito
+                    Save Habit
                 </Button>
             </div>
         </form>

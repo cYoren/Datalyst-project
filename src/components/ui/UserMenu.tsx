@@ -52,7 +52,7 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                     <div className="h-6 w-6 rounded-full bg-[var(--color-primary-100)] text-[var(--color-primary-600)] flex items-center justify-center text-xs font-bold mb-1">
                         {initials}
                     </div>
-                    <span className="text-[10px] font-medium">Perfil</span>
+                    <span className="text-[10px] font-medium">Profile</span>
                 </button>
 
                 {isOpen && (
@@ -64,7 +64,7 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                         <div className="absolute bottom-full right-0 mb-2 w-64 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--color-border)] z-50 overflow-hidden">
                             <div className="p-4 border-b border-[var(--color-border)]">
                                 <p className="font-medium text-[var(--text-primary)] truncate">
-                                    {user.name || 'Usuário'}
+                                    {user.name || 'User'}
                                 </p>
                                 <p className="text-sm text-[var(--text-secondary)] truncate">
                                     {user.email}
@@ -76,7 +76,7 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                                 className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors disabled:opacity-50"
                             >
                                 <LogOut className="h-4 w-4" />
-                                <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
+                                <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
                             </button>
                         </div>
                     </>
@@ -99,7 +99,7 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                 </div>
                 <div className="flex-1 text-left min-w-0">
                     <p className="font-medium text-[var(--text-primary)] text-sm truncate">
-                        {user.name || 'Usuário'}
+                        {user.name || 'User'}
                     </p>
                     <p className="text-xs text-[var(--text-secondary)] truncate">
                         {user.email}
@@ -124,7 +124,7 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                             className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors disabled:opacity-50"
                         >
                             <LogOut className="h-4 w-4" />
-                            <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
+                            <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
                         </button>
                     </div>
                 </>

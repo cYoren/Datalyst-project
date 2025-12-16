@@ -91,7 +91,7 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
     return (
         <div ref={wrapperRef} className="relative">
             <label className="text-sm font-medium text-[var(--text-secondary)] mb-2 block">
-                Usar template existente (opcional)
+                Use existing template (optional)
             </label>
 
             <div className="relative">
@@ -104,7 +104,7 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                         setIsOpen(true);
                     }}
                     onFocus={() => setIsOpen(true)}
-                    placeholder="Buscar template ou criar novo..."
+                    placeholder="Search template or create new..."
                     className={cn(
                         "w-full h-12 pl-10 pr-4 rounded-lg border bg-white",
                         "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]",
@@ -119,7 +119,7 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                         onClick={handleClear}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-sm font-medium"
                     >
-                        Limpar
+                        Clear
                     </button>
                 )}
             </div>
@@ -128,17 +128,17 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                 <div className="absolute z-50 w-full mt-2 bg-white rounded-lg border border-[var(--color-slate-200)] shadow-lg max-h-80 overflow-auto">
                     {isLoading ? (
                         <div className="p-4 text-center text-[var(--text-secondary)]">
-                            Carregando...
+                            Loading...
                         </div>
                     ) : templates.length === 0 ? (
                         <div className="p-4 text-center text-[var(--text-secondary)]">
                             {query ? (
                                 <>
-                                    <p className="mb-2">Nenhum template encontrado.</p>
-                                    <p className="text-sm">Continue digitando para criar um novo hábito.</p>
+                                    <p className="mb-2">No templates found.</p>
+                                    <p className="text-sm">Keep typing to create a new habit.</p>
                                 </>
                             ) : (
-                                <p>Nenhum template salvo ainda.</p>
+                                <p>No templates saved yet.</p>
                             )}
                         </div>
                     ) : (
@@ -168,12 +168,12 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                                         <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-tertiary)]">
                                             <span className="flex items-center gap-1">
                                                 <Tag className="h-3 w-3" suppressHydrationWarning />
-                                                {template.subvariableTemplate.length} variáveis
+                                                {template.subvariableTemplate.length} variables
                                             </span>
                                             {template.useCount > 0 && (
                                                 <span className="flex items-center gap-1">
                                                     <TrendingUp className="h-3 w-3" suppressHydrationWarning />
-                                                    Usado {template.useCount}x
+                                                    Used {template.useCount}x
                                                 </span>
                                             )}
                                         </div>
@@ -190,12 +190,12 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                     <div className="flex items-center gap-2 text-sm">
                         <Tag className="h-4 w-4 text-[var(--color-accent)]" suppressHydrationWarning />
                         <span className="font-medium text-[var(--text-primary)]">
-                            Usando template: {selectedTemplate.name}
+                            Using template: {selectedTemplate.name}
                         </span>
                     </div>
                     {selectedTemplate.subvariableTemplate.length > 0 && (
                         <div className="mt-2 text-xs text-[var(--text-secondary)]">
-                            Inclui: {selectedTemplate.subvariableTemplate.map((s: any) => s.name).join(', ')}
+                            Includes: {selectedTemplate.subvariableTemplate.map((s: any) => s.name).join(', ')}
                         </div>
                     )}
                 </div>

@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+
 import { HabitCard } from '@/components/habits/HabitCard';
 import { QuickEntryForm } from '@/components/forms/QuickEntryForm';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Loader2, Flame, TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3 } from 'lucide-react';
+import { useDashboardData } from '@/lib/hooks';
 
 interface DashboardStats {
     streak: number;
@@ -27,70 +28,27 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-    const [habits, setHabits] = useState<any[]>([]);
-    const [stats, setStats] = useState<DashboardStats | null>(null);
-    const [insights, setInsights] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const { habits, stats, insights, user, isLoading, refreshHabits } = useDashboardData();
     const [selectedHabit, setSelectedHabit] = useState<any | null>(null);
     const [currentDate, setCurrentDate] = useState('');
     const [greeting, setGreeting] = useState('');
-    const [userName, setUserName] = useState('');
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [habitsRes, statsRes, insightsRes, userRes] = await Promise.all([
-                fetch('/api/habits'),
-                fetch('/api/dashboard/stats'),
-                fetch('/api/insights'),
-                fetch('/api/user'),
-            ]);
-
-            if (habitsRes.ok) {
-                const habitsData = await habitsRes.json();
-                setHabits(Array.isArray(habitsData) ? habitsData : []);
-            }
-
-            if (statsRes.ok) {
-                const statsData = await statsRes.json();
-                setStats(statsData);
-            }
-
-            if (insightsRes.ok) {
-                const insightsData = await insightsRes.json();
-                setInsights(insightsData);
-            }
-
-            if (userRes.ok) {
-                const userData = await userRes.json();
-                setUserName(userData.name || userData.user_metadata?.name || userData.email?.split('@')[0] || 'Usuário');
-            } else if (userRes.status === 401) {
-                // Redirect to login if unauthorized
-                window.location.href = '/login';
-            }
-        } catch (error) {
-            console.error('Failed to fetch data', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     useEffect(() => {
         const date = new Date();
-        setCurrentDate(format(date, "EEEE, d 'de' MMMM", { locale: ptBR }));
+        setCurrentDate(format(date, "EEEE, MMMM do"));
 
         const hour = date.getHours();
-        if (hour < 12) setGreeting('Bom dia');
-        else if (hour < 18) setGreeting('Boa tarde');
-        else setGreeting('Boa noite');
-
-        fetchData();
+        if (hour < 12) setGreeting('Good morning');
+        else if (hour < 18) setGreeting('Good afternoon');
+        else setGreeting('Good evening');
     }, []);
 
     const handleRegisterSuccess = () => {
         setSelectedHabit(null);
-        fetchData();
+        refreshHabits(); // Use SWR's mutate to refresh
     };
+
+    const userName = user?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
 
     const isHabitCompleted = (habitId: string) => {
         const habit = habits.find(h => h.id === habitId);
@@ -118,7 +76,7 @@ export default function DashboardPage() {
         return false;
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center h-[50vh]">
                 <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" suppressHydrationWarning />
@@ -153,7 +111,7 @@ export default function DashboardPage() {
                                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                                     {stats?.streak || 0}
                                 </p>
-                                <p className="text-xs text-[var(--text-tertiary)]">Dias de sequência</p>
+                                <p className="text-xs text-[var(--text-tertiary)]">Streak Days</p>
                             </div>
                         </div>
                     </Card>
@@ -169,7 +127,7 @@ export default function DashboardPage() {
                                     {stats?.dailyProgress.percentage || 0}%
                                 </p>
                                 <p className="text-xs text-[var(--text-tertiary)]">
-                                    Hoje ({stats?.dailyProgress.completed}/{stats?.dailyProgress.total})
+                                    Today ({stats?.dailyProgress.completed}/{stats?.dailyProgress.total})
                                 </p>
                             </div>
                         </div>
@@ -185,7 +143,7 @@ export default function DashboardPage() {
                                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                                     {stats?.weeklyCompletion || 0}%
                                 </p>
-                                <p className="text-xs text-[var(--text-tertiary)]">Semana</p>
+                                <p className="text-xs text-[var(--text-tertiary)]">Week</p>
                             </div>
                         </div>
                     </Card>
@@ -200,7 +158,7 @@ export default function DashboardPage() {
                                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                                     {stats?.consistency || 0}%
                                 </p>
-                                <p className="text-xs text-[var(--text-tertiary)]">Consistência</p>
+                                <p className="text-xs text-[var(--text-tertiary)]">Consistency</p>
                             </div>
                         </div>
                     </Card>
@@ -211,9 +169,9 @@ export default function DashboardPage() {
             <div className="space-y-6 animate-slide-up">
                 {habits.length === 0 ? (
                     <div className="text-center py-16 bg-[var(--color-bg-card)] rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)]">
-                        <p className="text-[var(--text-secondary)] mb-6 text-lg">Sua jornada começa agora.</p>
+                        <p className="text-[var(--text-secondary)] mb-6 text-lg">Your journey starts now.</p>
                         <Button onClick={() => window.location.href = '/habits/new'} size="lg">
-                            Criar primeiro hábito
+                            Create First Habit
                         </Button>
                     </div>
                 ) : (
@@ -236,7 +194,7 @@ export default function DashboardPage() {
                         {completedHabits.length > 0 && (
                             <div className="pt-8">
                                 <h2 className="text-sm font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-4 pl-1">
-                                    Concluídos
+                                    Completed
                                 </h2>
                                 <div className="grid gap-4 opacity-60 hover:opacity-100 transition-opacity">
                                     {completedHabits.map(habit => (
@@ -272,21 +230,21 @@ export default function DashboardPage() {
                             <div className="relative z-10">
                                 <div className="flex items-center gap-2 text-blue-100 mb-2 text-sm font-medium uppercase tracking-wider">
                                     <TrendingUp className="h-4 w-4" suppressHydrationWarning />
-                                    Correlação Forte
+                                    Strong Correlation
                                 </div>
                                 <h3 className="text-2xl font-bold mb-4 leading-tight">
                                     {insights.correlations[0].text}
                                 </h3>
                                 <div className="flex items-center gap-6 text-sm text-blue-50">
                                     <div className="flex flex-col">
-                                        <span className="text-blue-100 text-xs uppercase">Confiança</span>
+                                        <span className="text-blue-100 text-xs uppercase">Confidence</span>
                                         <span className="font-mono font-medium">
                                             {((1 - insights.correlations[0].pValue) * 100).toFixed(1)}%
                                         </span>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-blue-100 text-xs uppercase">Amostra</span>
-                                        <span className="font-mono font-medium">{insights.correlations[0].n} dias</span>
+                                        <span className="text-blue-100 text-xs uppercase">Sample</span>
+                                        <span className="font-mono font-medium">{insights.correlations[0].n} days</span>
                                     </div>
                                 </div>
                             </div>
@@ -300,7 +258,7 @@ export default function DashboardPage() {
                                 <Card key={i} className="p-6 hover:shadow-[var(--shadow-hover)] transition-all cursor-pointer group border-l-4 border-l-[var(--color-accent)]">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="bg-[var(--color-bg-subtle)] px-3 py-1 rounded-full text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
-                                            Correlação
+                                            Correlation
                                         </div>
                                         <ArrowUpRight className="h-5 w-5 text-[var(--text-tertiary)] group-hover:text-[var(--color-accent)] transition-colors" suppressHydrationWarning />
                                     </div>
@@ -311,12 +269,12 @@ export default function DashboardPage() {
 
                                     <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)] mt-4">
                                         <div className="flex flex-col">
-                                            <span className="text-[var(--text-tertiary)] text-xs uppercase">Confiança</span>
+                                            <span className="text-[var(--text-tertiary)] text-xs uppercase">Confidence</span>
                                             <span className="font-mono font-medium">{((1 - corr.pValue) * 100).toFixed(1)}%</span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[var(--text-tertiary)] text-xs uppercase">Amostra</span>
-                                            <span className="font-mono font-medium">{corr.n} dias</span>
+                                            <span className="text-[var(--text-tertiary)] text-xs uppercase">Sample</span>
+                                            <span className="font-mono font-medium">{corr.n} days</span>
                                         </div>
                                     </div>
                                 </Card>
@@ -330,7 +288,7 @@ export default function DashboardPage() {
             <Modal
                 isOpen={!!selectedHabit}
                 onClose={() => setSelectedHabit(null)}
-                title={selectedHabit ? `Registrar ${selectedHabit.name}` : ''}
+                title={selectedHabit ? `Log ${selectedHabit.name}` : ''}
             >
                 {selectedHabit && (
                     <QuickEntryForm

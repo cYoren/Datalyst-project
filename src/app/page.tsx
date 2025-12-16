@@ -24,10 +24,10 @@ export default async function Home() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant="ghost">Entrar</Button>
+              <Button variant="ghost">Log In</Button>
             </Link>
             <Link href="/register">
-              <Button>Criar Conta</Button>
+              <Button>Sign Up</Button>
             </Link>
           </div>
         </div>
@@ -38,20 +38,20 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl sm:text-6xl font-bold text-[var(--text-primary)] mb-6 tracking-tight">
-              Domine seus hábitos através de <span className="text-[var(--color-accent)]">dados</span>
+              Master your habits through <span className="text-[var(--color-accent)]">data</span>
             </h1>
             <p className="text-xl text-[var(--text-secondary)] mb-10 leading-relaxed">
-              O Datalyst ajuda você a rastrear, analisar e correlacionar seus hábitos diários para descobrir insights poderosos sobre sua produtividade e bem-estar.
+              Datalyst helps you track, analyze, and correlate your daily habits to uncover powerful insights about your productivity and well-being.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full h-12 text-base gap-2">
-                  Começar Agora <ArrowRight className="h-5 w-5" />
+                  Get Started <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/login" className="w-full sm:w-auto">
                 <Button variant="outline" size="lg" className="w-full h-12 text-base">
-                  Já tenho conta
+                  I already have an account
                 </Button>
               </Link>
             </div>
@@ -63,27 +63,27 @@ export default async function Home() {
               <div className="h-12 w-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
                 <BarChart2 className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Análise Visual</h3>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Visual Analysis</h3>
               <p className="text-[var(--text-secondary)]">
-                Visualize seu progresso com gráficos intuitivos e dashboards personalizáveis.
+                Visualize your progress with intuitive charts and customizable dashboards.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--color-border)]">
               <div className="h-12 w-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center mb-4">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Rastreamento Simples</h3>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Simple Tracking</h3>
               <p className="text-[var(--text-secondary)]">
-                Registre seus hábitos diários em segundos com nossa interface otimizada.
+                Log your daily habits in seconds with our optimized interface.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--color-border)]">
               <div className="h-12 w-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4">
                 <Lock className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Privacidade Total</h3>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Total Privacy</h3>
               <p className="text-[var(--text-secondary)]">
-                Seus dados são seus. Segurança de ponta a ponta para sua tranquilidade.
+                Your data is yours. End-to-end security for your peace of mind.
               </p>
             </div>
           </div>
@@ -94,12 +94,12 @@ export default async function Home() {
       <footer className="border-t border-[var(--color-border)] bg-[var(--bg-card)] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[var(--text-tertiary)] text-sm">
-            © {new Date().getFullYear()} Datalyst. Todos os direitos reservados.
+            © {new Date().getFullYear()} Datalyst. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)]">
-            <Link href="#" className="hover:text-[var(--text-primary)]">Privacidade</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)]">Termos</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)]">Contato</Link>
+            <Link href="#" className="hover:text-[var(--text-primary)]">Privacy</Link>
+            <Link href="#" className="hover:text-[var(--text-primary)]">Terms</Link>
+            <Link href="#" className="hover:text-[var(--text-primary)]">Contact</Link>
           </div>
         </div>
       </footer>

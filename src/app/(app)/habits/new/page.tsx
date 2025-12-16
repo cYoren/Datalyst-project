@@ -41,8 +41,8 @@ export default function NewHabitPage() {
     return (
         <div className="space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">Novo Hábito</h1>
-                <p className="text-[var(--text-secondary)]">Configure o que você quer acompanhar.</p>
+                <h1 className="text-2xl font-bold text-[var(--text-primary)]">New Habit</h1>
+                <p className="text-[var(--text-secondary)]">Configure what you want to track.</p>
             </header>
 
             <HabitForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />

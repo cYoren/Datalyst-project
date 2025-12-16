@@ -26,13 +26,13 @@ export default function RegisterPage() {
 
         // Validation
         if (password !== confirmPassword) {
-            setError('As senhas não coincidem');
+            setError('Passwords do not match');
             setLoading(false);
             return;
         }
 
         if (password.length < 6) {
-            setError('A senha deve ter pelo menos 6 caracteres');
+            setError('Password must be at least 6 characters');
             setLoading(false);
             return;
         }
@@ -54,7 +54,7 @@ export default function RegisterPage() {
 
             setSuccess(true);
         } catch (err: any) {
-            setError(err.message || 'Erro ao criar conta');
+            setError(err.message || 'Error creating account');
         } finally {
             setLoading(false);
         }
@@ -75,7 +75,7 @@ export default function RegisterPage() {
 
             if (error) throw error;
         } catch (err: any) {
-            setError(err.message || 'Erro ao entrar com Google');
+            setError(err.message || 'Error logging in with Google');
             setLoading(false);
         }
     };
@@ -90,14 +90,14 @@ export default function RegisterPage() {
                         </div>
                     </div>
                     <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                        Conta criada com sucesso!
+                        Account created successfully!
                     </h2>
                     <p className="text-[var(--text-secondary)] mb-6">
-                        Enviamos um email de confirmação para <strong>{email}</strong>.
-                        Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.
+                        We sent a confirmation email to <strong>{email}</strong>.
+                        Please check your inbox and click the link to activate your account.
                     </p>
                     <Button onClick={() => router.push('/login')} className="w-full">
-                        Ir para login
+                        Go to login
                     </Button>
                 </Card>
             </div>
@@ -109,10 +109,10 @@ export default function RegisterPage() {
             <Card className="w-full max-w-md p-8">
                 <div className="mb-8 text-center">
                     <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-                        Criar conta
+                        Create Account
                     </h1>
                     <p className="text-[var(--text-secondary)]">
-                        Comece sua jornada de autoconhecimento
+                        Start your self-discovery journey
                     </p>
                 </div>
 
@@ -126,7 +126,7 @@ export default function RegisterPage() {
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                            Nome
+                            Name
                         </label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-tertiary)]" suppressHydrationWarning />
@@ -135,7 +135,7 @@ export default function RegisterPage() {
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="Seu nome"
+                                placeholder="Your name"
                                 required
                                 className="pl-10"
                             />
@@ -153,7 +153,7 @@ export default function RegisterPage() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="seu@email.com"
+                                placeholder="your@email.com"
                                 required
                                 className="pl-10"
                             />
@@ -162,7 +162,7 @@ export default function RegisterPage() {
 
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                            Senha
+                            Password
                         </label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-tertiary)]" suppressHydrationWarning />
@@ -178,13 +178,13 @@ export default function RegisterPage() {
                             />
                         </div>
                         <p className="mt-1 text-xs text-[var(--text-tertiary)]">
-                            Mínimo de 6 caracteres
+                            Minimum 6 characters
                         </p>
                     </div>
 
                     <div>
                         <label htmlFor="confirmPassword" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                            Confirmar senha
+                            Confirm Password
                         </label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-tertiary)]" suppressHydrationWarning />
@@ -204,10 +204,10 @@ export default function RegisterPage() {
                         {loading ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" suppressHydrationWarning />
-                                Criando conta...
+                                Creating account...
                             </>
                         ) : (
-                            'Criar conta'
+                            'Create Account'
                         )}
                     </Button>
                 </form>
@@ -218,7 +218,7 @@ export default function RegisterPage() {
                     </div>
                     <div className="relative flex justify-center text-sm">
                         <span className="px-4 bg-[var(--color-bg-card)] text-[var(--text-tertiary)]">
-                            ou cadastre-se com
+                            or sign up with
                         </span>
                     </div>
                 </div>
@@ -252,9 +252,9 @@ export default function RegisterPage() {
                 </Button>
 
                 <p className="mt-8 text-center text-sm text-[var(--text-secondary)]">
-                    Já tem uma conta?{' '}
+                    Already have an account?{' '}
                     <Link href="/login" className="text-[var(--color-accent)] hover:underline font-medium">
-                        Faça login
+                        Log In
                     </Link>
                 </p>
             </Card>

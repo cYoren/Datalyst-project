@@ -1,30 +1,30 @@
-import { prisma } from '@/lib/prisma';
+'use client';
+
 import { Card } from '@/components/ui/Card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ScrollText, Activity, Clock } from 'lucide-react';
+import { ScrollText, Activity, Clock, Loader2 } from 'lucide-react';
+import { useLogsPage, useUser } from '@/lib/hooks';
 
-export const dynamic = 'force-dynamic';
+export default function LogsPage() {
+    const { user, isLoading: userLoading } = useUser();
+    const { events, sessions, isLoading: logsLoading } = useLogsPage();
 
-export default async function LogsPage() {
-    const [events, sessions] = await Promise.all([
-        prisma.userEvent.findMany({
-            take: 50,
-            orderBy: { timestamp: 'desc' },
-            include: { user: { select: { email: true } } }
-        }),
-        prisma.appSessionLog.findMany({
-            take: 50,
-            orderBy: { timestamp: 'desc' },
-            include: { user: { select: { email: true } } }
-        })
-    ]);
+    const isLoading = userLoading || logsLoading;
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
+            </div>
+        );
+    }
 
     // Combine and sort
     const allLogs = [
         ...events.map((e: any) => ({ ...e, type: 'EVENT', sortTime: e.timestamp })),
         ...sessions.map((s: any) => ({ ...s, type: 'SESSION', sortTime: s.timestamp }))
-    ].sort((a, b) => b.sortTime.getTime() - a.sortTime.getTime());
+    ].sort((a, b) => new Date(b.sortTime).getTime() - new Date(a.sortTime).getTime());
 
     return (
         <div className="space-y-8 pb-20">
@@ -70,7 +70,7 @@ export default async function LogsPage() {
                                     {format(new Date(log.sortTime), "dd 'de' MMM, HH:mm:ss", { locale: ptBR })}
                                 </span>
                                 <span className="text-xs text-[var(--text-tertiary)]">
-                                    {log.user?.email}
+                                    {user?.email}
                                 </span>
                                 {log.origin && (
                                     <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--text-secondary)]">

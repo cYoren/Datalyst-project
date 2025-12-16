@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Calendar, BarChart2, PlusCircle, Settings, ScrollText, BarChart3, Microscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -53,11 +54,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const navItems = [
         { href: '/dashboard', icon: Calendar, label: 'Dashboard' },
-        { href: '/data', icon: BarChart3, label: 'Dados' },
+        { href: '/data', icon: BarChart3, label: 'Data' },
         { href: '/logs', icon: ScrollText, label: 'Logs' },
-        { href: '/habits/new', icon: PlusCircle, label: 'Novo' },
-        { href: '/about', icon: Microscope, label: 'Sobre' },
-        // { href: '/settings', icon: Settings, label: 'Ajustes' },
+        { href: '/habits/new', icon: PlusCircle, label: 'New' },
+        { href: '/about', icon: Microscope, label: 'About' },
+        // { href: '/settings', icon: Settings, label: 'Settings' },
     ];
 
     return (
@@ -66,7 +67,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <aside className="hidden sm:flex fixed inset-y-0 left-0 w-64 flex-col bg-[var(--bg-card)] border-r border-[var(--color-slate-200)]">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold text-[var(--color-primary-600)] flex items-center gap-2">
-                        <span className="text-3xl">📊</span> Datalyst
+                        <Image
+                            src="/web-app-manifest-192x192.png"
+                            alt="Datalyst logo"
+                            width={32}
+                            height={32}
+                            className="rounded-lg"
+                        />
+                        Datalyst
                     </h1>
                 </div>
 
