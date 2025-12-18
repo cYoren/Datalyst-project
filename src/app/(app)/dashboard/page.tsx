@@ -6,10 +6,11 @@ import { format } from 'date-fns';
 import { HabitCard } from '@/components/habits/HabitCard';
 import { QuickEntryForm } from '@/components/forms/QuickEntryForm';
 import { TodaysLogWidget } from '@/components/dashboard/TodaysLogWidget';
+import AdHocLogModal from '@/components/dashboard/AdHocLogModal';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Loader2, Flame, TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3 } from 'lucide-react';
+import { Loader2, Flame, TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3, Plus } from 'lucide-react';
 import { useDashboardData } from '@/lib/hooks';
 
 interface DashboardStats {
@@ -31,6 +32,7 @@ interface DashboardStats {
 export default function DashboardPage() {
     const { habits, stats, insights, user, isLoading, refreshHabits } = useDashboardData();
     const [selectedHabit, setSelectedHabit] = useState<any | null>(null);
+    const [isAdHocModalOpen, setIsAdHocModalOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
     const [greeting, setGreeting] = useState('');
 
@@ -302,6 +304,23 @@ export default function DashboardPage() {
                     />
                 )}
             </Modal>
+
+            {/* Ad-Hoc Log Modal */}
+            <AdHocLogModal
+                isOpen={isAdHocModalOpen}
+                onClose={() => setIsAdHocModalOpen(false)}
+                onLogComplete={refreshHabits}
+            />
+
+            {/* Floating Action Button */}
+            <button
+                onClick={() => setIsAdHocModalOpen(true)}
+                className="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-40 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                title="Log ad-hoc item"
+            >
+                <Plus className="h-5 w-5" />
+                <span className="hidden md:inline font-medium">Log Anything</span>
+            </button>
         </div>
     );
 }

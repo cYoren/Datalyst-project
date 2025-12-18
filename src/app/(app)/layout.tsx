@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Calendar, BarChart2, PlusCircle, Settings, ScrollText, BarChart3, Microscope } from 'lucide-react';
+import { Calendar, BarChart2, PlusCircle, Settings, ScrollText, BarChart3, Microscope, FlaskConical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/ui/UserMenu';
 
@@ -55,6 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const navItems = [
         { href: '/dashboard', icon: Calendar, label: 'Dashboard' },
         { href: '/data', icon: BarChart3, label: 'Data' },
+        { href: '/lab', icon: FlaskConical, label: 'Lab' },
         { href: '/logs', icon: ScrollText, label: 'Logs' },
         { href: '/habits/new', icon: PlusCircle, label: 'Protocol' },
         { href: '/about', icon: Microscope, label: 'About' },

@@ -78,3 +78,34 @@ export const dateRangeSchema = z.object({
     startDate: z.string().datetime(),
     endDate: z.string().datetime(),
 });
+
+// Experiment validation schema
+export const experimentFormSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
+    hypothesis: z.string().max(1000).optional().nullable(),
+    independentId: z.string().cuid('Invalid variable ID'),
+    dependentId: z.string().cuid('Invalid variable ID'),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
+    status: z.enum(['PLANNING', 'ACTIVE', 'COMPLETED', 'ARCHIVED']).default('PLANNING'),
+}).refine(
+    (data) => data.independentId !== data.dependentId,
+    { message: 'Independent and dependent variables must be different', path: ['dependentId'] }
+).refine(
+    (data) => {
+        const start = new Date(data.startDate);
+        const end = new Date(data.endDate);
+        return end > start;
+    },
+    { message: 'End date must be after start date', path: ['endDate'] }
+).refine(
+    (data) => {
+        const start = new Date(data.startDate);
+        const end = new Date(data.endDate);
+        const daysDiff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+        return daysDiff >= 7;
+    },
+    { message: 'Experiment must be at least 7 days long', path: ['endDate'] }
+);
+
+export const updateExperimentSchema = experimentFormSchema.partial().omit({ independentId: true, dependentId: true });

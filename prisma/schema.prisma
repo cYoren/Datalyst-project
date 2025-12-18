@@ -60,6 +60,14 @@ enum GoalDirection {
   NEUTRAL         // Observation only (e.g., Caffeine intake)
 }
 
+// Experiment lifecycle status
+enum ExperimentStatus {
+  PLANNING        // Draft, not started
+  ACTIVE          // Currently running
+  COMPLETED       // Ended, results available
+  ARCHIVED        // Dismissed
+}
+
 // ========================================
 // MODELS
 // ========================================
@@ -88,6 +96,7 @@ model User {
   habitTemplates HabitTemplate[]
   sessionLogs    AppSessionLog[]
   userEvents     UserEvent[]
+  experiments    Experiment[]
   
   @@index([email])
 }
@@ -127,6 +136,10 @@ model Habit {
   template       HabitTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
   subvariables   Subvariable[]
   entries        HabitEntry[]
+  
+  // Experiment relations (habit can be independent or dependent variable)
+  independentExperiments Experiment[] @relation("IndependentVariable")
+  dependentExperiments   Experiment[] @relation("DependentVariable")
   
   @@index([userId])
   @@index([userId, archived])
@@ -285,4 +298,38 @@ model UserEvent {
   @@index([userId])
   @@index([eventType])
   @@index([userId, timestamp])
+}
+
+// Experiment model - overlay on habits to test correlations
+model Experiment {
+  id              String           @id @default(cuid())
+  userId          String
+  
+  // Experiment info
+  name            String           // "Does Magnesium Improve Sleep?"
+  hypothesis      String?          // Free text for context
+  
+  // Variable links (both must be existing habits)
+  independentId   String           // The variable you're changing
+  dependentId     String           // The outcome you're measuring
+  
+  // Date range (stored as YYYY-MM-DD strings for timezone safety)
+  startDate       String           // "2025-12-20"
+  endDate         String           // "2026-01-03"
+  
+  // Status workflow
+  status          ExperimentStatus @default(PLANNING)
+  
+  // Timestamps
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  // Relations
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  independent     Habit            @relation("IndependentVariable", fields: [independentId], references: [id], onDelete: Cascade)
+  dependent       Habit            @relation("DependentVariable", fields: [dependentId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
 }

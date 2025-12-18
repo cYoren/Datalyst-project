@@ -50,7 +50,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 disabled={isLoading || props.disabled}
                 {...props}
             >
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {/* Don't render Loader2 when asChild - Slot requires exactly one child */}
+                {!asChild && isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {children}
             </Comp>
         )
