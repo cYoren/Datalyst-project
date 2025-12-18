@@ -2,63 +2,121 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
-import { Brain, Microscope, LineChart, Sparkles } from 'lucide-react';
+import { Brain, Microscope, LineChart, Sparkles, FlaskConical, Target, TrendingUp } from 'lucide-react';
 
 export default function AboutPage() {
     return (
         <div className="space-y-10 pb-20 animate-fade-in">
             <header className="space-y-4 text-center max-w-2xl mx-auto">
-                <div className="inline-flex items-center justify-center p-3 bg-[var(--color-bg-subtle)] rounded-full mb-4">
-                    <Microscope className="h-8 w-8 text-[var(--color-accent)]" suppressHydrationWarning />
+                <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-hover)] rounded-full mb-4">
+                    <FlaskConical className="h-8 w-8 text-white" suppressHydrationWarning />
                 </div>
                 <h1 className="text-4xl font-bold text-[var(--text-primary)] tracking-tight">
-                    Scientist of Yourself
+                    Personal Science Laboratory
                 </h1>
                 <p className="text-xl text-[var(--text-secondary)] leading-relaxed">
-                    Datalyst is not just a habit tracker. It is a personal laboratory to discover what really works for you.
+                    Datalyst is your platform for <strong>N=1 experimentation</strong>.
+                    Stop guessing what works—start testing with data.
                 </p>
             </header>
+
+            {/* Core Philosophy */}
+            <Card className="p-6 bg-gradient-to-br from-[var(--color-accent)]/5 to-transparent border-[var(--color-accent)]/20">
+                <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-[var(--color-accent)]/10">
+                        <Target className="h-6 w-6 text-[var(--color-accent)]" suppressHydrationWarning />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-[var(--text-primary)] mb-2">The Core Philosophy</h2>
+                        <p className="text-[var(--text-secondary)]">
+                            Unlike habit trackers that encourage doing the same thing every day,
+                            Datalyst encourages <strong>Interventions</strong>—systematically changing variables
+                            to discover what actually affects your life. Does "No Coffee" improve your "Sleep Quality"?
+                            Stop guessing. Find out.
+                        </p>
+                    </div>
+                </div>
+            </Card>
 
             <div className="grid gap-8 max-w-4xl mx-auto">
                 <Card className="p-8 border-l-4 border-l-[var(--color-accent)]">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                        <LineChart className="h-6 w-6 text-[var(--color-accent)]" suppressHydrationWarning />
-                        Correlation, Not Just Consistency
+                        <FlaskConical className="h-6 w-6 text-[var(--color-accent)]" suppressHydrationWarning />
+                        Protocols, Not Habits
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
-                        Most apps focus on "keeping the streak". We focus on <strong>understanding why</strong>.
-                        By tracking variables (like sleep hours, stress levels, caffeine intake) alongside your habits,
-                        our algorithms find hidden patterns. You might discover that reading 10 pages a day reduces your anxiety by 20%,
-                        or that your focus triples when you work out in the morning.
+                        We call them <strong>Protocols</strong> because you're running experiments, not building routines.
+                        Each protocol tracks multiple <strong>variables</strong>—inputs you control (caffeine, sleep time, exercise)
+                        and outputs you measure (energy, mood, focus). The data reveals which interventions work for <em>you</em>.
                     </p>
                 </Card>
 
                 <Card className="p-8 border-l-4 border-l-[var(--color-warning)]">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                        <Brain className="h-6 w-6 text-[var(--color-warning)]" suppressHydrationWarning />
-                        Self-Experimentation
+                        <LineChart className="h-6 w-6 text-[var(--color-warning)]" suppressHydrationWarning />
+                        Correlation Engine
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
-                        We encourage you to treat your life as an experiment. Change one variable, keep the others constant, and observe the results.
-                        Datalyst provides the tools to measure the impact of these changes accurately, turning intuition into data.
+                        Most apps focus on "keeping the streak". We focus on <strong>understanding why</strong>.
+                        Our algorithms analyze your data to find hidden patterns. You might discover that reading
+                        10 pages a day correlates with 20% lower anxiety, or that morning workouts triple your afternoon focus.
                     </p>
                 </Card>
 
                 <Card className="p-8 border-l-4 border-l-[var(--color-success)]">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                        <Sparkles className="h-6 w-6 text-[var(--color-success)]" suppressHydrationWarning />
+                        <Brain className="h-6 w-6 text-[var(--color-success)]" suppressHydrationWarning />
+                        Personal RCT Platform
+                    </h2>
+                    <p className="text-[var(--text-secondary)] leading-relaxed">
+                        Think of Datalyst as your personal <strong>Randomized Controlled Trial</strong> platform.
+                        Change one variable, keep others constant, and measure the outcome. Scientific rigor
+                        applied to your daily life—turning intuition into evidence.
+                    </p>
+                </Card>
+
+                <Card className="p-8 border-l-4 border-l-purple-500">
+                    <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
+                        <Sparkles className="h-6 w-6 text-purple-500" suppressHydrationWarning />
                         Your Personal Truth
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
                         What works for "gurus" might not work for you. We are biologically and psychologically unique.
-                        Datalyst helps you build your own instruction manual, based on evidence from your own life, not on generic advice.
+                        Datalyst helps you build your own <strong>instruction manual</strong>, based on evidence
+                        from your own life—not generic advice.
                     </p>
                 </Card>
             </div>
 
-            <div className="text-center pt-10">
+            {/* Getting Started */}
+            <Card className="p-6 bg-[var(--color-bg-subtle)] border-dashed">
+                <h3 className="font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-[var(--color-accent)]" suppressHydrationWarning />
+                    How to Run Your First Experiment
+                </h3>
+                <ol className="space-y-3 text-[var(--text-secondary)]">
+                    <li className="flex gap-3">
+                        <span className="font-bold text-[var(--color-accent)]">1.</span>
+                        <span><strong>Create a Protocol</strong> with the variables you want to track (e.g., "Sleep Optimization")</span>
+                    </li>
+                    <li className="flex gap-3">
+                        <span className="font-bold text-[var(--color-accent)]">2.</span>
+                        <span><strong>Log daily</strong> using the Today's Log widget—takes seconds</span>
+                    </li>
+                    <li className="flex gap-3">
+                        <span className="font-bold text-[var(--color-accent)]">3.</span>
+                        <span><strong>Introduce an intervention</strong> (e.g., "No screens after 9pm")</span>
+                    </li>
+                    <li className="flex gap-3">
+                        <span className="font-bold text-[var(--color-accent)]">4.</span>
+                        <span><strong>Compare your data</strong> before vs after to see the real impact</span>
+                    </li>
+                </ol>
+            </Card>
+
+            <div className="text-center pt-6">
                 <p className="text-[var(--text-tertiary)] italic">
-                    "What gets measured gets managed." — Peter Drucker
+                    "The goal is not to track more—it's to understand more."
                 </p>
             </div>
         </div>

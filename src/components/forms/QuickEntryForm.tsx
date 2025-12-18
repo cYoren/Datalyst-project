@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/Input';
 import { Slider } from '@/components/ui/Slider';
 import { SubvariableType } from '@prisma/client';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { CalendarDays } from 'lucide-react';
 
 interface QuickEntryFormProps {
     habit: any;
@@ -17,6 +19,7 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [values, setValues] = useState<Record<string, number>>({});
     const [note, setNote] = useState('');
+    const [logicalDate, setLogicalDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
     React.useEffect(() => {
         const initial: Record<string, number> = {};
@@ -43,7 +46,7 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     habitId: habit.id,
-                    logicalDate: new Date().toISOString(),
+                    logicalDate: new Date(logicalDate + 'T12:00:00').toISOString(),
                     note,
                     subvariableEntries
                 })
@@ -128,6 +131,26 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
                         )}
                     </div>
                 ))}
+
+                {/* Date Picker for Backdating */}
+                <div className="pt-4 space-y-2">
+                    <label className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4" suppressHydrationWarning />
+                        Date
+                    </label>
+                    <input
+                        type="date"
+                        value={logicalDate}
+                        onChange={(e) => setLogicalDate(e.target.value)}
+                        max={format(new Date(), 'yyyy-MM-dd')}
+                        className="w-full h-10 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--text-primary)] focus:bg-white focus:border-[var(--color-accent)] focus:outline-none transition-colors"
+                    />
+                    {logicalDate !== format(new Date(), 'yyyy-MM-dd') && (
+                        <p className="text-xs text-[var(--color-warning)]">
+                            ⚠️ Backdating entry to {new Date(logicalDate + 'T12:00:00').toLocaleDateString()}
+                        </p>
+                    )}
+                </div>
 
                 <div className="pt-4">
                     <Input

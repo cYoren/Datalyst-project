@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 
 import { HabitCard } from '@/components/habits/HabitCard';
 import { QuickEntryForm } from '@/components/forms/QuickEntryForm';
+import { TodaysLogWidget } from '@/components/dashboard/TodaysLogWidget';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -165,13 +166,16 @@ export default function DashboardPage() {
                 </div>
             </header>
 
-            {/* Habits List */}
+            {/* Today's Log Widget - Sticky Section */}
+            <TodaysLogWidget />
+
+            {/* Protocols List */}
             <div className="space-y-6 animate-slide-up">
                 {habits.length === 0 ? (
                     <div className="text-center py-16 bg-[var(--color-bg-card)] rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)]">
                         <p className="text-[var(--text-secondary)] mb-6 text-lg">Your journey starts now.</p>
                         <Button onClick={() => window.location.href = '/habits/new'} size="lg">
-                            Create First Habit
+                            Create First Protocol
                         </Button>
                     </div>
                 ) : (

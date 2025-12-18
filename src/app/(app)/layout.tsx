@@ -56,7 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         { href: '/dashboard', icon: Calendar, label: 'Dashboard' },
         { href: '/data', icon: BarChart3, label: 'Data' },
         { href: '/logs', icon: ScrollText, label: 'Logs' },
-        { href: '/habits/new', icon: PlusCircle, label: 'New' },
+        { href: '/habits/new', icon: PlusCircle, label: 'Protocol' },
         { href: '/about', icon: Microscope, label: 'About' },
         // { href: '/settings', icon: Settings, label: 'Settings' },
     ];

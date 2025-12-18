@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { EntryEditForm } from '@/components/forms/EntryEditForm';
 import { format } from 'date-fns';
 import {
     LineChart,
@@ -16,7 +18,7 @@ import {
     Bar,
     Legend
 } from 'recharts';
-import { Download, Filter } from 'lucide-react';
+import { Download, Filter, Edit2 } from 'lucide-react';
 
 // Fallback if UI Table components don't exist, I'll use standard HTML for now to be safe
 // Actually, I should check if Table components exist. I'll assume standard HTML with Tailwind classes for safety.
@@ -24,10 +26,12 @@ import { Download, Filter } from 'lucide-react';
 interface DataDashboardProps {
     habits: any[];
     entries: any[];
+    onRefresh?: () => void;
 }
 
-export function DataDashboard({ habits, entries }: DataDashboardProps) {
+export function DataDashboard({ habits, entries, onRefresh }: DataDashboardProps) {
     const [selectedHabitId, setSelectedHabitId] = useState<string>(habits[0]?.id || '');
+    const [editingEntry, setEditingEntry] = useState<any | null>(null);
 
     const selectedHabit = habits.find(h => h.id === selectedHabitId);
 
@@ -58,6 +62,16 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
             return dataPoint;
         });
     }, [habitEntries, selectedHabit]);
+
+    const handleEditSuccess = () => {
+        setEditingEntry(null);
+        if (onRefresh) {
+            onRefresh();
+        } else {
+            // Force page refresh if no onRefresh provided
+            window.location.reload();
+        }
+    };
 
     if (!selectedHabit) {
         return (
@@ -214,6 +228,7 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
                                     <th key={sub.id} className="px-6 py-3 font-medium">{sub.name}</th>
                                 ))}
                                 <th className="px-6 py-3 font-medium">Note</th>
+                                <th className="px-6 py-3 font-medium w-16">Edit</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--color-border)]">
@@ -235,12 +250,24 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
                                     <td className="px-6 py-4 text-[var(--text-secondary)] max-w-xs truncate">
                                         {entry.note || '-'}
                                     </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => setEditingEntry({
+                                                ...entry,
+                                                habit: selectedHabit
+                                            })}
+                                            className="p-2 rounded-lg hover:bg-[var(--color-bg-subtle)] text-[var(--text-tertiary)] hover:text-[var(--color-accent)] transition-colors"
+                                            title="Edit entry"
+                                        >
+                                            <Edit2 className="h-4 w-4" suppressHydrationWarning />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                             {habitEntries.length === 0 && (
                                 <tr>
-                                    <td colSpan={selectedHabit.subvariables.length + 2} className="px-6 py-8 text-center text-[var(--text-tertiary)]">
-                                        No entries found for this habit.
+                                    <td colSpan={selectedHabit.subvariables.length + 3} className="px-6 py-8 text-center text-[var(--text-tertiary)]">
+                                        No entries found for this protocol.
                                     </td>
                                 </tr>
                             )}
@@ -248,6 +275,22 @@ export function DataDashboard({ habits, entries }: DataDashboardProps) {
                     </table>
                 </div>
             </Card>
+
+            {/* Entry Edit Modal */}
+            <Modal
+                isOpen={!!editingEntry}
+                onClose={() => setEditingEntry(null)}
+                title="Edit Entry"
+            >
+                {editingEntry && (
+                    <EntryEditForm
+                        entry={editingEntry}
+                        onSuccess={handleEditSuccess}
+                        onCancel={() => setEditingEntry(null)}
+                        onDelete={handleEditSuccess}
+                    />
+                )}
+            </Modal>
         </div>
     );
 }

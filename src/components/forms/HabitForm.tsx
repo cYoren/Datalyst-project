@@ -15,6 +15,10 @@ interface HabitFormProps {
     isSubmitting?: boolean;
 }
 
+type ScheduleType = 'DAILY' | 'WEEKLY' | 'ADHOC';
+type TimeBlock = 'MORNING' | 'AFTERNOON' | 'EVENING' | 'ANYTIME';
+type GoalDirection = 'HIGHER_BETTER' | 'LOWER_BETTER' | 'NEUTRAL';
+
 export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProps) => {
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [name, setName] = useState(initialData?.name || '');
@@ -22,7 +26,12 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
     const [color, setColor] = useState(initialData?.color || '#3b82f6');
     const [icon, setIcon] = useState(initialData?.icon || '🎯');
 
-    // Schedule State
+    // Schedule State (new Protocol Rules)
+    const [scheduleType, setScheduleType] = useState<ScheduleType>(initialData?.scheduleType || 'DAILY');
+    const [scheduleDays, setScheduleDays] = useState<number[]>(initialData?.scheduleDays || []);
+    const [timeBlock, setTimeBlock] = useState<TimeBlock>(initialData?.timeBlock || 'ANYTIME');
+
+    // Legacy schedule parsing (for backward compatibility)
     let parsedSchedule = {};
     try {
         parsedSchedule = initialData?.schedule ?
@@ -81,6 +90,8 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                 name: '',
                 type,
                 unit: '',
+                prompt: '',
+                goalDirection: 'NEUTRAL' as GoalDirection,
                 metadata,
                 order: subvariables.length
             }
@@ -117,6 +128,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Legacy schedule object (for backward compatibility)
         const schedule = {
             frequency,
             daysOfWeek: frequency === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : daysOfWeek,
@@ -128,12 +140,19 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
             description,
             color,
             icon,
+            // New Protocol Rules fields
+            scheduleType,
+            scheduleDays: scheduleType === 'WEEKLY' ? scheduleDays : [],
+            timeBlock,
+            // Legacy (backward compat)
             schedule,
             subvariables: subvariables.map((s: any) => ({
                 id: s.id, // Include ID if editing
                 name: s.name,
                 type: s.type,
                 unit: s.unit,
+                prompt: s.prompt || null,
+                goalDirection: s.goalDirection || 'NEUTRAL',
                 metadata: s.metadata ? (typeof s.metadata === 'string' ? JSON.parse(s.metadata) : s.metadata) : {},
                 order: s.order
             }))
@@ -176,10 +195,10 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                 <h3 className="text-lg font-semibold text-[var(--text-primary)]">Basic Information</h3>
 
                 <Input
-                    label="Habit Name"
+                    label="Protocol Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: Gym, Reading"
+                    placeholder="Ex: Sleep Optimization, Focus Protocol"
                     required
                 />
 
@@ -191,35 +210,50 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                 />
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium text-[var(--text-secondary)]">Frequency</label>
-                    <div className="flex gap-2">
-                        {(['daily', 'weekly'] as const).map((freq) => (
+                    <label className="text-sm font-medium text-[var(--text-secondary)]">Schedule Type</label>
+                    <div className="flex gap-2 flex-wrap">
+                        {([
+                            { value: 'DAILY', label: 'Every Day' },
+                            { value: 'WEEKLY', label: 'Specific Days' },
+                            { value: 'ADHOC', label: 'Ad-hoc' }
+                        ] as const).map((opt) => (
                             <button
-                                key={freq}
+                                key={opt.value}
                                 type="button"
-                                onClick={() => setFrequency(freq)}
+                                onClick={() => setScheduleType(opt.value)}
                                 className={cn(
                                     "px-4 py-2 rounded-lg text-sm font-medium transition-all border",
-                                    frequency === freq
+                                    scheduleType === opt.value
                                         ? "bg-[var(--color-primary-50)] border-[var(--color-primary-500)] text-[var(--color-primary-700)]"
                                         : "bg-white border-[var(--color-slate-200)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)]"
                                 )}
                             >
-                                {freq === 'daily' ? 'Every day' : 'Specific days'}
+                                {opt.label}
                             </button>
                         ))}
                     </div>
+                    {scheduleType === 'ADHOC' && (
+                        <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                            Ad-hoc protocols don't appear in Today's Log automatically
+                        </p>
+                    )}
 
-                    {frequency === 'weekly' && (
+                    {scheduleType === 'WEEKLY' && (
                         <div className="flex gap-2 mt-2">
                             {weekDays.map((day) => (
                                 <button
                                     key={day.value}
                                     type="button"
-                                    onClick={() => toggleDay(day.value)}
+                                    onClick={() => {
+                                        if (scheduleDays.includes(day.value)) {
+                                            setScheduleDays(scheduleDays.filter(d => d !== day.value));
+                                        } else {
+                                            setScheduleDays([...scheduleDays, day.value]);
+                                        }
+                                    }}
                                     className={cn(
                                         "h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-all border",
-                                        daysOfWeek.includes(day.value)
+                                        scheduleDays.includes(day.value)
                                             ? "bg-[var(--color-primary-500)] border-[var(--color-primary-500)] text-white"
                                             : "bg-white border-[var(--color-slate-200)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)]"
                                     )}
@@ -230,6 +264,33 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                         </div>
                     )}
                 </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--text-secondary)]">Time Block</label>
+                    <div className="flex gap-2 flex-wrap">
+                        {([
+                            { value: 'MORNING', label: '🌅 Morning' },
+                            { value: 'AFTERNOON', label: '☀️ Afternoon' },
+                            { value: 'EVENING', label: '🌙 Evening' },
+                            { value: 'ANYTIME', label: '⏰ Anytime' }
+                        ] as const).map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setTimeBlock(opt.value)}
+                                className={cn(
+                                    "px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                    timeBlock === opt.value
+                                        ? "bg-[var(--color-primary-50)] border-[var(--color-primary-500)] text-[var(--color-primary-700)]"
+                                        : "bg-white border-[var(--color-slate-200)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)]"
+                                )}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--text-secondary)]">Log Limit</label>
@@ -377,7 +438,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
 
             <div className="pt-6 border-t border-[var(--color-slate-200)]">
                 <Button type="submit" size="lg" className="w-full" isLoading={isSubmitting}>
-                    Save Habit
+                    Save Protocol
                 </Button>
             </div>
         </form>

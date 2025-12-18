@@ -38,6 +38,28 @@ enum EventType {
   SUBVARIABLE_UPDATED
 }
 
+// Schedule frequency for protocols
+enum ScheduleType {
+  DAILY           // Every day (default)
+  WEEKLY          // Specific days of week
+  ADHOC           // Manual trigger only (not in widget)
+}
+
+// Time block for sorting protocols in dashboard
+enum TimeBlock {
+  MORNING         // Morning routines
+  AFTERNOON       // Midday protocols  
+  EVENING         // Evening routines
+  ANYTIME         // No specific time (default)
+}
+
+// Goal direction for variables (for correlation insights)
+enum GoalDirection {
+  HIGHER_BETTER   // e.g., Sleep Quality, Focus
+  LOWER_BETTER    // e.g., Anxiety, Stress
+  NEUTRAL         // Observation only (e.g., Caffeine intake)
+}
+
 // ========================================
 // MODELS
 // ========================================
@@ -81,8 +103,16 @@ model Habit {
   color       String   @default("#3b82f6") // Hex color
   icon        String   @default("🎯")      // Emoji or icon identifier
   
-  // Schedule configuration (JSON)
-  // Example: { "daysOfWeek": [1,2,3,4,5], "frequency": "daily", "logLimit": "unlimited" }
+  // Schedule configuration
+  scheduleType  ScheduleType @default(DAILY)
+  // Days of week for WEEKLY type (0=Sunday, 1=Monday... 6=Saturday - matches JS Date.getDay())
+  scheduleDays  Int[]        @default([])
+  
+  // Dashboard sorting
+  timeBlock     TimeBlock    @default(ANYTIME)  // When to show in day
+  rank          Int          @default(0)         // Order within time block
+  
+  // Legacy schedule (kept for backward compatibility, will be deprecated)
   schedule    String   @default("{}") // JSON string
   
   // Soft delete
@@ -145,10 +175,15 @@ model Subvariable {
   name     String
   type     SubvariableType
   unit     String?         // e.g., "kg", "km", "minutes"
+  prompt   String?         // Optional question/prompt (e.g., "How refreshed do you feel?")
+  
+  // Goal direction for correlation insights
+  goalDirection GoalDirection @default(NEUTRAL)
   
   // Metadata (JSON)
-  // For SCALE_0_10: { "min": 0, "max": 10, "labels": ["Baixo", "Alto"] }
+  // For SCALE_0_10: { "min": 0, "max": 10, "labels": ["Low", "High"] }
   // For CATEGORY: { "options": ["Option1", "Option2"] }
+  // For NUMERIC: { "step": 1 }
   metadata String          @default("{}")
   
   // Order in the UI

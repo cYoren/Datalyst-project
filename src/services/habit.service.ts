@@ -43,7 +43,11 @@ export class HabitService {
                 color: habitData.color || template.color,
                 icon: habitData.icon || template.icon,
                 schedule: habitData.schedule || template.defaultSchedule,
-            };
+                // New Protocol Rules (use provided or defaults)
+                scheduleType: (habitData as any).scheduleType || 'DAILY',
+                scheduleDays: (habitData as any).scheduleDays || [],
+                timeBlock: (habitData as any).timeBlock || 'ANYTIME',
+            } as any;
 
             // Use template subvariables if none provided
             if (!subvariables || subvariables.length === 0) {
@@ -61,8 +65,13 @@ export class HabitService {
                     description: finalHabitData.description,
                     color: finalHabitData.color,
                     icon: finalHabitData.icon,
+                    // New Protocol Rules fields
+                    scheduleType: (finalHabitData as any).scheduleType || 'DAILY',
+                    scheduleDays: (finalHabitData as any).scheduleDays || [],
+                    timeBlock: (finalHabitData as any).timeBlock || 'ANYTIME',
+                    // Legacy (backward compat)
                     schedule: JSON.stringify(finalHabitData.schedule || {}),
-                },
+                } as any, // Cast to any until migration is run
             });
 
             if (finalSubvariables && finalSubvariables.length > 0) {
@@ -72,6 +81,8 @@ export class HabitService {
                         name: sub.name,
                         type: sub.type as SubvariableType,
                         unit: sub.unit,
+                        prompt: sub.prompt || null,
+                        goalDirection: sub.goalDirection || 'NEUTRAL',
                         metadata: JSON.stringify(sub.metadata || {}),
                         order: sub.order ?? index,
                     })),
@@ -113,6 +124,11 @@ export class HabitService {
             if (data.color !== undefined) updateData.color = data.color;
             if (data.icon !== undefined) updateData.icon = data.icon;
             if (data.archived !== undefined) updateData.archived = data.archived;
+            // New Protocol Rules fields
+            if ((data as any).scheduleType !== undefined) updateData.scheduleType = (data as any).scheduleType;
+            if ((data as any).scheduleDays !== undefined) updateData.scheduleDays = (data as any).scheduleDays;
+            if ((data as any).timeBlock !== undefined) updateData.timeBlock = (data as any).timeBlock;
+            // Legacy
             if (data.schedule) {
                 updateData.schedule = JSON.stringify(data.schedule);
             }
@@ -147,6 +163,8 @@ export class HabitService {
                         name: sub.name,
                         type: sub.type as SubvariableType,
                         unit: sub.unit,
+                        prompt: sub.prompt || null,
+                        goalDirection: sub.goalDirection || 'NEUTRAL',
                         metadata: JSON.stringify(sub.metadata || {}),
                         order: index,
                         active: true,

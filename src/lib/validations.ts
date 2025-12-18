@@ -11,10 +11,15 @@ export const createUserSchema = z.object({
 
 // Habit validation schemas
 export const createHabitSchema = z.object({
-    name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
-    description: z.string().max(500, 'Descrição muito longa').optional(),
-    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Cor inválida').default('#3b82f6'),
+    name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+    description: z.string().max(500, 'Description too long').optional(),
+    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color').default('#3b82f6'),
     icon: z.string().default('🎯'),
+    // New Protocol Rules fields
+    scheduleType: z.enum(['DAILY', 'WEEKLY', 'ADHOC']).default('DAILY'),
+    scheduleDays: z.array(z.number().min(0).max(6)).default([]), // 0=Sunday...6=Saturday
+    timeBlock: z.enum(['MORNING', 'AFTERNOON', 'EVENING', 'ANYTIME']).default('ANYTIME'),
+    // Legacy (backward compat)
     schedule: z.object({
         daysOfWeek: z.array(z.number().min(0).max(6)).optional(),
         frequency: z.enum(['daily', 'weekly', 'custom']).optional(),
@@ -26,9 +31,11 @@ export const updateHabitSchema = createHabitSchema.partial();
 // Subvariable validation schemas
 export const createSubvariableSchema = z.object({
     habitId: z.string().cuid(),
-    name: z.string().min(1, 'Nome é obrigatório').max(100),
+    name: z.string().min(1, 'Name is required').max(100),
     type: z.enum(['NUMERIC', 'SCALE_0_10', 'BOOLEAN', 'CATEGORY']),
     unit: z.string().max(50).optional(),
+    prompt: z.string().max(200).optional().nullable(),
+    goalDirection: z.enum(['HIGHER_BETTER', 'LOWER_BETTER', 'NEUTRAL']).default('NEUTRAL'),
     metadata: z.record(z.string(), z.any()).optional(),
     order: z.number().int().min(0).default(0),
 });

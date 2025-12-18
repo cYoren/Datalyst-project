@@ -22,11 +22,11 @@ export default function NewHabitPage() {
                 const contentType = res.headers.get('content-type');
                 if (contentType && contentType.includes('application/json')) {
                     const json = await res.json();
-                    const errorMessage = json.error ? JSON.stringify(json.error) : 'Erro ao criar hábito';
+                    const errorMessage = json.error ? JSON.stringify(json.error) : 'Error creating protocol';
                     alert(errorMessage);
                     throw new Error(errorMessage);
                 } else {
-                    alert('Erro ao criar hábito: Servidor retornou erro inesperado');
+                    alert('Error creating protocol: Server returned unexpected error');
                     throw new Error('Server returned non-JSON error');
                 }
             }
@@ -41,8 +41,8 @@ export default function NewHabitPage() {
     return (
         <div className="space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">New Habit</h1>
-                <p className="text-[var(--text-secondary)]">Configure what you want to track.</p>
+                <h1 className="text-2xl font-bold text-[var(--text-primary)]">New Protocol</h1>
+                <p className="text-[var(--text-secondary)]">Configure what you want to track and measure.</p>
             </header>
 
             <HabitForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
