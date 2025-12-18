@@ -192,12 +192,7 @@ export const TodaysLogWidget = () => {
         // effectively it stays "green" seamlessly.
     }, [logVariable]);
 
-    // Don't render if no variables
-    if (!isLoading && summary.variables.length === 0) {
-        return null;
-    }
-
-    // Group variables by time block
+    // Group variables by time block - MUST be before any conditional return
     const groupedVariables = React.useMemo(() => {
         const groups: Record<string, TodayVariable[]> = {
             'MORNING': [],
@@ -234,6 +229,11 @@ export const TodaysLogWidget = () => {
             default: return '⏰';
         }
     };
+
+    // Don't render if no variables - AFTER all hooks are called
+    if (!isLoading && summary.variables.length === 0) {
+        return null;
+    }
 
     // Simplified positioning - always sticky
     return (
