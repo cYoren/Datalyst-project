@@ -24,27 +24,15 @@ export default function LoginPage() {
 
         try {
             const supabase = createClient();
-            console.log('[Login] Attempting login with:', email);
 
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (error) {
-                console.error('[Login] Error details:', {
-                    message: error.message,
-                    status: error.status,
-                    name: error.name,
-                    code: (error as any).code,
-                    fullError: error
-                });
                 throw error;
             }
-
-            console.log('[Login] Success! Session:', data.session);
-            console.log('[Login] All cookies:', document.cookie);
-            console.log('[Login] Cookie count:', document.cookie.split(';').length);
 
             // Wait a bit for cookies to be set
             await new Promise(resolve => setTimeout(resolve, 100));

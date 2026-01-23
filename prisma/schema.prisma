@@ -85,6 +85,10 @@ model User {
   timezone  String   @default("UTC")
   locale    String   @default("en-US")
   theme     Theme    @default(SYSTEM)
+
+  // Privacy and consent
+  healthDataConsent   Boolean  @default(false)
+  healthDataConsentAt DateTime?
   
   // Timestamps
   createdAt DateTime @default(now())
@@ -97,8 +101,20 @@ model User {
   sessionLogs    AppSessionLog[]
   userEvents     UserEvent[]
   experiments    Experiment[]
+  insightsCache  InsightsCache?
   
   @@index([email])
+}
+
+// Cache for expensive insight calculations
+model InsightsCache {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  data      Json     // Cached correlation results
+  createdAt DateTime @default(now())
+  expiresAt DateTime // When cache becomes stale (e.g., 1 hour)
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Habit {

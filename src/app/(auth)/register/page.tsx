@@ -211,6 +211,10 @@ export default function RegisterPage() {
                         )}
                     </Button>
                 </form>
+                <p className="mt-3 text-center text-xs text-[var(--text-tertiary)]">
+                    By creating an account, you agree to our <Link href="/terms" className="underline">Terms</Link> and{' '}
+                    <Link href="/privacy" className="underline">Privacy Policy</Link>.
+                </p>
 
                 <div className="mt-6 relative">
                     <div className="absolute inset-0 flex items-center">

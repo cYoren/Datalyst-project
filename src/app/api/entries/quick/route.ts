@@ -28,7 +28,6 @@ export async function POST(request: Request) {
 
         const json = await request.json();
         const body = quickEntrySchema.parse(json);
-        console.log('[QuickEntry] Received payload:', body);
 
         // Verify the habit belongs to the user and subvariable exists
         const habit = await prisma.habit.findFirst({
@@ -54,12 +53,6 @@ export async function POST(request: Request) {
         const logicalDate = parseISO(body.logicalDate);
         const dayStart = startOfDay(logicalDate);
         const dayEnd = endOfDay(logicalDate);
-        console.log('[QuickEntry] Date processing:', {
-            received: body.logicalDate,
-            parsed: logicalDate,
-            dayStart,
-            dayEnd
-        });
 
         // Check if an entry already exists for this habit on this day
         let habitEntry = await prisma.habitEntry.findFirst({
@@ -75,7 +68,6 @@ export async function POST(request: Request) {
                 subvariableEntries: true,
             },
         });
-        console.log('[QuickEntry] Found habitEntry:', habitEntry?.id);
 
         // If no entry exists, create one
         if (!habitEntry) {
@@ -110,7 +102,6 @@ export async function POST(request: Request) {
                     rawValue: body.rawValue,
                 },
             });
-            console.log('[QuickEntry] Updated subvariable entry:', subvariableEntry.id);
         } else {
             // Create new subvariable entry
             subvariableEntry = await prisma.subvariableEntry.create({
@@ -121,7 +112,6 @@ export async function POST(request: Request) {
                     rawValue: body.rawValue,
                 },
             });
-            console.log('[QuickEntry] Created subvariable entry:', subvariableEntry.id);
         }
 
         return NextResponse.json({

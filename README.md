@@ -37,6 +37,10 @@ DATABASE_URL="your-supabase-postgres-url"
 NEXT_PUBLIC_SUPABASE_URL="your-supabase-project-url"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
+RETENTION_TASK_SECRET="shared-secret-for-retention-job"
+RETENTION_SESSION_LOG_DAYS="90"
+RETENTION_USER_EVENT_DAYS="365"
+RETENTION_INSIGHTS_DAYS="30"
 ```
 
 3. Install dependencies:

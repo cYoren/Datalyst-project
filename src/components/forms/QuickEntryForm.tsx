@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Slider } from '@/components/ui/Slider';
+import { useToast } from '@/components/ui/Toast';
 import { SubvariableType } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -20,6 +21,7 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
     const [values, setValues] = useState<Record<string, number>>({});
     const [note, setNote] = useState('');
     const [logicalDate, setLogicalDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const toast = useToast();
 
     React.useEffect(() => {
         const initial: Record<string, number> = {};
@@ -35,13 +37,17 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
         e.preventDefault();
         setIsSubmitting(true);
 
+        // Optimistic: Close modal and show success immediately
+        toast.success(`${habit.name} logged! ✓`);
+        onSuccess();
+
         try {
             const subvariableEntries = Object.entries(values).map(([subId, val]) => ({
                 subvariableId: subId,
                 numericValue: val,
             }));
 
-            await fetch('/api/entries', {
+            const response = await fetch('/api/entries', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -52,10 +58,13 @@ export const QuickEntryForm = ({ habit, onSuccess, onCancel }: QuickEntryFormPro
                 })
             });
 
-            onSuccess();
+            if (!response.ok) {
+                throw new Error('Failed to save entry');
+            }
         } catch (error) {
+            // Rollback on error
             console.error(error);
-            setIsSubmitting(false);
+            toast.error('Failed to save entry. Please try again.');
         }
     };
 

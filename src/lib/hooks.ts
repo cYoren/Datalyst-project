@@ -58,7 +58,7 @@ export function useInsights() {
 
 // Hook for fetching user info
 export function useUser() {
-    const { data, error, isLoading } = useSWR('/api/user', fetcher, {
+    const { data, error, isLoading, mutate } = useSWR('/api/user', fetcher, {
         ...swrConfig,
         revalidateOnFocus: false,
         dedupingInterval: 300000, // User data rarely changes - cache for 5 minutes
@@ -66,11 +66,13 @@ export function useUser() {
     return {
         user: data,
         isLoading,
-        isError: error
+        isError: error,
+        refresh: mutate
     };
 }
 
 // Hook for combined dashboard data (uses individual hooks for maximum cache efficiency)
+// DEPRECATED: Use useDashboard() for better performance
 export function useDashboardData() {
     const { habits, isLoading: habitsLoading, refresh: refreshHabits } = useHabits();
     const { stats, isLoading: statsLoading } = useDashboardStats();
@@ -84,6 +86,24 @@ export function useDashboardData() {
         user,
         isLoading: habitsLoading || statsLoading || insightsLoading || userLoading,
         refreshHabits
+    };
+}
+
+// NEW: Single-request dashboard hook for optimal performance
+export function useDashboard() {
+    const { data, error, isLoading, mutate } = useSWR('/api/dashboard', fetcher, {
+        ...swrConfig,
+        dedupingInterval: 30000, // 30 second cache for dashboard
+    });
+
+    return {
+        habits: data?.habits || [],
+        stats: data?.stats || null,
+        insights: data?.insights || null,
+        user: data?.user || null,
+        isLoading,
+        isError: error,
+        refresh: mutate
     };
 }
 

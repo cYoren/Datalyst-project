@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Calendar, BarChart2, PlusCircle, Settings, ScrollText, BarChart3, Microscope, FlaskConical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/ui/UserMenu';
+import { ToastProvider } from '@/components/ui/Toast';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -59,7 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         { href: '/logs', icon: ScrollText, label: 'Logs' },
         { href: '/habits/new', icon: PlusCircle, label: 'Protocol' },
         { href: '/about', icon: Microscope, label: 'About' },
-        // { href: '/settings', icon: Settings, label: 'Settings' },
+        { href: '/settings', icon: Settings, label: 'Settings' },
     ];
 
     return (
@@ -132,7 +133,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Main Content */}
             <main className="max-w-3xl mx-auto p-4 sm:p-8 animate-fade-in">
-                {children}
+                <ToastProvider>
+                    {children}
+                </ToastProvider>
             </main>
         </div>
     );

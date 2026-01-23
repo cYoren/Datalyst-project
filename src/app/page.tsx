@@ -97,9 +97,10 @@ export default async function Home() {
             © {new Date().getFullYear()} Datalyst. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)]">
-            <Link href="#" className="hover:text-[var(--text-primary)]">Privacy</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)]">Terms</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)]">Contact</Link>
+            <Link href="/privacy" className="hover:text-[var(--text-primary)]">Privacy</Link>
+            <Link href="/terms" className="hover:text-[var(--text-primary)]">Terms</Link>
+            <Link href="/cookies" className="hover:text-[var(--text-primary)]">Cookies</Link>
+            <Link href="/contact" className="hover:text-[var(--text-primary)]">Contact</Link>
           </div>
         </div>
       </footer>

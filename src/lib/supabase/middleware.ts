@@ -6,15 +6,19 @@ export async function updateSession(request: NextRequest) {
         request,
     })
 
+    const withCookieDefaults = (options: any) => ({
+        ...options,
+        sameSite: options?.sameSite ?? 'lax',
+        secure: process.env.NODE_ENV === 'production',
+    })
+
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
                 getAll() {
-                    const allCookies = request.cookies.getAll()
-                    console.log('[Middleware] Cookies:', allCookies.map(c => c.name))
-                    return allCookies
+                    return request.cookies.getAll()
                 },
                 setAll(cookiesToSet: any) {
                     cookiesToSet.forEach(({ name, value, options }: any) => request.cookies.set(name, value))
@@ -23,8 +27,7 @@ export async function updateSession(request: NextRequest) {
                     })
                     cookiesToSet.forEach(({ name, value, options }: any) =>
                         supabaseResponse.cookies.set(name, value, {
-                            ...options,
-                            secure: process.env.NODE_ENV === 'production',
+                            ...withCookieDefaults(options),
                         })
                     )
                 },
@@ -40,22 +43,15 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    console.log('[Middleware]', {
-        path: request.nextUrl.pathname,
-        hasUser: !!user,
-        userId: user?.id,
-        userEmail: user?.email
-    });
-
     const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
         request.nextUrl.pathname.startsWith('/register') ||
         request.nextUrl.pathname.startsWith('/reset-password')
 
     const isAuthCallback = request.nextUrl.pathname.startsWith('/auth')
+    const isPublicPage = ['/','/privacy','/terms','/cookies','/contact'].includes(request.nextUrl.pathname)
 
     // Protected routes - redirect to login if not authenticated
-    if (!user && !isAuthPage && !isAuthCallback) {
-        console.log('[Middleware] Redirecting to /login - no user');
+    if (!user && !isAuthPage && !isAuthCallback && !isPublicPage) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
@@ -63,7 +59,6 @@ export async function updateSession(request: NextRequest) {
 
     // Redirect to dashboard if already logged in and trying to access auth pages
     if (user && isAuthPage) {
-        console.log('[Middleware] Redirecting to /dashboard - already logged in');
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'
         return NextResponse.redirect(url)

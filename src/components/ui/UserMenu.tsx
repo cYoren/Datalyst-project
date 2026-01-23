@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { LogOut, User as UserIcon, Settings, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UserMenuProps {
@@ -62,18 +63,25 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                             onClick={() => setIsOpen(false)}
                         />
                         <div className="absolute bottom-full right-0 mb-2 w-64 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--color-border)] z-50 overflow-hidden">
-                            <div className="p-4 border-b border-[var(--color-border)]">
-                                <p className="font-medium text-[var(--text-primary)] truncate">
-                                    {user.name || 'User'}
-                                </p>
-                                <p className="text-sm text-[var(--text-secondary)] truncate">
-                                    {user.email}
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleLogout}
-                                disabled={isLoggingOut}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors disabled:opacity-50"
+                        <div className="p-4 border-b border-[var(--color-border)]">
+                            <p className="font-medium text-[var(--text-primary)] truncate">
+                                {user.name || 'User'}
+                            </p>
+                            <p className="text-sm text-[var(--text-secondary)] truncate">
+                                {user.email}
+                            </p>
+                        </div>
+                        <Link
+                            href="/settings"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors"
+                        >
+                            <Settings className="h-4 w-4" />
+                            <span>Settings</span>
+                        </Link>
+                        <button
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors disabled:opacity-50"
                             >
                                 <LogOut className="h-4 w-4" />
                                 <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
@@ -118,6 +126,13 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                         onClick={() => setIsOpen(false)}
                     />
                     <div className="absolute bottom-full left-4 right-4 mb-2 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--color-border)] z-50 overflow-hidden">
+                        <Link
+                            href="/settings"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors"
+                        >
+                            <Settings className="h-4 w-4" />
+                            <span>Settings</span>
+                        </Link>
                         <button
                             onClick={handleLogout}
                             disabled={isLoggingOut}

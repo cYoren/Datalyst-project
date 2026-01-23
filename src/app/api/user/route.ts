@@ -1,26 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { ensureUserExists } from '@/lib/ensure-user';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
     try {
-        console.log('[/api/user] Auth check start');
-
         const supabase = await createClient();
         const { data: { user }, error } = await supabase.auth.getUser();
 
-        console.log('[/api/user] Auth check result:', {
-            hasUser: !!user,
-            userId: user?.id,
-            userEmail: user?.email,
-            error: error?.message,
-            errorCode: error?.code
-        });
-
-        if (error || !user) {
-            console.log('[/api/user] Unauthorized - no user found or error occurred');
+        if (error || !user || !user.email) {
             return NextResponse.json({ error: 'Unauthorized', details: error?.message }, { status: 401 });
         }
+
+        await ensureUserExists(user.id, user.email);
 
         // Get user profile from database
         const profile = await prisma.user.findUnique({
@@ -33,6 +26,8 @@ export async function GET() {
                 timezone: true,
                 locale: true,
                 theme: true,
+                healthDataConsent: true,
+                healthDataConsentAt: true,
                 createdAt: true,
             }
         });
@@ -59,7 +54,9 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { onboardingCompleted, timezone, locale, theme } = body;
+        const { onboardingCompleted, timezone, locale, theme, name, healthDataConsent } = body;
+        const normalizedName = typeof name === 'string' ? name.trim() : undefined;
+        const shouldUpdateConsent = typeof healthDataConsent === 'boolean';
 
         // Update user profile in database
         const updatedProfile = await prisma.user.update({
@@ -69,14 +66,22 @@ export async function PATCH(request: NextRequest) {
                 ...(timezone && { timezone }),
                 ...(locale && { locale }),
                 ...(theme && { theme }),
+                ...(typeof normalizedName === 'string' && { name: normalizedName || null }),
+                ...(shouldUpdateConsent && {
+                    healthDataConsent,
+                    healthDataConsentAt: healthDataConsent ? new Date() : null,
+                }),
             },
             select: {
                 id: true,
                 email: true,
+                name: true,
                 onboardingCompleted: true,
                 timezone: true,
                 locale: true,
                 theme: true,
+                healthDataConsent: true,
+                healthDataConsentAt: true,
                 createdAt: true,
             }
         });
@@ -84,6 +89,46 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json(updatedProfile);
     } catch (error) {
         console.error('Error updating user:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+
+        if (error || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await request.json().catch(() => ({}));
+        if (body?.confirm !== 'DELETE') {
+            return NextResponse.json({ error: 'Confirmation required' }, { status: 400 });
+        }
+
+        let adminClient;
+        try {
+            adminClient = createAdminClient();
+        } catch (adminError) {
+            return NextResponse.json({ error: 'Account deletion not configured' }, { status: 500 });
+        }
+
+        await prisma.user.delete({
+            where: { id: user.id },
+        });
+
+        const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
+        if (deleteError) {
+            return NextResponse.json({
+                error: 'Data deleted, but auth removal failed. Contact support.',
+                details: deleteError.message,
+            }, { status: 502 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting user:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

@@ -15,6 +15,7 @@ export default function OnboardingPage() {
     const [name, setName] = useState('');
     const [focus, setFocus] = useState('');
     const [habitName, setHabitName] = useState('');
+    const [healthDataConsent, setHealthDataConsent] = useState(false);
 
     const handleComplete = async () => {
         setLoading(true);
@@ -30,6 +31,7 @@ export default function OnboardingPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     onboardingCompleted: true,
+                    ...(healthDataConsent && { healthDataConsent: true }),
                     // If name was collected here, we'd update it too, but we assume it's from signup
                 })
             });
@@ -198,9 +200,23 @@ export default function OnboardingPage() {
                                 />
                             </div>
 
+                            {['Physical Health', 'Mental Wellness'].includes(focus) && (
+                                <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+                                    <input
+                                        type="checkbox"
+                                        className="mt-1 h-4 w-4 rounded border-[var(--color-slate-200)]"
+                                        checked={healthDataConsent}
+                                        onChange={(event) => setHealthDataConsent(event.target.checked)}
+                                    />
+                                    <span>
+                                        I consent to processing health-related data for insights and tracking.
+                                    </span>
+                                </label>
+                            )}
+
                             <Button
                                 onClick={handleComplete}
-                                disabled={!habitName || loading}
+                                disabled={!habitName || loading || (['Physical Health', 'Mental Wellness'].includes(focus) && !healthDataConsent)}
                                 className="w-full"
                                 size="lg"
                             >

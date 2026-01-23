@@ -10,8 +10,9 @@ import AdHocLogModal from '@/components/dashboard/AdHocLogModal';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Loader2, Flame, TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3, Plus } from 'lucide-react';
-import { useDashboardData } from '@/lib/hooks';
+import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { Flame, TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3, Plus } from 'lucide-react';
+import { useDashboard } from '@/lib/hooks';
 
 interface DashboardStats {
     streak: number;
@@ -30,7 +31,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-    const { habits, stats, insights, user, isLoading, refreshHabits } = useDashboardData();
+    const { habits, stats, insights, user, isLoading, refresh: refreshHabits } = useDashboard();
     const [selectedHabit, setSelectedHabit] = useState<any | null>(null);
     const [isAdHocModalOpen, setIsAdHocModalOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
@@ -80,11 +81,7 @@ export default function DashboardPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" suppressHydrationWarning />
-            </div>
-        );
+        return <DashboardSkeleton />;
     }
 
     const pendingHabits = habits.filter(h => !isHabitCompleted(h.id));
@@ -174,11 +171,51 @@ export default function DashboardPage() {
             {/* Protocols List */}
             <div className="space-y-6 animate-slide-up">
                 {habits.length === 0 ? (
-                    <div className="text-center py-16 bg-[var(--color-bg-card)] rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)]">
-                        <p className="text-[var(--text-secondary)] mb-6 text-lg">Your journey starts now.</p>
-                        <Button onClick={() => window.location.href = '/habits/new'} size="lg">
-                            Create First Protocol
-                        </Button>
+                    <div className="text-center py-12 px-6 bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-bg-subtle)] rounded-[var(--radius-card)] border border-[var(--color-border)]">
+                        {/* Illustration */}
+                        <div className="relative mx-auto w-32 h-32 mb-6">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full animate-pulse" />
+                            <div className="absolute inset-4 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-full" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-5xl">🧪</span>
+                            </div>
+                        </div>
+
+                        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
+                            Start Your First Experiment
+                        </h2>
+                        <p className="text-[var(--text-secondary)] mb-8 max-w-sm mx-auto">
+                            Create a protocol to track something you care about.
+                            Discover patterns and correlations in your data.
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <Button
+                                onClick={() => window.location.href = '/habits/new'}
+                                size="lg"
+                                className="shadow-lg shadow-blue-500/20"
+                            >
+                                Create Protocol
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={async () => {
+                                    try {
+                                        await fetch('/api/demo/setup', { method: 'POST' });
+                                        refreshHabits();
+                                    } catch (e) {
+                                        console.error(e);
+                                    }
+                                }}
+                                size="lg"
+                            >
+                                Try Demo Data
+                            </Button>
+                        </div>
+
+                        <p className="text-xs text-[var(--text-tertiary)] mt-6">
+                            💡 Popular: Sleep tracking, Workout logs, Mood journals
+                        </p>
                     </div>
                 ) : (
                     <>

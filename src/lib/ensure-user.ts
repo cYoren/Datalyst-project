@@ -14,7 +14,6 @@ export async function ensureUserExists(userId: string, email: string) {
 
         // If user doesn't exist, create it
         if (!user) {
-            console.log(`Creating database record for user: ${email}`);
             user = await prisma.user.create({
                 data: {
                     id: userId,

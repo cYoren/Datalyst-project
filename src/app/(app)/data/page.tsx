@@ -1,8 +1,9 @@
 'use client';
 
 import { DataDashboard } from '@/components/data/DataDashboard';
-import { BarChart3, Loader2 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { useDataPage, useUser } from '@/lib/hooks';
+import { DataPageSkeleton } from '@/components/ui/Skeleton';
 
 export default function DataPage() {
     const { user, isLoading: userLoading } = useUser();
@@ -11,11 +12,7 @@ export default function DataPage() {
     const isLoading = userLoading || dataLoading;
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
-            </div>
-        );
+        return <DataPageSkeleton />;
     }
 
     if (habits.length === 0) {

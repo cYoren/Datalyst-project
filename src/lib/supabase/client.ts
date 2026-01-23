@@ -24,13 +24,11 @@ export function createClient() {
                     if (options?.domain) {
                         cookie += `; domain=${options.domain}`
                     }
-                    // Force secure: false in development
-                    if (process.env.NODE_ENV === 'production' && options?.secure) {
+                    if (process.env.NODE_ENV === 'production') {
                         cookie += '; secure'
                     }
-                    if (options?.sameSite) {
-                        cookie += `; samesite=${options.sameSite}`
-                    }
+                    const sameSite = options?.sameSite ?? 'lax'
+                    cookie += `; samesite=${sameSite}`
 
                     document.cookie = cookie
                 },

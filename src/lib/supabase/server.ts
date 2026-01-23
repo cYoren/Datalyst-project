@@ -3,6 +3,11 @@ import { cookies } from 'next/headers'
 
 export async function createClient() {
     const cookieStore = await cookies()
+    const withCookieDefaults = (options: any) => ({
+        ...options,
+        sameSite: options?.sameSite ?? 'lax',
+        secure: process.env.NODE_ENV === 'production',
+    })
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,18 +15,13 @@ export async function createClient() {
         {
             cookies: {
                 getAll() {
-                    const allCookies = cookieStore.getAll()
-                    const sbCookies = allCookies.filter(c => c.name.includes('sb-') || c.name.includes('supabase'))
-                    console.log('[Server Client] All cookies:', allCookies.map(c => c.name))
-                    console.log('[Server Client] Supabase cookies found:', sbCookies.map(c => `${c.name} (len: ${c.value.length})`))
-                    return allCookies
+                    return cookieStore.getAll()
                 },
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) =>
                             cookieStore.set(name, value, {
-                                ...options,
-                                secure: process.env.NODE_ENV === 'production',
+                                ...withCookieDefaults(options),
                             })
                         )
                     } catch {
