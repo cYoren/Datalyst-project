@@ -95,9 +95,10 @@ export function useDashboard() {
         ...swrConfig,
         dedupingInterval: 30000, // 30 second cache for dashboard
     });
+    const habits = (data?.habits || []) as Habit[];
 
     return {
-        habits: data?.habits || [],
+        habits,
         stats: data?.stats || null,
         insights: data?.insights || null,
         user: data?.user || null,
