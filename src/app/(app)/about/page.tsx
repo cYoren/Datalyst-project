@@ -16,7 +16,7 @@ export default function AboutPage() {
                 </h1>
                 <p className="text-xl text-[var(--text-secondary)] leading-relaxed">
                     Datalyst is your platform for <strong>N=1 experimentation</strong>.
-                    Stop guessing what works—start testing with data.
+                    Stop guessing what works. Start testing with data.
                 </p>
             </header>
 
@@ -30,7 +30,7 @@ export default function AboutPage() {
                         <h2 className="text-lg font-bold text-[var(--text-primary)] mb-2">The Core Philosophy</h2>
                         <p className="text-[var(--text-secondary)]">
                             Unlike habit trackers that encourage doing the same thing every day,
-                            Datalyst encourages <strong>Interventions</strong>—systematically changing variables
+                            Datalyst encourages <strong>Interventions</strong>: systematically changing variables
                             to discover what actually affects your life. Does "No Coffee" improve your "Sleep Quality"?
                             Stop guessing. Find out.
                         </p>
@@ -46,7 +46,7 @@ export default function AboutPage() {
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
                         We call them <strong>Protocols</strong> because you're running experiments, not building routines.
-                        Each protocol tracks multiple <strong>variables</strong>—inputs you control (caffeine, sleep time, exercise)
+                        Each protocol tracks multiple <strong>variables</strong>: inputs you control (caffeine, sleep time, exercise)
                         and outputs you measure (energy, mood, focus). The data reveals which interventions work for <em>you</em>.
                     </p>
                 </Card>
@@ -71,7 +71,7 @@ export default function AboutPage() {
                     <p className="text-[var(--text-secondary)] leading-relaxed">
                         Think of Datalyst as your personal <strong>Randomized Controlled Trial</strong> platform.
                         Change one variable, keep others constant, and measure the outcome. Scientific rigor
-                        applied to your daily life—turning intuition into evidence.
+                        applied to your daily life, turning intuition into evidence.
                     </p>
                 </Card>
 
@@ -83,7 +83,7 @@ export default function AboutPage() {
                     <p className="text-[var(--text-secondary)] leading-relaxed">
                         What works for "gurus" might not work for you. We are biologically and psychologically unique.
                         Datalyst helps you build your own <strong>instruction manual</strong>, based on evidence
-                        from your own life—not generic advice.
+                        from your own life, not generic advice.
                     </p>
                 </Card>
             </div>
@@ -116,7 +116,7 @@ export default function AboutPage() {
 
             <div className="text-center pt-6">
                 <p className="text-[var(--text-tertiary)] italic">
-                    "The goal is not to track more—it's to understand more."
+                    "The goal is not to track more. It's to understand more."
                 </p>
             </div>
         </div>

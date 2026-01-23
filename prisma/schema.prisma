@@ -82,8 +82,8 @@ model User {
   onboardingCompleted Boolean @default(false)
   
   // Preferences
-  timezone  String   @default("America/Sao_Paulo")
-  locale    String   @default("pt-BR")
+  timezone  String   @default("UTC")
+  locale    String   @default("en-US")
   theme     Theme    @default(SYSTEM)
   
   // Timestamps

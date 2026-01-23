@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { Loader2, ArrowRight, CheckCircle, Target, Sparkles } from 'lucide-react';
+import { Loader2, ArrowRight, CheckCircle, Target, Sparkles, Play } from 'lucide-react';
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -41,7 +41,7 @@ export default function OnboardingPage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: habitName,
-                        description: `Meu foco: ${focus}`,
+                        description: `My focus: ${focus}`,
                         schedule: JSON.stringify({ frequency: 'daily' }),
                         subvariables: []
                     })
@@ -52,6 +52,26 @@ export default function OnboardingPage() {
             router.refresh();
         } catch (error) {
             console.error('Onboarding error:', error);
+            setLoading(false);
+        }
+    };
+
+    const handleDemoSetup = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/api/demo/setup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to setup demo');
+            }
+
+            router.push('/dashboard');
+            router.refresh();
+        } catch (error) {
+            console.error('Demo setup error:', error);
             setLoading(false);
         }
     };
@@ -77,15 +97,49 @@ export default function OnboardingPage() {
                                 <Sparkles className="h-8 w-8 text-blue-600" />
                             </div>
                             <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-                                Bem-vindo ao Datalyst!
+                                Welcome to Datalyst!
                             </h1>
                             <p className="text-[var(--text-secondary)] mt-2">
-                                Vamos configurar seu espaço para você começar a dominar seus hábitos.
+                                Let's set up your space so you can start mastering your habits.
                             </p>
                         </div>
                         <Button onClick={() => setStep(2)} className="w-full" size="lg">
-                            Começar <ArrowRight className="ml-2 h-4 w-4" />
+                            Get Started <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
+
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-[var(--color-border)]"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-4 bg-[var(--color-bg-card)] text-[var(--text-tertiary)]">
+                                    or
+                                </span>
+                            </div>
+                        </div>
+
+                        <Button
+                            onClick={handleDemoSetup}
+                            variant="outline"
+                            className="w-full"
+                            size="lg"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Setting up demo...
+                                </>
+                            ) : (
+                                <>
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Try with Sample Data
+                                </>
+                            )}
+                        </Button>
+                        <p className="text-xs text-center text-[var(--text-tertiary)]">
+                            See how Datalyst works with 30 days of pre-filled data showing real correlations.
+                        </p>
                     </div>
                 )}
 
@@ -96,15 +150,15 @@ export default function OnboardingPage() {
                                 <Target className="h-8 w-8 text-purple-600" />
                             </div>
                             <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-                                Qual é seu foco principal?
+                                What's your main focus?
                             </h2>
                             <p className="text-[var(--text-secondary)] mt-2">
-                                Isso nos ajuda a personalizar sua experiência.
+                                This helps us personalize your experience.
                             </p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-3">
-                            {['Produtividade', 'Saúde Física', 'Bem-estar Mental', 'Estudos', 'Finanças'].map((opt) => (
+                            {['Productivity', 'Physical Health', 'Mental Wellness', 'Learning', 'Finance'].map((opt) => (
                                 <button
                                     key={opt}
                                     onClick={() => { setFocus(opt); setStep(3); }}
@@ -124,22 +178,22 @@ export default function OnboardingPage() {
                                 <CheckCircle className="h-8 w-8 text-green-600" />
                             </div>
                             <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-                                Crie seu primeiro hábito
+                                Create your first habit
                             </h2>
                             <p className="text-[var(--text-secondary)] mt-2">
-                                Escolha algo simples para começar.
+                                Choose something simple to get started.
                             </p>
                         </div>
 
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                                    Nome do Hábito
+                                    Habit Name
                                 </label>
                                 <Input
                                     value={habitName}
                                     onChange={(e) => setHabitName(e.target.value)}
-                                    placeholder="Ex: Beber 2L de água, Ler 10 páginas..."
+                                    placeholder="E.g., Drink 2L of water, Read 10 pages..."
                                     autoFocus
                                 />
                             </div>
@@ -153,10 +207,10 @@ export default function OnboardingPage() {
                                 {loading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Finalizando...
+                                        Finishing...
                                     </>
                                 ) : (
-                                    'Concluir Configuração'
+                                    'Complete Setup'
                                 )}
                             </Button>
                         </div>

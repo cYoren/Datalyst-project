@@ -3,82 +3,82 @@ import { SubvariableType } from '@prisma/client';
 export const HABIT_TEMPLATES = [
     {
         id: 'gym',
-        name: 'Academia',
+        name: 'Gym Workout',
         icon: '💪',
         color: '#ef4444',
-        description: 'Treino de força ou cardio',
+        description: 'Strength training or cardio',
         subvariables: [
             {
-                name: 'Duração',
+                name: 'Duration',
                 type: SubvariableType.NUMERIC,
                 unit: 'min',
                 order: 0,
                 metadata: { step: 5 }
             },
             {
-                name: 'Esforço',
+                name: 'Effort',
                 type: SubvariableType.SCALE_0_10,
                 order: 1,
-                metadata: { labels: ['Leve', 'Exaustivo'] }
+                metadata: { labels: ['Light', 'Exhausting'] }
             },
             {
-                name: 'Satisfação',
+                name: 'Satisfaction',
                 type: SubvariableType.SCALE_0_10,
                 order: 2,
-                metadata: { labels: ['Ruim', 'Ótimo'] }
+                metadata: { labels: ['Poor', 'Great'] }
             }
         ]
     },
     {
         id: 'meditation',
-        name: 'Meditação',
+        name: 'Meditation',
         icon: '🧘',
         color: '#8b5cf6',
-        description: 'Prática de mindfulness',
+        description: 'Mindfulness practice',
         subvariables: [
             {
-                name: 'Tempo',
+                name: 'Time',
                 type: SubvariableType.NUMERIC,
                 unit: 'min',
                 order: 0,
                 metadata: { step: 1 }
             },
             {
-                name: 'Foco',
+                name: 'Focus',
                 type: SubvariableType.SCALE_0_10,
                 order: 1,
-                metadata: { labels: ['Disperso', 'Focado'] }
+                metadata: { labels: ['Distracted', 'Focused'] }
             },
             {
-                name: 'Calma pós',
+                name: 'Post-calm',
                 type: SubvariableType.SCALE_0_10,
                 order: 2,
-                metadata: { labels: ['Agitado', 'Zen'] }
+                metadata: { labels: ['Restless', 'Zen'] }
             }
         ]
     },
     {
         id: 'sleep',
-        name: 'Sono',
+        name: 'Sleep',
         icon: '😴',
         color: '#3b82f6',
-        description: 'Qualidade e duração do sono',
+        description: 'Sleep quality and duration',
         subvariables: [
             {
-                name: 'Horas',
+                name: 'Hours',
                 type: SubvariableType.NUMERIC,
                 unit: 'h',
                 order: 0,
                 metadata: { step: 0.5 }
             },
             {
-                name: 'Qualidade',
+                name: 'Quality',
                 type: SubvariableType.SCALE_0_10,
                 order: 1,
-                metadata: { labels: ['Péssima', 'Excelente'] }
+                metadata: { labels: ['Terrible', 'Excellent'] }
             },
             {
-                name: 'Acordou bem?',
+                name: 'Woke up refreshed?',
                 type: SubvariableType.BOOLEAN,
                 order: 2,
                 metadata: {}
@@ -87,31 +87,32 @@ export const HABIT_TEMPLATES = [
     },
     {
         id: 'reading',
-        name: 'Leitura',
+        name: 'Reading',
         icon: '📚',
         color: '#10b981',
-        description: 'Leitura de livros ou artigos',
+        description: 'Reading books or articles',
         subvariables: [
             {
-                name: 'Páginas',
+                name: 'Pages',
                 type: SubvariableType.NUMERIC,
-                unit: 'pág',
+                unit: 'pages',
                 order: 0,
                 metadata: { step: 1 }
             },
             {
-                name: 'Tempo',
+                name: 'Time',
                 type: SubvariableType.NUMERIC,
                 unit: 'min',
                 order: 1,
                 metadata: { step: 5 }
             },
             {
-                name: 'Interesse',
+                name: 'Interest',
                 type: SubvariableType.SCALE_0_10,
                 order: 2,
-                metadata: { labels: ['Chato', 'Incrível'] }
+                metadata: { labels: ['Boring', 'Amazing'] }
             }
         ]
     }
 ];
+

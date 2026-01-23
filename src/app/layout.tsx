@@ -5,9 +5,25 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Datalyst | Personal Statistics Tracker",
-  description: "Track your habits and discover insights through data correlations",
+  title: "Datalyst | N=1 Self-Experimentation Platform",
+  description: "Run personal experiments. Track protocols. Discover what actually works for you through data-driven self-optimization.",
+  keywords: ["self-tracking", "quantified self", "personal experiments", "habit tracking", "data correlation", "N=1", "self-optimization"],
+  authors: [{ name: "Datalyst" }],
+  creator: "Datalyst",
   manifest: "/manifest.json",
+  metadataBase: new URL("https://datalyst.app"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Datalyst",
+    title: "Datalyst | Your Personal Experiment Lab",
+    description: "Stop guessing what works. Start testing with data. Run N=1 experiments to discover correlations in your daily life.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Datalyst | N=1 Self-Experimentation",
+    description: "Track protocols. Find correlations. Build your own instruction manual based on evidence from your life.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -39,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Additional favicon formats for maximum compatibility */}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
