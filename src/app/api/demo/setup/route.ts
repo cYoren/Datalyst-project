@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
                         create: protocol.subvariables.map((sv, idx) => ({
                             name: sv.name,
                             type: sv.type,
-                            unit: sv.unit || null,
+                            unit: 'unit' in sv ? (sv.unit ?? null) : null,
                             goalDirection: sv.goalDirection,
                             metadata: JSON.stringify(sv.metadata),
                             order: idx
