@@ -30,17 +30,52 @@ EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
 
+DO $$ BEGIN
+  CREATE TYPE "ScheduleType" AS ENUM ('DAILY', 'WEEKLY', 'ADHOC');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "TimeBlock" AS ENUM ('MORNING', 'AFTERNOON', 'EVENING', 'ANYTIME');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "GoalDirection" AS ENUM ('HIGHER_BETTER', 'LOWER_BETTER', 'NEUTRAL');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE "ExperimentStatus" AS ENUM ('PLANNING', 'ACTIVE', 'COMPLETED', 'ARCHIVED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
 -- Create User table
 CREATE TABLE IF NOT EXISTS "User" (
   "id" TEXT PRIMARY KEY,
   "email" TEXT UNIQUE NOT NULL,
+  "name" TEXT,
   "passwordHash" TEXT,
-  "timezone" TEXT DEFAULT 'America/Sao_Paulo' NOT NULL,
-  "locale" TEXT DEFAULT 'pt-BR' NOT NULL,
+  "onboardingCompleted" BOOLEAN DEFAULT false NOT NULL,
+  "timezone" TEXT DEFAULT 'UTC' NOT NULL,
+  "locale" TEXT DEFAULT 'en-US' NOT NULL,
   "theme" "Theme" DEFAULT 'SYSTEM' NOT NULL,
+  "healthDataConsent" BOOLEAN DEFAULT false NOT NULL,
+  "healthDataConsentAt" TIMESTAMP(3),
   "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
   "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "name" TEXT;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "onboardingCompleted" BOOLEAN DEFAULT false NOT NULL;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "healthDataConsent" BOOLEAN DEFAULT false NOT NULL;
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "healthDataConsentAt" TIMESTAMP(3);
+ALTER TABLE "User" ALTER COLUMN "timezone" SET DEFAULT 'UTC';
+ALTER TABLE "User" ALTER COLUMN "locale" SET DEFAULT 'en-US';
 
 CREATE INDEX IF NOT EXISTS "User_email_idx" ON "User"("email");
 
@@ -51,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "HabitTemplate" (
   "name" TEXT NOT NULL,
   "description" TEXT,
   "color" TEXT DEFAULT '#3b82f6' NOT NULL,
-  "icon" TEXT DEFAULT '🎯' NOT NULL,
+  "icon" TEXT DEFAULT 'ðŸŽ¯' NOT NULL,
   "defaultSchedule" TEXT DEFAULT '{}' NOT NULL,
   "subvariableTemplate" TEXT DEFAULT '[]' NOT NULL,
   "useCount" INTEGER DEFAULT 0 NOT NULL,
@@ -73,7 +108,11 @@ CREATE TABLE IF NOT EXISTS "Habit" (
   "name" TEXT NOT NULL,
   "description" TEXT,
   "color" TEXT DEFAULT '#3b82f6' NOT NULL,
-  "icon" TEXT DEFAULT '🎯' NOT NULL,
+  "icon" TEXT DEFAULT 'ðŸŽ¯' NOT NULL,
+  "scheduleType" "ScheduleType" DEFAULT 'DAILY' NOT NULL,
+  "scheduleDays" INTEGER[] DEFAULT '{}'::INTEGER[] NOT NULL,
+  "timeBlock" "TimeBlock" DEFAULT 'ANYTIME' NOT NULL,
+  "rank" INTEGER DEFAULT 0 NOT NULL,
   "schedule" TEXT DEFAULT '{}' NOT NULL,
   "archived" BOOLEAN DEFAULT false NOT NULL,
   "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -81,6 +120,12 @@ CREATE TABLE IF NOT EXISTS "Habit" (
   FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE,
   FOREIGN KEY ("templateId") REFERENCES "HabitTemplate"("id") ON DELETE SET NULL
 );
+
+ALTER TABLE "Habit" ADD COLUMN IF NOT EXISTS "templateId" TEXT;
+ALTER TABLE "Habit" ADD COLUMN IF NOT EXISTS "scheduleType" "ScheduleType" DEFAULT 'DAILY' NOT NULL;
+ALTER TABLE "Habit" ADD COLUMN IF NOT EXISTS "scheduleDays" INTEGER[] DEFAULT '{}'::INTEGER[] NOT NULL;
+ALTER TABLE "Habit" ADD COLUMN IF NOT EXISTS "timeBlock" "TimeBlock" DEFAULT 'ANYTIME' NOT NULL;
+ALTER TABLE "Habit" ADD COLUMN IF NOT EXISTS "rank" INTEGER DEFAULT 0 NOT NULL;
 
 CREATE INDEX IF NOT EXISTS "Habit_userId_idx" ON "Habit"("userId");
 CREATE INDEX IF NOT EXISTS "Habit_userId_archived_idx" ON "Habit"("userId", "archived");
@@ -93,6 +138,8 @@ CREATE TABLE IF NOT EXISTS "Subvariable" (
   "name" TEXT NOT NULL,
   "type" "SubvariableType" NOT NULL,
   "unit" TEXT,
+  "prompt" TEXT,
+  "goalDirection" "GoalDirection" DEFAULT 'NEUTRAL' NOT NULL,
   "metadata" TEXT DEFAULT '{}' NOT NULL,
   "order" INTEGER DEFAULT 0 NOT NULL,
   "active" BOOLEAN DEFAULT true NOT NULL,
@@ -100,6 +147,9 @@ CREATE TABLE IF NOT EXISTS "Subvariable" (
   "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
   FOREIGN KEY ("habitId") REFERENCES "Habit"("id") ON DELETE CASCADE
 );
+
+ALTER TABLE "Subvariable" ADD COLUMN IF NOT EXISTS "prompt" TEXT;
+ALTER TABLE "Subvariable" ADD COLUMN IF NOT EXISTS "goalDirection" "GoalDirection" DEFAULT 'NEUTRAL' NOT NULL;
 
 CREATE INDEX IF NOT EXISTS "Subvariable_habitId_idx" ON "Subvariable"("habitId");
 CREATE INDEX IF NOT EXISTS "Subvariable_habitId_active_idx" ON "Subvariable"("habitId", "active");
@@ -166,6 +216,40 @@ CREATE INDEX IF NOT EXISTS "UserEvent_userId_idx" ON "UserEvent"("userId");
 CREATE INDEX IF NOT EXISTS "UserEvent_eventType_idx" ON "UserEvent"("eventType");
 CREATE INDEX IF NOT EXISTS "UserEvent_userId_timestamp_idx" ON "UserEvent"("userId", "timestamp");
 
+-- Create InsightsCache table
+CREATE TABLE IF NOT EXISTS "InsightsCache" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT UNIQUE NOT NULL,
+  "data" JSONB NOT NULL,
+  "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  "expiresAt" TIMESTAMP(3) NOT NULL,
+  FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS "InsightsCache_userId_idx" ON "InsightsCache"("userId");
+
+-- Create Experiment table
+CREATE TABLE IF NOT EXISTS "Experiment" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "hypothesis" TEXT,
+  "independentId" TEXT NOT NULL,
+  "dependentId" TEXT NOT NULL,
+  "startDate" TEXT NOT NULL,
+  "endDate" TEXT NOT NULL,
+  "status" "ExperimentStatus" DEFAULT 'PLANNING' NOT NULL,
+  "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("independentId") REFERENCES "Habit"("id") ON DELETE CASCADE,
+  FOREIGN KEY ("dependentId") REFERENCES "Habit"("id") ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS "Experiment_userId_idx" ON "Experiment"("userId");
+CREATE INDEX IF NOT EXISTS "Experiment_status_idx" ON "Experiment"("status");
+CREATE INDEX IF NOT EXISTS "Experiment_userId_status_idx" ON "Experiment"("userId", "status");
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Habit" ENABLE ROW LEVEL SECURITY;
@@ -175,6 +259,8 @@ ALTER TABLE "HabitEntry" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "SubvariableEntry" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "AppSessionLog" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "UserEvent" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "InsightsCache" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Experiment" ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can view own data" ON "User";
@@ -190,6 +276,8 @@ DROP POLICY IF EXISTS "Users can manage own events" ON "UserEvent";
 DROP POLICY IF EXISTS "Users can view subvariables of own habits" ON "Subvariable";
 DROP POLICY IF EXISTS "Users can manage subvariables of own habits" ON "Subvariable";
 DROP POLICY IF EXISTS "Users can manage own subvariable entries" ON "SubvariableEntry";
+DROP POLICY IF EXISTS "Users can manage own insights cache" ON "InsightsCache";
+DROP POLICY IF EXISTS "Users can manage own experiments" ON "Experiment";
 
 -- Create RLS policies
 CREATE POLICY "Users can view own data" ON "User"
@@ -225,8 +313,8 @@ CREATE POLICY "Users can manage own events" ON "UserEvent"
 CREATE POLICY "Users can view subvariables of own habits" ON "Subvariable"
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM "Habit" 
-      WHERE "Habit"."id" = "Subvariable"."habitId" 
+      SELECT 1 FROM "Habit"
+      WHERE "Habit"."id" = "Subvariable"."habitId"
       AND "Habit"."userId" = auth.uid()::text
     )
   );
@@ -234,8 +322,8 @@ CREATE POLICY "Users can view subvariables of own habits" ON "Subvariable"
 CREATE POLICY "Users can manage subvariables of own habits" ON "Subvariable"
   FOR ALL USING (
     EXISTS (
-      SELECT 1 FROM "Habit" 
-      WHERE "Habit"."id" = "Subvariable"."habitId" 
+      SELECT 1 FROM "Habit"
+      WHERE "Habit"."id" = "Subvariable"."habitId"
       AND "Habit"."userId" = auth.uid()::text
     )
   );
@@ -243,34 +331,21 @@ CREATE POLICY "Users can manage subvariables of own habits" ON "Subvariable"
 CREATE POLICY "Users can manage own subvariable entries" ON "SubvariableEntry"
   FOR ALL USING (
     EXISTS (
-      SELECT 1 FROM "HabitEntry" 
-      WHERE "HabitEntry"."id" = "SubvariableEntry"."habitEntryId" 
+      SELECT 1 FROM "HabitEntry"
+      WHERE "HabitEntry"."id" = "SubvariableEntry"."habitEntryId"
       AND "HabitEntry"."userId" = auth.uid()::text
     )
   );
 
--- Create or replace function to automatically create User record on signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public."User" (id, email, "createdAt", "updatedAt")
-  VALUES (
-    new.id,
-    new.email,
-    now(),
-    now()
-  )
-  ON CONFLICT (id) DO NOTHING;
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+CREATE POLICY "Users can manage own insights cache" ON "InsightsCache"
+  FOR ALL USING (auth.uid()::text = "userId");
 
--- Drop trigger if exists and recreate
+CREATE POLICY "Users can manage own experiments" ON "Experiment"
+  FOR ALL USING (auth.uid()::text = "userId");
+
+-- Auth user creation is handled by the app (/auth/callback); remove any legacy trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+DROP FUNCTION IF EXISTS public.handle_new_user();
 
 -- Success message
 DO $$

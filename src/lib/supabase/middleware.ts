@@ -48,7 +48,8 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/reset-password')
 
     const isAuthCallback = request.nextUrl.pathname.startsWith('/auth')
-    const isPublicPage = ['/','/privacy','/terms','/cookies','/contact'].includes(request.nextUrl.pathname)
+    const isPublicPage = ['/', '/privacy', '/terms', '/cookies', '/contact', '/manifest.json', '/site.webmanifest']
+        .includes(request.nextUrl.pathname)
 
     // Protected routes - redirect to login if not authenticated
     if (!user && !isAuthPage && !isAuthCallback && !isPublicPage) {
