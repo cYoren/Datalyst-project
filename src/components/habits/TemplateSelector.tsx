@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Tag, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HABIT_TEMPLATES } from '@/lib/templates';
 
 interface Template {
     id: string;
@@ -19,12 +20,32 @@ interface TemplateSelectorProps {
     selectedTemplate: Template | null;
 }
 
+// Convert static templates to the Template shape
+const STARTER_TEMPLATES: Template[] = HABIT_TEMPLATES.map((t) => ({
+    id: `starter-${t.id}`,
+    name: t.name,
+    icon: t.icon,
+    color: t.color,
+    description: t.description,
+    useCount: 0,
+    subvariableTemplate: t.subvariables,
+}));
+
 export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelectorProps) => {
     const [query, setQuery] = useState('');
-    const [templates, setTemplates] = useState<Template[]>([]);
+    const [dbTemplates, setDbTemplates] = useState<Template[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
+
+    // Filter static templates by query
+    const filteredStarter = useMemo(() => {
+        if (!query) return STARTER_TEMPLATES;
+        const q = query.toLowerCase();
+        return STARTER_TEMPLATES.filter(
+            (t) => t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)
+        );
+    }, [query]);
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -35,26 +56,24 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                     : '/api/templates';
                 const res = await fetch(url);
 
-                // Check if response is OK and is JSON before parsing
                 if (!res.ok) {
                     console.error('Failed to fetch templates:', res.status, res.statusText);
-                    setTemplates([]);
+                    setDbTemplates([]);
                     return;
                 }
 
                 const contentType = res.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     console.error('Response is not JSON:', contentType);
-                    setTemplates([]);
+                    setDbTemplates([]);
                     return;
                 }
 
                 const data = await res.json();
-                // Ensure data is always an array
-                setTemplates(Array.isArray(data) ? data : []);
+                setDbTemplates(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error('Failed to fetch templates:', error);
-                setTemplates([]); // Set empty array on error
+                setDbTemplates([]);
             } finally {
                 setIsLoading(false);
             }
@@ -87,6 +106,48 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
         setQuery('');
         setIsOpen(true);
     };
+
+    const renderTemplateRow = (template: Template) => (
+        <button
+            key={template.id}
+            type="button"
+            onClick={() => handleSelect(template)}
+            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--color-slate-50)] transition-colors text-left"
+        >
+            <div
+                className="h-10 w-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
+                style={{ backgroundColor: template.color + '20' }}
+            >
+                {template.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="font-medium text-[var(--text-primary)] truncate">
+                    {template.name}
+                </div>
+                {template.description && (
+                    <div className="text-sm text-[var(--text-secondary)] truncate">
+                        {template.description}
+                    </div>
+                )}
+                <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-tertiary)]">
+                    <span className="flex items-center gap-1">
+                        <Tag className="h-3 w-3" suppressHydrationWarning />
+                        {template.subvariableTemplate.length} variables
+                    </span>
+                    {template.useCount > 0 && (
+                        <span className="flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" suppressHydrationWarning />
+                            Used {template.useCount}x
+                        </span>
+                    )}
+                </div>
+            </div>
+        </button>
+    );
+
+    const hasStarter = filteredStarter.length > 0;
+    const hasDb = dbTemplates.length > 0;
+    const hasAny = hasStarter || hasDb;
 
     return (
         <div ref={wrapperRef} className="relative">
@@ -126,11 +187,11 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
 
             {isOpen && (
                 <div className="absolute z-50 w-full mt-2 bg-white rounded-lg border border-[var(--color-slate-200)] shadow-lg max-h-80 overflow-auto">
-                    {isLoading ? (
+                    {isLoading && !hasStarter ? (
                         <div className="p-4 text-center text-[var(--text-secondary)]">
                             Loading...
                         </div>
-                    ) : templates.length === 0 ? (
+                    ) : !hasAny ? (
                         <div className="p-4 text-center text-[var(--text-secondary)]">
                             {query ? (
                                 <>
@@ -138,48 +199,30 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
                                     <p className="text-sm">Keep typing to create a new habit.</p>
                                 </>
                             ) : (
-                                <p>No templates saved yet.</p>
+                                <p>No templates available.</p>
                             )}
                         </div>
                     ) : (
                         <div className="py-2">
-                            {templates.map((template) => (
-                                <button
-                                    key={template.id}
-                                    type="button"
-                                    onClick={() => handleSelect(template)}
-                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--color-slate-50)] transition-colors text-left"
-                                >
-                                    <div
-                                        className="h-10 w-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
-                                        style={{ backgroundColor: template.color + '20' }}
-                                    >
-                                        {template.icon}
+                            {hasStarter && (
+                                <>
+                                    <div className="px-4 py-2 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">
+                                        Starter Templates
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-medium text-[var(--text-primary)] truncate">
-                                            {template.name}
-                                        </div>
-                                        {template.description && (
-                                            <div className="text-sm text-[var(--text-secondary)] truncate">
-                                                {template.description}
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-tertiary)]">
-                                            <span className="flex items-center gap-1">
-                                                <Tag className="h-3 w-3" suppressHydrationWarning />
-                                                {template.subvariableTemplate.length} variables
-                                            </span>
-                                            {template.useCount > 0 && (
-                                                <span className="flex items-center gap-1">
-                                                    <TrendingUp className="h-3 w-3" suppressHydrationWarning />
-                                                    Used {template.useCount}x
-                                                </span>
-                                            )}
-                                        </div>
+                                    {filteredStarter.map(renderTemplateRow)}
+                                </>
+                            )}
+                            {hasDb && (
+                                <>
+                                    <div className={cn(
+                                        "px-4 py-2 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider",
+                                        hasStarter && "border-t border-[var(--color-slate-200)] mt-1 pt-3"
+                                    )}>
+                                        My Templates
                                     </div>
-                                </button>
-                            ))}
+                                    {dbTemplates.map(renderTemplateRow)}
+                                </>
+                            )}
                         </div>
                     )}
                 </div>

@@ -2,40 +2,44 @@
 
 @layer base {
   :root {
-    /* Base Colors - Zen Data Palette */
-    --color-bg-app: #FAFAFA;
-    --color-bg-card: #FFFFFF;
-    --color-bg-subtle: #F2F2F2;
+    /* Font Variables */
+    --font-display: 'Crimson Pro', serif;
+    --font-body: 'DM Sans', sans-serif;
+
+    /* Base Colors - Laboratory Journal */
+    --color-bg-app: #FAF8F5;
+    --color-bg-card: #FFFCF7;
+    --color-bg-subtle: #F5F1EA;
 
     /* Text Colors */
-    --color-text-primary: #1A1A1A;
-    --color-text-secondary: #4A4A4A;
-    --color-text-tertiary: #9CA3AF;
+    --color-text-primary: #1C1410;
+    --color-text-secondary: #54504B;
+    --color-text-tertiary: #9B938C;
 
-    /* Accent Color - Soft Blue */
-    --color-accent: #4D8BF7;
-    --color-accent-light: #EBF3FF;
-    --color-accent-hover: #3B76D8;
+    /* Accent Color - Deep Teal */
+    --color-accent: #0F766E;
+    --color-accent-light: #CCFBF1;
+    --color-accent-hover: #0D5B54;
 
     /* Semantic Colors */
-    --color-success: #42C8A0;
-    --color-warning: #FFA86A;
-    --color-error: #FF6B6B;
+    --color-success: #15803D;
+    --color-warning: #D97706;
+    --color-error: #B91C1C;
 
     /* Borders & Dividers */
-    --color-border: #E5E7EB;
-    --color-border-hover: #D1D5DB;
+    --color-border: #E7E1D8;
+    --color-border-hover: #D4CAB8;
 
-    /* Shadows */
-    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.03);
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.06);
+    /* Shadows - Warm */
+    --shadow-soft: 0 4px 20px rgba(28, 20, 16, 0.04);
+    --shadow-card: 0 2px 8px rgba(28, 20, 16, 0.05), 0 1px 2px rgba(28, 20, 16, 0.03);
+    --shadow-hover: 0 8px 24px rgba(28, 20, 16, 0.08), 0 2px 6px rgba(28, 20, 16, 0.04);
+    --shadow-elevated: 0 12px 32px rgba(28, 20, 16, 0.1), 0 4px 8px rgba(28, 20, 16, 0.05);
 
-    /* Radius */
-    --radius-card: 16px;
-    --radius-button: 9999px;
-    /* Pill shape */
-    --radius-input: 12px;
+    /* Radius - Refined, no pills */
+    --radius-card: 12px;
+    --radius-button: 10px;
+    --radius-input: 8px;
 
     /* Aliases for compatibility */
     --bg-app: var(--color-bg-app);
@@ -52,57 +56,46 @@
     --error: var(--color-error);
     --border: var(--color-border);
     --border-hover: var(--color-border-hover);
-
-    /* Next.js Defaults */
-    --foreground-rgb: 26, 26, 26;
-    --background-start-rgb: 250, 250, 250;
-    --background-end-rgb: 250, 250, 250;
   }
 
   .dark {
-    /* Dark Mode - Deep Zen */
-    --color-bg-app: #111111;
-    --color-bg-card: #1C1C1C;
-    --color-bg-subtle: #262626;
+    /* Dark Mode - Warm Dark */
+    --color-bg-app: #0F0D0B;
+    --color-bg-card: #1A1714;
+    --color-bg-subtle: #242018;
 
-    --color-text-primary: #F3F4F6;
-    --color-text-secondary: #A1A1AA;
-    --color-text-tertiary: #52525B;
+    --color-text-primary: #F5F1EA;
+    --color-text-secondary: #B8AFA3;
+    --color-text-tertiary: #6B6459;
 
-    --color-accent: #5E9EFF;
-    --color-accent-light: #1E293B;
-    --color-accent-hover: #70A9FF;
+    --color-accent: #14B8A6;
+    --color-accent-light: #134E4A;
+    --color-accent-hover: #0F766E;
 
-    --color-border: #27272A;
-    --color-border-hover: #3F3F46;
+    --color-border: #2D2720;
+    --color-border-hover: #3F3830;
 
-    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.2);
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.2);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3);
-
-    /* Aliases for Dark Mode */
-    --bg-app: var(--color-bg-app);
-    --bg-card: var(--color-bg-card);
-    --bg-subtle: var(--color-bg-subtle);
-    --text-primary: var(--color-text-primary);
-    --text-secondary: var(--color-text-secondary);
-    --text-tertiary: var(--color-text-tertiary);
-    --accent: var(--color-accent);
-    --accent-light: var(--color-accent-light);
-    --accent-hover: var(--color-accent-hover);
-    --success: var(--color-success);
-    --warning: var(--color-warning);
-    --error: var(--color-error);
-    --border: var(--color-border);
-    --border-hover: var(--color-border-hover);
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.5);
   }
 
   body {
     background-color: var(--color-bg-app);
     color: var(--color-text-primary);
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+
+  /* Prevent iOS auto-zoom on focus by ensuring font-size is at least 16px */
+  input, textarea, select {
+    font-size: 16px !important;
   }
 }
 
@@ -118,13 +111,53 @@
   .animate-scale-in {
     animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  .animate-reveal-stagger {
+    animation: revealStagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .paper-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .paper-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  /* Safe Area Utilities */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+  .mt-safe {
+    margin-top: env(safe-area-inset-top);
+  }
+  .min-h-screen-safe {
+    min-height: calc(100vh - env(safe-area-inset-bottom) - env(safe-area-inset-top));
+  }
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -135,7 +168,6 @@
     transform: translateY(20px);
     opacity: 0;
   }
-
   to {
     transform: translateY(0);
     opacity: 1;
@@ -147,9 +179,19 @@
     transform: scale(0.95);
     opacity: 0;
   }
-
   to {
     transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes revealStagger {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }

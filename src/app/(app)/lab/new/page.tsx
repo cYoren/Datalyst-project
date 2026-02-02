@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
-import { FlaskConical, ArrowLeft, Loader2 } from 'lucide-react';
+import { FlaskConical, ArrowLeft, Loader2, Plus, X, AlertTriangle } from 'lucide-react';
+import { InfoTooltip } from '@/components/ui/Tooltip';
+import { fetcher } from '@/lib/hooks';
 
 interface Habit {
     id: string;
@@ -16,7 +18,7 @@ interface Habit {
     color: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 
 export default function NewExperimentPage() {
     const router = useRouter();
@@ -39,10 +41,38 @@ export default function NewExperimentPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // N=1 Methodology State
+    const [type, setType] = useState<'OBSERVATIONAL' | 'RANDOMIZED' | 'BLIND_RCT'>('OBSERVATIONAL');
+    const [randomizationType, setRandomizationType] = useState<'SIMPLE' | 'BLOCKED'>('BLOCKED');
+    const [washoutPeriod, setWashoutPeriod] = useState(2);
+    const [blockSize, setBlockSize] = useState(4);
+    const [isBlind, setIsBlind] = useState(false);
+    const [conditions, setConditions] = useState<{ label: string; dose?: number }[]>([
+        { label: 'A' }, { label: 'B' },
+    ]);
+
+    // Reset blockSize to nearest valid multiple when conditions change
+    useEffect(() => {
+        const n = conditions.length;
+        if (n > 0 && blockSize % n !== 0) {
+            setBlockSize(n * 2);
+        }
+    }, [conditions.length]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         setError(null);
+
+        // Validate condition labels for non-observational
+        if (type !== 'OBSERVATIONAL') {
+            const emptyLabels = conditions.some(c => !c.label.trim());
+            if (emptyLabels) {
+                setError('All condition labels must be filled in.');
+                setIsSubmitting(false);
+                return;
+            }
+        }
 
         try {
             const res = await fetch('/api/experiments', {
@@ -56,6 +86,12 @@ export default function NewExperimentPage() {
                     startDate,
                     endDate,
                     status: 'PLANNING',
+                    type,
+                    randomizationType,
+                    washoutPeriod,
+                    blockSize: type === 'OBSERVATIONAL' ? 4 : blockSize,
+                    isBlind: type === 'BLIND_RCT' || isBlind,
+                    conditions,
                 }),
             });
 
@@ -72,7 +108,7 @@ export default function NewExperimentPage() {
         }
     };
 
-    const filteredHabits = habits?.filter(h => !h.id.includes('archived')) || [];
+    const filteredHabits = Array.isArray(habits) ? habits.filter(h => !h.id.includes('archived')) : [];
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
@@ -125,7 +161,10 @@ export default function NewExperimentPage() {
 
                 {/* Variables */}
                 <Card className="p-5 space-y-4">
-                    <h2 className="font-semibold text-[var(--text-primary)]">Variables</h2>
+                    <h2 className="font-semibold text-[var(--text-primary)] flex items-center gap-1">
+                        Variables
+                        <InfoTooltip text="The independent variable is what you intentionally change (e.g. exercise). The dependent variable is what you expect to be affected (e.g. sleep quality)." />
+                    </h2>
                     <p className="text-sm text-[var(--text-secondary)]">
                         Select the independent variable (what you're changing) and dependent variable (what you're measuring).
                     </p>
@@ -139,7 +178,7 @@ export default function NewExperimentPage() {
                             {/* Independent */}
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--text-secondary)]">
-                                    Independent Variable (Cause) <span className="text-red-500">*</span>
+                                    Daily Intervention (Cause) <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     value={independentId}
@@ -162,7 +201,7 @@ export default function NewExperimentPage() {
                             {/* Dependent */}
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--text-secondary)]">
-                                    Dependent Variable (Effect) <span className="text-red-500">*</span>
+                                    Outcome to Measure (Effect) <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     value={dependentId}
@@ -180,6 +219,172 @@ export default function NewExperimentPage() {
                                 <p className="text-xs text-[var(--text-tertiary)]">
                                     The outcome you're measuring
                                 </p>
+                            </div>
+                        </div>
+                    )}
+                </Card>
+
+                {/* Methodology Selection */}
+                <Card className="p-5 space-y-4">
+                    <h2 className="font-semibold text-[var(--text-primary)] flex items-center gap-1">
+                        Methodology
+                        <InfoTooltip text="Choose how rigorous you want your experiment to be." />
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setType('OBSERVATIONAL');
+                                setIsBlind(false);
+                            }}
+                            className={cn(
+                                "p-4 rounded-xl border text-left transition-all relative overflow-hidden",
+                                type === 'OBSERVATIONAL'
+                                    ? "border-[var(--color-accent)] bg-[var(--color-accent-light)] bg-opacity-20 ring-1 ring-[var(--color-accent)]"
+                                    : "border-[var(--color-border)] hover:border-[var(--text-tertiary)]"
+                            )}
+                        >
+                            <p className="font-bold text-[var(--text-primary)]">Observational</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">Just track daily habits and see what correlates naturally.</p>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setType('RANDOMIZED');
+                                setIsBlind(false);
+                            }}
+                            className={cn(
+                                "p-4 rounded-xl border text-left transition-all relative overflow-hidden",
+                                type === 'RANDOMIZED'
+                                    ? "border-[var(--color-accent)] bg-[var(--color-accent-light)] bg-opacity-20 ring-1 ring-[var(--color-accent)]"
+                                    : "border-[var(--color-border)] hover:border-[var(--text-tertiary)]"
+                            )}
+                        >
+                            <p className="font-bold text-[var(--text-primary)]">Randomized</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">Datalyst tells you which condition ({conditions.map(c => c.label).join('/')}) to do each day.</p>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setType('BLIND_RCT');
+                                setIsBlind(true);
+                            }}
+                            className={cn(
+                                "p-4 rounded-xl border text-left transition-all relative overflow-hidden",
+                                type === 'BLIND_RCT'
+                                    ? "border-[var(--color-accent)] bg-[var(--color-accent-light)] bg-opacity-20 ring-1 ring-[var(--color-accent)]"
+                                    : "border-[var(--color-border)] hover:border-[var(--text-tertiary)]"
+                            )}
+                        >
+                            <p className="font-bold text-[var(--text-primary)]">Blind RCT</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">The Gold Standard. Substance labels are hidden to avoid placebo effect.</p>
+                        </button>
+                    </div>
+
+                    {type !== 'OBSERVATIONAL' && (
+                        <div className="pt-4 space-y-6 animate-fade-in border-t border-[var(--color-border)] mt-4">
+                            {/* Conditions */}
+                            <div className="space-y-3">
+                                <label className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-1">
+                                    Conditions
+                                    <InfoTooltip text="Define the conditions to compare. Each condition will be randomly assigned across blocks." />
+                                </label>
+                                <div className="space-y-2">
+                                    {conditions.map((cond, idx) => (
+                                        <div key={idx} className="flex items-center gap-2">
+                                            <Input
+                                                value={cond.label}
+                                                onChange={(e) => {
+                                                    const next = [...conditions];
+                                                    next[idx] = { ...next[idx], label: e.target.value };
+                                                    setConditions(next);
+                                                }}
+                                                placeholder={`Condition ${idx + 1}`}
+                                                className="flex-1"
+                                                maxLength={20}
+                                            />
+                                            <Input
+                                                type="number"
+                                                value={cond.dose ?? ''}
+                                                onChange={(e) => {
+                                                    const next = [...conditions];
+                                                    next[idx] = { ...next[idx], dose: e.target.value ? Number(e.target.value) : undefined };
+                                                    setConditions(next);
+                                                }}
+                                                placeholder="Dose (optional)"
+                                                className="w-32"
+                                            />
+                                            {conditions.length > 2 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setConditions(conditions.filter((_, i) => i !== idx))}
+                                                    className="p-1.5 rounded-md hover:bg-red-50 text-[var(--text-tertiary)] hover:text-red-500 transition-colors"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                {conditions.length < 8 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setConditions([...conditions, { label: '' }])}
+                                        className="flex items-center gap-1 text-sm text-[var(--color-accent)] hover:underline"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" /> Add Condition
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {type !== 'OBSERVATIONAL' && (
+                        <div className="pt-4 space-y-6 animate-fade-in border-t border-[var(--color-border)] mt-4">
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Randomization Details */}
+                                <div className="space-y-3">
+                                    <label className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-1">
+                                        Adaptation Period (Washout)
+                                        <InfoTooltip text="Days allowed between condition switches to let the previous intervention leave your system." />
+                                    </label>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="range"
+                                            min="0" max="5"
+                                            value={washoutPeriod}
+                                            onChange={(e) => setWashoutPeriod(parseInt(e.target.value))}
+                                            className="flex-1 accent-[var(--color-accent)]"
+                                        />
+                                        <span className="text-sm font-bold w-12 text-center bg-[var(--color-bg-subtle)] py-1 rounded-md text-[var(--text-primary)]">
+                                            {washoutPeriod}d
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-sm font-medium text-[var(--text-secondary)] flex items-center gap-1">
+                                        Block Size
+                                        <InfoTooltip text="Every block of X days will have an equal split of conditions. Prevents long streaks." />
+                                    </label>
+                                    <select
+                                        value={blockSize}
+                                        onChange={(e) => setBlockSize(parseInt(e.target.value))}
+                                        className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-white text-[var(--text-primary)]"
+                                    >
+                                        {Array.from({ length: Math.floor(24 / conditions.length) }, (_, i) => {
+                                            const val = (i + 1) * conditions.length;
+                                            return (
+                                                <option key={val} value={val}>
+                                                    {val} Days ({val / conditions.length} per condition)
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -219,6 +424,47 @@ export default function NewExperimentPage() {
                         </div>
                     </div>
                 </Card>
+
+                {/* Trial Preview (non-observational only) */}
+                {type !== 'OBSERVATIONAL' && startDate && endDate && (() => {
+                    const totalDays = Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                    const nConditions = conditions.length;
+                    const blocksCount = Math.floor(totalDays / blockSize);
+                    const washoutTransitions = Math.max(0, blocksCount * nConditions - 1);
+                    const washoutDays = washoutTransitions * washoutPeriod;
+                    const treatmentDays = totalDays - washoutDays;
+                    const washoutPct = totalDays > 0 ? (washoutDays / totalDays) * 100 : 0;
+
+                    return (
+                        <Card className="p-5 space-y-3">
+                            <h2 className="font-semibold text-[var(--text-primary)]">Trial Preview</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div className="text-[var(--text-tertiary)] text-xs">Total Days</div>
+                                    <div className="font-bold text-[var(--text-primary)]">{totalDays}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[var(--text-tertiary)] text-xs">Treatment Days</div>
+                                    <div className="font-bold text-[var(--text-primary)]">~{Math.max(0, treatmentDays)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[var(--text-tertiary)] text-xs">Washout Days</div>
+                                    <div className="font-bold text-[var(--text-primary)]">~{washoutDays}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[var(--text-tertiary)] text-xs">Conditions</div>
+                                    <div className="font-bold text-[var(--text-primary)]">{conditions.filter(c => c.label.trim()).map(c => c.label).join(' vs ')}</div>
+                                </div>
+                            </div>
+                            {washoutPct > 40 && (
+                                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                                    <span>Washout consumes {Math.round(washoutPct)}% of the trial. Consider reducing the washout period or extending the trial duration.</span>
+                                </div>
+                            )}
+                        </Card>
+                    );
+                })()}
 
                 {/* Error */}
                 {error && (

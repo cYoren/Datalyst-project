@@ -18,6 +18,8 @@ interface ChartDataPoint {
     date: string;
     independent: number | null;
     dependent: number | null;
+    isWashout?: boolean;
+    condition?: string | null;
 }
 
 interface ExperimentChartProps {
@@ -29,6 +31,8 @@ interface ExperimentChartProps {
     correlation: number | null;
     correlationType: 'pearson' | 'spearman';
     strength: string;
+    conditionLabels?: string[];
+    isBlind?: boolean;
 }
 
 export default function ExperimentChart({
@@ -40,6 +44,8 @@ export default function ExperimentChart({
     correlation,
     correlationType,
     strength,
+    conditionLabels,
+    isBlind,
 }: ExperimentChartProps) {
     const [normalized, setNormalized] = useState(false);
 
@@ -170,11 +176,26 @@ export default function ExperimentChart({
                                 borderRadius: '8px',
                                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                             }}
-                            formatter={(value: any, name: string) => {
+                            formatter={(value: any, name: string, props: any) => {
                                 if (value === null) return ['No data', name];
+                                const label = name === 'independent' ? independentName : dependentName;
+                                const isWashout = props.payload.isWashout;
+                                const condition = props.payload.condition;
+
+                                let finalName = label;
+                                if (isWashout) finalName += ' (Washout)';
+                                else if (condition) {
+                                    if (isBlind) {
+                                        const idx = conditionLabels?.indexOf(condition);
+                                        finalName += ` [Cond ${idx != null && idx >= 0 ? idx + 1 : condition}]`;
+                                    } else {
+                                        finalName += ` [${condition}]`;
+                                    }
+                                }
+
                                 return [
                                     `${value.toFixed(1)}${normalized ? '%' : ''}`,
-                                    name === 'independent' ? independentName : dependentName,
+                                    finalName,
                                 ];
                             }}
                             labelFormatter={(label) => formatDate(label as string)}

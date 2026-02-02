@@ -49,7 +49,7 @@ export const Slider = ({
 
                 {/* Visual Thumb (follows position) */}
                 <div
-                    className="absolute h-8 w-8 bg-white border-2 border-[var(--color-accent)] rounded-full shadow-md z-10 pointer-events-none transition-all duration-150 ease-out flex items-center justify-center text-xs font-bold text-[var(--color-accent)] group-active:scale-110"
+                    className="absolute h-8 w-8 bg-[var(--color-bg-card)] border-2 border-[var(--color-accent)] rounded-full shadow-[var(--shadow-card)] z-10 pointer-events-none transition-all duration-150 ease-out flex items-center justify-center text-xs font-bold text-[var(--color-accent)] group-active:scale-110"
                     style={{ left: `calc(${percentage}% - 16px)` }}
                 >
                     {value}

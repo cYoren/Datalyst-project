@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/ensure-user';
+import {
+    performN1Stats,
+    performBlockAnalysis,
+    testCarryoverEffect,
+    testPeriodEffect,
+    calculateSequentialBoundary,
+    calculateBayesianPosterior,
+    zFromP,
+    normalCDF,
+} from '@/stats/analysis';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -47,6 +57,9 @@ export async function GET(request: Request, { params }: RouteParams) {
                         },
                     },
                 },
+                assignments: {
+                    orderBy: { date: 'asc' },
+                }
             },
         });
 
@@ -120,7 +133,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         });
 
         // Build chart data (all dates in range)
-        const chartData: { date: string; independent: number | null; dependent: number | null }[] = [];
+        const chartData: any[] = [];
         const pairedValues: { x: number; y: number }[] = [];
 
         const startDate = new Date(experiment.startDate);
@@ -132,10 +145,15 @@ export async function GET(request: Request, { params }: RouteParams) {
             const indValue = independentMap.get(dateStr) ?? null;
             const depValue = dependentMap.get(dateStr) ?? null;
 
+            // Find active assignment for this day (to identify washout vs A vs B)
+            const assignment = (experiment as any).assignments?.find((a: any) => a.date === dateStr);
+
             chartData.push({
                 date: dateStr,
                 independent: indValue,
                 dependent: depValue,
+                isWashout: assignment?.isWashout ?? false,
+                condition: assignment?.condition ?? null,
             });
 
             // Only include in correlation if both values exist
@@ -145,6 +163,78 @@ export async function GET(request: Request, { params }: RouteParams) {
 
             currentDate.setDate(currentDate.getDate() + 1);
         }
+
+        // Parse conditions from experiment (backward compat: default to A/B)
+        let parsedConditions: { label: string }[] = [{ label: 'A' }, { label: 'B' }];
+        try {
+            const raw = (experiment as any).conditions;
+            if (raw && typeof raw === 'string') {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length >= 2) parsedConditions = parsed;
+            }
+        } catch { /* use default */ }
+        const conditionLabels = parsedConditions.map(c => c.label);
+
+        // Split data by condition for N=1 analysis
+        const conditionGroups = new Map<string, number[]>();
+        for (const label of conditionLabels) {
+            conditionGroups.set(
+                label,
+                chartData
+                    .filter(d => d.condition === label && !d.isWashout && d.dependent !== null)
+                    .map(d => d.dependent as number)
+            );
+        }
+
+        // For backward compat: extract first two for existing 2-condition analysis
+        const condA = conditionGroups.get(conditionLabels[0]) ?? [];
+        const condB = conditionGroups.get(conditionLabels[1]) ?? [];
+
+        // Build chronologically ordered dependent values (excluding washout) for autocorrelation
+        const temporalValues = chartData
+            .filter(d => !d.isWashout && d.dependent !== null)
+            .map(d => d.dependent as number);
+
+        // Block analysis (only for BLOCKED randomization)
+        const isBlocked = (experiment as any).randomizationType === 'BLOCKED';
+        const blockAnalysis = isBlocked
+            ? performBlockAnalysis(chartData, (experiment as any).assignments ?? [])
+            : null;
+
+        // Carryover test (requires block assignments)
+        const carryoverTest = isBlocked
+            ? testCarryoverEffect(chartData, (experiment as any).assignments ?? [])
+            : null;
+
+        // Period effect test (requires block differences)
+        const periodEffect = blockAnalysis
+            ? testPeriodEffect(blockAnalysis.blockDifferences)
+            : null;
+
+        // Sequential testing for ACTIVE experiments
+        let sequentialBoundary = null;
+        if (experiment.status === 'ACTIVE' && condA.length >= 3 && condB.length >= 3) {
+            const bayesian = calculateBayesianPosterior(condA, condB);
+            if (bayesian) {
+                const currentZ = bayesian.posteriorMean / bayesian.posteriorStd;
+                let analysisParams: Record<string, any> | null = null;
+                try {
+                    const raw = (experiment as any).analysisParams;
+                    if (raw && typeof raw === 'string') analysisParams = JSON.parse(raw);
+                } catch { /* invalid JSON, use defaults */ }
+                const totalLooks = analysisParams?.sequentialTesting?.nLooks ?? 5;
+                // Estimate current look based on data fraction
+                const totalPlannedDays = chartData.length;
+                const currentDay = chartData.filter(d => d.dependent !== null).length;
+                const dataFraction = Math.max(0.01, currentDay / Math.max(totalPlannedDays, 1));
+                const currentLook = Math.max(1, Math.ceil(dataFraction * totalLooks));
+                sequentialBoundary = calculateSequentialBoundary(currentZ, currentLook, totalLooks);
+            }
+        }
+
+        // Perform advanced N=1 analysis (only for 2-condition experiments)
+        const isMultiArm = conditionLabels.length > 2;
+        const n1Stats = isMultiArm ? null : performN1Stats(condA, condB, temporalValues, blockAnalysis, carryoverTest, periodEffect, sequentialBoundary);
 
         // Calculate Pearson correlation
         const correlation = calculatePearsonCorrelation(pairedValues);
@@ -156,16 +246,21 @@ export async function GET(request: Request, { params }: RouteParams) {
                 status: experiment.status,
                 startDate: experiment.startDate,
                 endDate: experiment.endDate,
+                type: (experiment as any).type,
+                randomizationType: (experiment as any).randomizationType,
+                washoutPeriod: (experiment as any).washoutPeriod,
+                blockSize: (experiment as any).blockSize,
+                isBlind: (experiment as any).isBlind,
             },
             independent: {
-                name: experiment.independent.name,
-                icon: experiment.independent.icon,
+                name: (experiment as any).independent.name,
+                icon: (experiment as any).independent.icon,
                 variable: independentSub.name,
                 unit: independentSub.unit || '',
             },
             dependent: {
-                name: experiment.dependent.name,
-                icon: experiment.dependent.icon,
+                name: (experiment as any).dependent.name,
+                icon: (experiment as any).dependent.icon,
                 variable: dependentSub.name,
                 unit: dependentSub.unit || '',
             },
@@ -176,6 +271,10 @@ export async function GET(request: Request, { params }: RouteParams) {
                 correlation: correlation,
                 correlationType: 'pearson',
                 strength: getCorrelationStrength(correlation),
+                n1: n1Stats,
+                multiArm: isMultiArm ? null : undefined,
+                multiArmPending: isMultiArm ? true : undefined,
+                conditionLabels,
             },
         });
     } catch (error) {

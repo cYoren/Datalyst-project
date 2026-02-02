@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { TemplateSelector } from '@/components/habits/TemplateSelector';
 import { SubvariableType } from '@prisma/client';
 import { Plus, Trash2, GripVertical, Check } from 'lucide-react';
+import { InfoTooltip } from '@/components/ui/Tooltip';
 import { cn } from '@/lib/utils';
 
 interface HabitFormProps {
@@ -356,7 +357,10 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
             {/* Subvariables */}
             <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[var(--text-primary)]">Variables to track</h3>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)] flex items-center gap-1">
+                        Variables to track
+                        <InfoTooltip text="Numeric: any number (weight, duration, reps). Scale 0-10: a rating slider. Yes/No: a simple toggle. Category: pick from a list of options." />
+                    </h3>
                 </div>
 
                 <div className="space-y-3">

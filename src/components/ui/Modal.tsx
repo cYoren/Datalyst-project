@@ -33,17 +33,17 @@ export const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+                className="absolute inset-0 bg-[#1C1410]/40 backdrop-blur-sm animate-fade-in"
                 onClick={onClose}
             />
 
             {/* Content */}
-            <div className="relative w-full max-w-lg bg-[var(--bg-card)] rounded-2xl shadow-xl animate-fade-in overflow-hidden max-h-[90vh] flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-[var(--color-slate-200)]">
-                    <h2 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h2>
+            <div className="relative w-full max-w-lg bg-[var(--bg-card)] rounded-[var(--radius-card)] shadow-[var(--shadow-elevated)] animate-fade-in overflow-hidden max-h-[90vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
+                    <h2 className="text-lg font-semibold text-[var(--text-primary)] font-display">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full hover:bg-[var(--color-slate-100)] text-[var(--text-secondary)]"
+                        className="p-2 rounded-[var(--radius-button)] hover:bg-[var(--color-bg-subtle)] text-[var(--text-secondary)] transition-colors"
                     >
                         <X className="h-5 w-5" suppressHydrationWarning />
                     </button>

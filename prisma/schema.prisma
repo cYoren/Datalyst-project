@@ -60,12 +60,25 @@ enum GoalDirection {
   NEUTRAL         // Observation only (e.g., Caffeine intake)
 }
 
+// Methodology for the experiment logic
+enum ExperimentType {
+  OBSERVATIONAL   // Track correlations without intervention rules
+  RANDOMIZED      // A/B testing with full knowledge
+  BLIND_RCT       // A/B testing with condition labels hidden
+}
+
 // Experiment lifecycle status
 enum ExperimentStatus {
   PLANNING        // Draft, not started
   ACTIVE          // Currently running
   COMPLETED       // Ended, results available
   ARCHIVED        // Dismissed
+}
+
+// Randomization strategy for N=1 experiments
+enum RandomizationType {
+  SIMPLE          // Coin-flip each day
+  BLOCKED         // Balanced blocks (default, recommended)
 }
 
 // ========================================
@@ -321,6 +334,8 @@ model Experiment {
   id              String           @id @default(cuid())
   userId          String
   
+  type            ExperimentType   @default(OBSERVATIONAL)
+  
   // Experiment info
   name            String           // "Does Magnesium Improve Sleep?"
   hypothesis      String?          // Free text for context
@@ -332,20 +347,54 @@ model Experiment {
   // Date range (stored as YYYY-MM-DD strings for timezone safety)
   startDate       String           // "2025-12-20"
   endDate         String           // "2026-01-03"
-  
+
+  // N=1 experimentation fields
+  randomizationType RandomizationType @default(BLOCKED)
+  washoutPeriod     Int               @default(2)       // Adaptation days between condition switches
+  isBlind           Boolean           @default(false)    // Hide condition labels until trial ends
+  blockSize         Int               @default(4)        // Days per randomization block (for BLOCKED type)
+
+  // Pre-registration: lock hypothesis before trial starts (p-hacking protection)
+  hypothesisLockedAt DateTime?        // Timestamp when hypothesis was locked
+  analysisParams     String           @default("{}")     // JSON: locked analysis config
+  conditions         String?          // JSON array of conditions, e.g. [{label:"A"},{label:"B"}]
+
+  // Blinding integrity (Bang Index)
+  blindGuess         String?          // User's guess of which condition was active: "A" or "B"
+  blindRevealedAt    DateTime?        // When unblinding happened
+
   // Status workflow
   status          ExperimentStatus @default(PLANNING)
-  
+
   // Timestamps
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  
+
   // Relations
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   independent     Habit            @relation("IndependentVariable", fields: [independentId], references: [id], onDelete: Cascade)
   dependent       Habit            @relation("DependentVariable", fields: [dependentId], references: [id], onDelete: Cascade)
-  
+  assignments     Assignment[]
+
   @@index([userId])
   @@index([status])
   @@index([userId, status])
+}
+
+// Daily condition assignment for an experiment's A/B schedule
+model Assignment {
+  id            String   @id @default(cuid())
+  experimentId  String
+
+  date          String   // "2026-01-05" (YYYY-MM-DD)
+  condition     String   // "A" or "B"
+  blockIndex    Int      // Which randomization block this belongs to
+  isWashout     Boolean  @default(false) // True if this day is a washout/adaptation day
+
+  createdAt     DateTime @default(now())
+
+  experiment    Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@unique([experimentId, date])
+  @@index([experimentId])
 }

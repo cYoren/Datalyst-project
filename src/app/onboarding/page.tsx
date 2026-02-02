@@ -1,21 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Loader2, ArrowRight, CheckCircle, Target, Sparkles, Play } from 'lucide-react';
+import { Loader2, ArrowRight, Target, Sparkles, Play, Package, Check } from 'lucide-react';
+import { getBundlesForFocusArea, getTemplateById, type ProtocolBundle } from '@/lib/templates';
 
 export default function OnboardingPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [name, setName] = useState('');
     const [focus, setFocus] = useState('');
-    const [habitName, setHabitName] = useState('');
+    const [selectedBundles, setSelectedBundles] = useState<Set<string>>(new Set());
     const [healthDataConsent, setHealthDataConsent] = useState(false);
+
+    const availableBundles = useMemo(() => getBundlesForFocusArea(focus), [focus]);
+
+    const toggleBundle = (bundleId: string) => {
+        setSelectedBundles(prev => {
+            const next = new Set(prev);
+            if (next.has(bundleId)) next.delete(bundleId);
+            else next.add(bundleId);
+            return next;
+        });
+    };
 
     const handleComplete = async () => {
         setLoading(true);
@@ -32,22 +42,40 @@ export default function OnboardingPage() {
                 body: JSON.stringify({
                     onboardingCompleted: true,
                     ...(healthDataConsent && { healthDataConsent: true }),
-                    // If name was collected here, we'd update it too, but we assume it's from signup
                 })
             });
 
-            // 2. Create First Habit (if provided)
-            if (habitName) {
-                await fetch('/api/habits', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: habitName,
-                        description: `My focus: ${focus}`,
-                        schedule: JSON.stringify({ frequency: 'daily' }),
-                        subvariables: []
-                    })
-                });
+            // 2. Create protocols from selected bundles
+            const createdTemplateIds = new Set<string>();
+            for (const bundleId of selectedBundles) {
+                const bundle = availableBundles.find(b => b.id === bundleId);
+                if (!bundle) continue;
+
+                for (const templateId of bundle.protocolIds) {
+                    if (createdTemplateIds.has(templateId)) continue; // avoid duplicates across bundles
+                    createdTemplateIds.add(templateId);
+
+                    const template = getTemplateById(templateId);
+                    if (!template) continue;
+
+                    await fetch('/api/habits', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: template.name,
+                            description: template.description,
+                            icon: template.icon,
+                            color: template.color,
+                            subvariables: template.subvariables.map(sv => ({
+                                name: sv.name,
+                                type: sv.type,
+                                unit: sv.unit || undefined,
+                                order: sv.order,
+                                metadata: sv.metadata || {},
+                            }))
+                        })
+                    });
+                }
             }
 
             router.push('/dashboard');
@@ -177,59 +205,96 @@ export default function OnboardingPage() {
                     <div className="animate-fade-in space-y-6">
                         <div className="text-center">
                             <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle className="h-8 w-8 text-green-600" />
+                                <Package className="h-8 w-8 text-green-600" />
                             </div>
                             <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-                                Create your first habit
+                                Pick your experiment bundles
                             </h2>
                             <p className="text-[var(--text-secondary)] mt-2">
-                                Choose something simple to get started.
+                                Each bundle includes 2-3 protocols designed to reveal real correlations.
                             </p>
                         </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                                    Habit Name
-                                </label>
-                                <Input
-                                    value={habitName}
-                                    onChange={(e) => setHabitName(e.target.value)}
-                                    placeholder="E.g., Drink 2L of water, Read 10 pages..."
-                                    autoFocus
-                                />
-                            </div>
-
-                            {['Physical Health', 'Mental Wellness'].includes(focus) && (
-                                <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
-                                    <input
-                                        type="checkbox"
-                                        className="mt-1 h-4 w-4 rounded border-[var(--color-slate-200)]"
-                                        checked={healthDataConsent}
-                                        onChange={(event) => setHealthDataConsent(event.target.checked)}
-                                    />
-                                    <span>
-                                        I consent to processing health-related data for insights and tracking.
-                                    </span>
-                                </label>
-                            )}
-
-                            <Button
-                                onClick={handleComplete}
-                                disabled={!habitName || loading || (['Physical Health', 'Mental Wellness'].includes(focus) && !healthDataConsent)}
-                                className="w-full"
-                                size="lg"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Finishing...
-                                    </>
-                                ) : (
-                                    'Complete Setup'
-                                )}
-                            </Button>
+                        <div className="space-y-3">
+                            {availableBundles.map((bundle) => {
+                                const isSelected = selectedBundles.has(bundle.id);
+                                const protocols = bundle.protocolIds.map(id => getTemplateById(id)).filter(Boolean);
+                                return (
+                                    <button
+                                        key={bundle.id}
+                                        onClick={() => toggleBundle(bundle.id)}
+                                        className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                                            isSelected
+                                                ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5 shadow-sm'
+                                                : 'border-[var(--color-border)] hover:border-[var(--color-accent)]/50'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-semibold text-[var(--text-primary)]">
+                                                {bundle.emoji} {bundle.name}
+                                            </span>
+                                            {isSelected && (
+                                                <div className="h-5 w-5 rounded-full bg-[var(--color-accent)] flex items-center justify-center">
+                                                    <Check className="h-3 w-3 text-white" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-[var(--text-secondary)] mb-2">
+                                            {bundle.description}
+                                        </p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {protocols.map(t => t && (
+                                                <span key={t.id} className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--text-tertiary)]">
+                                                    {t.icon} {t.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-[var(--text-tertiary)] mt-2 italic">
+                                            {bundle.whyItCorrelates}
+                                        </p>
+                                    </button>
+                                );
+                            })}
                         </div>
+
+                        {['Physical Health', 'Mental Wellness'].includes(focus) && (
+                            <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
+                                <input
+                                    type="checkbox"
+                                    className="mt-1 h-4 w-4 rounded border-[var(--color-slate-200)]"
+                                    checked={healthDataConsent}
+                                    onChange={(event) => setHealthDataConsent(event.target.checked)}
+                                />
+                                <span>
+                                    I consent to processing health-related data for insights and tracking.
+                                </span>
+                            </label>
+                        )}
+
+                        <Button
+                            onClick={handleComplete}
+                            disabled={selectedBundles.size === 0 || loading || (['Physical Health', 'Mental Wellness'].includes(focus) && !healthDataConsent)}
+                            className="w-full"
+                            size="lg"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating {selectedBundles.size} bundle{selectedBundles.size !== 1 ? 's' : ''}...
+                                </>
+                            ) : (
+                                <>
+                                    Start with {selectedBundles.size} bundle{selectedBundles.size !== 1 ? 's' : ''} <ArrowRight className="ml-2 h-4 w-4" />
+                                </>
+                            )}
+                        </Button>
+
+                        <button
+                            onClick={() => setStep(2)}
+                            className="w-full text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+                        >
+                            Change focus area
+                        </button>
                     </div>
                 )}
             </Card>

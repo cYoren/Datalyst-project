@@ -72,30 +72,30 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
     const icons = {
-        success: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-        error: <XCircle className="h-5 w-5 text-red-500" />,
-        info: <AlertCircle className="h-5 w-5 text-blue-500" />,
+        success: <CheckCircle2 className="h-5 w-5 text-[var(--color-success)]" />,
+        error: <XCircle className="h-5 w-5 text-[var(--color-error)]" />,
+        info: <AlertCircle className="h-5 w-5 text-[var(--color-accent)]" />,
     };
 
     const backgrounds = {
-        success: 'bg-green-50 border-green-200',
-        error: 'bg-red-50 border-red-200',
-        info: 'bg-blue-50 border-blue-200',
+        success: 'bg-[#ECFDF5] border-[#A7F3D0]',
+        error: 'bg-[#FEF2F2] border-[#FECACA]',
+        info: 'bg-[var(--color-accent-light)] border-[var(--color-accent)]/20',
     };
 
     return (
         <div
             className={cn(
-                "pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg",
+                "pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-[var(--radius-card)] border shadow-[var(--shadow-hover)]",
                 "animate-slide-up min-w-[280px] max-w-[400px]",
                 backgrounds[toast.type]
             )}
         >
             {icons[toast.type]}
-            <span className="flex-1 text-sm font-medium text-gray-800">{toast.message}</span>
+            <span className="flex-1 text-sm font-medium text-[var(--color-text-primary)]">{toast.message}</span>
             <button
                 onClick={onDismiss}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
             >
                 <X className="h-4 w-4" />
             </button>

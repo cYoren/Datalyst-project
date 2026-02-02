@@ -8,6 +8,7 @@ import { Button, buttonVariants } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { FlaskConical, Plus, Calendar, TrendingUp, Archive, Loader2 } from 'lucide-react';
 import CorrelationMatrix from '@/components/lab/CorrelationMatrix';
+import { fetcher } from '@/lib/hooks';
 
 interface Experiment {
     id: string;
@@ -20,7 +21,7 @@ interface Experiment {
     dependent: { id: string; name: string; icon: string; color: string };
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 
 const statusColors: Record<string, string> = {
     PLANNING: 'bg-yellow-100 text-yellow-800',
@@ -40,13 +41,14 @@ export default function LabPage() {
     const { data: experiments, isLoading, error } = useSWR<Experiment[]>('/api/experiments', fetcher);
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-    const filteredExperiments = experiments?.filter(exp => {
+    const experimentsList = Array.isArray(experiments) ? experiments : [];
+    const filteredExperiments = experimentsList.filter(exp => {
         if (statusFilter === null) return exp.status !== 'ARCHIVED';
         return exp.status === statusFilter;
-    }) || [];
+    });
 
-    const activeCount = experiments?.filter(e => e.status === 'ACTIVE').length || 0;
-    const completedCount = experiments?.filter(e => e.status === 'COMPLETED').length || 0;
+    const activeCount = experimentsList.filter(e => e.status === 'ACTIVE').length;
+    const completedCount = experimentsList.filter(e => e.status === 'COMPLETED').length;
 
     return (
         <div className="space-y-6">
@@ -72,7 +74,7 @@ export default function LabPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">{experiments?.length || 0}</div>
+                    <div className="text-2xl font-bold text-purple-600">{experimentsList.length}</div>
                     <div className="text-sm text-[var(--text-secondary)]">Total</div>
                 </Card>
                 <Card className="p-4 text-center">
@@ -85,7 +87,7 @@ export default function LabPage() {
                 </Card>
                 <Card className="p-4 text-center cursor-pointer hover:bg-gray-50" onClick={() => setStatusFilter(statusFilter === 'ARCHIVED' ? null : 'ARCHIVED')}>
                     <div className="text-2xl font-bold text-gray-500">
-                        {experiments?.filter(e => e.status === 'ARCHIVED').length || 0}
+                        {experimentsList.filter(e => e.status === 'ARCHIVED').length}
                     </div>
                     <div className="text-sm text-[var(--text-secondary)]">Archived</div>
                 </Card>

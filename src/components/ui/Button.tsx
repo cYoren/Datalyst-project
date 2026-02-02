@@ -5,19 +5,20 @@ import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-button)] text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95",
+    "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-button)] text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95",
     {
         variants: {
             variant: {
                 default: "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] shadow-sm hover:shadow-md",
                 destructive:
-                    "bg-[var(--color-error)] text-white hover:bg-red-600 shadow-sm",
+                    "bg-[var(--color-error)] text-white hover:bg-red-800 shadow-sm",
                 outline:
                     "border border-[var(--color-border)] bg-transparent hover:bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)]",
                 secondary:
                     "bg-[var(--color-accent-light)] text-[var(--color-accent)] hover:bg-[var(--color-accent-light)]/80",
                 ghost: "hover:bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]",
                 link: "text-[var(--color-accent)] underline-offset-4 hover:underline",
+                data: "bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
             },
             size: {
                 default: "h-11 px-6 py-2",

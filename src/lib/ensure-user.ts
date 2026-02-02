@@ -7,20 +7,33 @@ import { prisma } from '@/lib/prisma';
  */
 export async function ensureUserExists(userId: string, email: string) {
     try {
-        // Check if user exists
+        // Check if user exists by ID
         let user = await prisma.user.findUnique({
             where: { id: userId }
         });
 
-        // If user doesn't exist, create it
+        // If ID doesn't match, check if email exists
         if (!user) {
-            user = await prisma.user.create({
-                data: {
-                    id: userId,
-                    email: email,
-                    onboardingCompleted: false,
-                }
+            const userByEmail = await prisma.user.findUnique({
+                where: { email: email }
             });
+
+            if (userByEmail) {
+                // User exists with different ID - update the ID
+                user = await prisma.user.update({
+                    where: { email: email },
+                    data: { id: userId }
+                });
+            } else {
+                // New user - create record
+                user = await prisma.user.create({
+                    data: {
+                        id: userId,
+                        email: email,
+                        onboardingCompleted: false,
+                    }
+                });
+            }
         }
 
         return user;

@@ -1,13 +1,15 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState } from 'react';
 import useSWR from 'swr';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
-import { FlaskConical, ArrowLeft, Calendar, Play, CheckCircle, Archive, Loader2 } from 'lucide-react';
+import { FlaskConical, ArrowLeft, Play, CheckCircle, Archive, Loader2, Download, ShieldCheck, ChevronDown, AlertTriangle } from 'lucide-react';
 import ExperimentChart from '@/components/lab/ExperimentChart';
+import { exportRawData } from '@/stats/analysis';
+import { fetcher } from '@/lib/hooks';
 
 interface ExperimentResults {
     experiment: {
@@ -16,6 +18,11 @@ interface ExperimentResults {
         status: string;
         startDate: string;
         endDate: string;
+        type?: string;
+        randomizationType?: string;
+        washoutPeriod?: number;
+        blockSize?: number;
+        isBlind?: boolean;
     };
     independent: {
         name: string;
@@ -29,17 +36,201 @@ interface ExperimentResults {
         variable: string;
         unit: string;
     };
-    chartData: { date: string; independent: number | null; dependent: number | null }[];
+    chartData: {
+        date: string;
+        independent: number | null;
+        dependent: number | null;
+        isWashout: boolean;
+        condition: string | null;
+    }[];
     stats: {
         totalDays: number;
         loggedDays: number;
         correlation: number | null;
         correlationType: 'pearson' | 'spearman';
         strength: string;
+        conditionLabels?: string[];
+        multiArmPending?: boolean;
+        n1?: {
+            conditionAMean: number;
+            conditionBMean: number;
+            conditionAStd: number;
+            conditionBStd: number;
+            nA: number;
+            nB: number;
+            effectSize: number;
+            effectLabel: string;
+            tTest: { tStatistic: number; pValue: number; significant: boolean } | null;
+            bayesian: {
+                probabilityOfEffect: number;
+                posteriorMean: number;
+                posteriorStd: number;
+                credibleInterval: [number, number];
+            };
+            autocorrelation: {
+                lag1: number;
+                isProblematic: boolean;
+                warning: string | null;
+            };
+            blockAnalysis?: {
+                nBlocks: number;
+                meanBlockDiff: number;
+                tTest: { tStatistic: number; pValue: number; significant: boolean } | null;
+                effectSize: number;
+                missingDataWarning: string | null;
+            } | null;
+            carryoverTest?: {
+                hasCarryover: boolean;
+                warning: string | null;
+            } | null;
+            periodEffect?: {
+                earlyMeanDiff: number;
+                lateMeanDiff: number;
+                hasPeriodEffect: boolean;
+                warning: string | null;
+            } | null;
+            sequentialBoundary?: {
+                currentZ: number;
+                criticalValue: number;
+                alphaSpent: number;
+                dataFraction: number;
+                nLooks: number;
+                canRejectNull: boolean;
+                canStopForFutility: boolean;
+            } | null;
+        };
     };
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+
+function DataQualitySection({ stats, experiment }: { stats: ExperimentResults['stats']; experiment: ExperimentResults['experiment'] }) {
+    const [expanded, setExpanded] = useState(false);
+    const n1 = stats.n1;
+    if (!n1) return null;
+
+    // Collect all active warnings
+    const warnings: { label: string; detail: string; severity: 'red' | 'orange' | 'amber' }[] = [];
+
+    if (n1.carryoverTest?.hasCarryover) {
+        warnings.push({ label: 'Carryover effect', detail: n1.carryoverTest.warning!, severity: 'red' });
+    }
+    if (n1.periodEffect?.hasPeriodEffect) {
+        warnings.push({ label: 'Period effect', detail: n1.periodEffect.warning!, severity: 'orange' });
+    }
+    if (n1.autocorrelation.isProblematic) {
+        warnings.push({
+            label: 'Autocorrelation',
+            detail: `Day-to-day drift detected (lag-1: ${n1.autocorrelation.lag1.toFixed(2)}). Results may reflect a trend rather than your intervention.`,
+            severity: 'amber',
+        });
+    }
+
+    const hasSequential = n1.sequentialBoundary && experiment.status === 'ACTIVE';
+    const hasBlockAnalysis = !!n1.blockAnalysis;
+    const hasAnything = warnings.length > 0 || hasSequential || hasBlockAnalysis;
+
+    if (!hasAnything) return null;
+
+    // Summary line
+    const allClear = warnings.length === 0;
+    const summaryColor = allClear ? 'text-green-700' : warnings.some(w => w.severity === 'red') ? 'text-red-700' : 'text-amber-700';
+    const summaryBg = allClear ? 'bg-green-50 border-green-200' : warnings.some(w => w.severity === 'red') ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200';
+    const summary = allClear
+        ? 'No issues detected'
+        : `${warnings.length} issue${warnings.length > 1 ? 's' : ''} found`;
+
+    return (
+        <Card className={cn('animate-fade-in overflow-hidden border', summaryBg)}>
+            {/* Clickable header */}
+            <button
+                onClick={() => setExpanded(!expanded)}
+                className="w-full flex items-center justify-between p-4 text-left"
+            >
+                <div className="flex items-center gap-2.5">
+                    <AlertTriangle className={cn('h-4 w-4', summaryColor)} />
+                    <span className={cn('text-sm font-semibold', summaryColor)}>
+                        Data Quality: {summary}
+                    </span>
+                    {hasSequential && n1.sequentialBoundary!.canRejectNull && (
+                        <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                            Early stopping possible
+                        </span>
+                    )}
+                </div>
+                <ChevronDown className={cn(
+                    'h-4 w-4 transition-transform text-[var(--text-tertiary)]',
+                    expanded && 'rotate-180'
+                )} />
+            </button>
+
+            {/* Expanded details */}
+            {expanded && (
+                <div className="px-4 pb-4 space-y-3 border-t border-[var(--color-border)]">
+                    {/* Warnings */}
+                    {warnings.map((w, i) => (
+                        <div key={i} className="flex gap-2 items-start pt-3 first:pt-3">
+                            <span className={cn(
+                                'mt-0.5 h-2 w-2 rounded-full shrink-0',
+                                w.severity === 'red' ? 'bg-red-500' : w.severity === 'orange' ? 'bg-orange-500' : 'bg-amber-500'
+                            )} />
+                            <div>
+                                <span className="text-xs font-semibold text-[var(--text-primary)]">{w.label}: </span>
+                                <span className="text-xs text-[var(--text-secondary)]">{w.detail}</span>
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Sequential testing */}
+                    {hasSequential && (
+                        <div className="flex gap-2 items-start pt-3">
+                            <span className={cn(
+                                'mt-0.5 h-2 w-2 rounded-full shrink-0',
+                                n1.sequentialBoundary!.canRejectNull ? 'bg-green-500' : 'bg-blue-500'
+                            )} />
+                            <div>
+                                <span className="text-xs font-semibold text-[var(--text-primary)]">Interim analysis: </span>
+                                <span className="text-xs text-[var(--text-secondary)]">
+                                    {n1.sequentialBoundary!.canRejectNull
+                                        ? 'Effect crossed the significance boundary — you may stop early.'
+                                        : `${(n1.sequentialBoundary!.dataFraction * 100).toFixed(0)}% of data collected. Continue gathering data.`
+                                    }
+                                    {n1.sequentialBoundary!.canStopForFutility && ' Effect is very small — consider stopping for futility.'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Block analysis */}
+                    {hasBlockAnalysis && (
+                        <div className="pt-3 border-t border-[var(--color-border)]">
+                            <div className="text-xs font-semibold text-[var(--text-primary)] mb-2">Block Analysis</div>
+                            <div className="grid grid-cols-3 gap-3 text-xs">
+                                <div>
+                                    <div className="text-[var(--text-tertiary)]">Blocks</div>
+                                    <div className="font-bold text-[var(--text-primary)]">{n1.blockAnalysis!.nBlocks}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[var(--text-tertiary)]">Mean diff</div>
+                                    <div className="font-bold text-[var(--text-primary)]">{n1.blockAnalysis!.meanBlockDiff.toFixed(2)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[var(--text-tertiary)]">Block p-value</div>
+                                    <div className="font-bold text-[var(--text-primary)]">
+                                        {n1.blockAnalysis!.tTest ? n1.blockAnalysis!.tTest.pValue.toFixed(3) : 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                            {n1.blockAnalysis!.missingDataWarning && (
+                                <p className="text-[10px] text-amber-700 mt-1.5">{n1.blockAnalysis!.missingDataWarning}</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+        </Card>
+    );
+}
 
 export default function ExperimentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -107,8 +298,44 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                     </div>
                 </div>
 
-                {/* Status Actions */}
+                {/* Status & Export Actions */}
                 <div className="flex gap-2">
+                    <Button
+                        variant="ghost"
+                        onClick={() => {
+                            const outcomeByDate: Record<string, number> = {};
+                            chartData.forEach((d: any) => {
+                                if (d.dependent !== null) outcomeByDate[d.date] = d.dependent;
+                            });
+                            // Transform chartData to ensure condition is a string for exportRawData
+                            const exportData = chartData.map((d: any) => ({
+                                date: d.date,
+                                condition: d.condition || 'N/A',
+                                isWashout: d.isWashout
+                            }));
+                            const csv = exportRawData(exportData, outcomeByDate);
+                            const blob = new Blob([csv], { type: 'text/csv' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${experiment.name.replace(/\s+/g, '_')}_data.csv`;
+                            a.click();
+                        }}
+                        className="gap-2 text-[var(--text-secondary)]" title="Export Raw Data"
+                    >
+                        <Download className="h-4 w-4" />
+                        <span className="hidden sm:inline">Export CSV</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        className="gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                        onClick={() => alert(`Scientific Audit for: ${experiment.name}\n\nMethodology: ${experiment.type || 'Standard'}\nRandomization: ${experiment.randomizationType || 'Fixed'}\nWashout Period: ${experiment.washoutPeriod ?? 0} days\nBlock Size: ${experiment.blockSize || 'N/A'}\nBlinding: ${experiment.isBlind ? 'Yes (Double blind)' : 'No'}`)}
+                    >
+                        <ShieldCheck className="h-4 w-4" />
+                        <span className="hidden sm:inline">Scientific Audit</span>
+                    </Button>
+
                     {experiment.status === 'PLANNING' && (
                         <Button onClick={() => handleStatusChange('ACTIVE')} className="gap-2">
                             <Play className="h-4 w-4" />
@@ -129,40 +356,113 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                 </div>
             </div>
 
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="p-4">
-                    <div className="text-sm text-[var(--text-secondary)]">Duration</div>
-                    <div className="text-lg font-semibold text-[var(--text-primary)]">
-                        {stats.totalDays} days
+            {/* Multi-arm pending notice */}
+            {stats.multiArmPending && (
+                <Card className="p-6 border-l-4 border-l-blue-400 bg-blue-50/50 animate-fade-in">
+                    <div className="flex items-center gap-3">
+                        <FlaskConical className="h-5 w-5 text-blue-500 shrink-0" />
+                        <div>
+                            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Multi-arm analysis coming soon</h3>
+                            <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+                                Your {stats.conditionLabels?.length ?? 3}+ condition experiment is collecting data. Advanced multi-arm analysis will be available in a future update.
+                            </p>
+                        </div>
                     </div>
                 </Card>
-                <Card className="p-4">
-                    <div className="text-sm text-[var(--text-secondary)]">Logged Days</div>
-                    <div className="text-lg font-semibold text-[var(--text-primary)]">
-                        {stats.loggedDays} / {stats.totalDays}
-                    </div>
-                </Card>
-                <Card className="p-4">
-                    <div className="text-sm text-[var(--text-secondary)]">Dates</div>
-                    <div className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {experiment.startDate} → {experiment.endDate}
-                    </div>
-                </Card>
-                <Card className="p-4">
-                    <div className="text-sm text-[var(--text-secondary)]">Status</div>
-                    <div className={cn(
-                        "text-lg font-semibold",
-                        experiment.status === 'ACTIVE' && "text-green-600",
-                        experiment.status === 'COMPLETED' && "text-blue-600",
-                        experiment.status === 'PLANNING' && "text-yellow-600",
-                        experiment.status === 'ARCHIVED' && "text-gray-500",
-                    )}>
-                        {experiment.status}
-                    </div>
-                </Card>
-            </div>
+            )}
+
+            {/* Scientific Analysis Metrics */}
+            {stats.n1 && (
+                <div className="grid md:grid-cols-3 gap-6 animate-fade-in">
+                    {/* Probability of Effect */}
+                    <Card className="p-6 space-y-4 border-l-4 border-l-purple-500 overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-4 opacity-5">
+                            <FlaskConical className="h-16 w-16" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                                Probability of Effect
+                            </h3>
+                            <div className="text-4xl font-black text-[var(--text-primary)] font-display">
+                                {(stats.n1.bayesian.probabilityOfEffect * 100).toFixed(1)}%
+                            </div>
+                            <p className="text-xs text-[var(--text-tertiary)]">
+                                Chance that {independent.name} actually impacts {dependent.name}
+                            </p>
+                        </div>
+                        <div className="pt-2">
+                            <div className="h-1.5 w-full bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-purple-500"
+                                    style={{ width: `${stats.n1.bayesian.probabilityOfEffect * 100}%` }}
+                                />
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Effect Size */}
+                    <Card className="p-6 space-y-4 border-l-4 border-l-blue-500">
+                        <div className="space-y-1">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                                Effect Size (d)
+                            </h3>
+                            <div className="text-4xl font-black text-[var(--text-primary)] font-display">
+                                {stats.n1.effectSize.toFixed(2)}
+                            </div>
+                            <p className="text-xs text-[var(--text-tertiary)]">
+                                {Math.abs(stats.n1.effectSize) > 0.8 ? 'Massive' : Math.abs(stats.n1.effectSize) > 0.5 ? 'Large' : 'Moderate'} relative impact
+                            </p>
+                        </div>
+                        <div className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">
+                            {stats.n1.bayesian.credibleInterval[0].toFixed(2)} to {stats.n1.bayesian.credibleInterval[1].toFixed(2)} (95% CI)
+                        </div>
+                    </Card>
+
+                    {/* Condition Means */}
+                    <Card className="p-6 space-y-4 border-l-4 border-l-emerald-500">
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                                Condition Averages
+                            </h3>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-[var(--text-secondary)] underline decoration-dotted decoration-gray-300">
+                                        {experiment.isBlind ? 'Condition 2' : (stats.conditionLabels?.[1] ?? 'Target/On')} (n={stats.n1.nB})
+                                    </span>
+                                    <span className="text-lg font-bold text-[var(--text-primary)]">{stats.n1.conditionBMean.toFixed(2)} {dependent.unit}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-[var(--text-secondary)] underline decoration-dotted decoration-gray-300">
+                                        {experiment.isBlind ? 'Condition 1' : (stats.conditionLabels?.[0] ?? 'Baseline/Off')} (n={stats.n1.nA})
+                                    </span>
+                                    <span className="text-lg font-bold text-[var(--text-primary)]">{stats.n1.conditionAMean.toFixed(2)} {dependent.unit}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 pt-1">
+                                <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                                    {stats.n1.effectLabel} effect
+                                </span>
+                                {stats.n1.tTest && (
+                                    <span className={cn(
+                                        'text-xs font-medium px-2 py-0.5 rounded',
+                                        stats.n1.tTest.significant
+                                            ? 'text-green-700 bg-green-50'
+                                            : 'text-gray-600 bg-gray-100'
+                                    )}>
+                                        p = {stats.n1.tTest.pValue.toFixed(3)}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="pt-1 text-[10px] text-[var(--text-tertiary)] italic">
+                                * Excluding washout/adaptation days
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Data Quality — grouped collapsible section */}
+            <DataQualitySection stats={stats} experiment={experiment} />
 
             {/* Chart */}
             <Card className="p-6">
@@ -190,6 +490,8 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                         correlation={stats.correlation}
                         correlationType={stats.correlationType}
                         strength={stats.strength}
+                        conditionLabels={stats.conditionLabels}
+                        isBlind={experiment.isBlind}
                     />
                 )}
             </Card>
@@ -199,6 +501,6 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                 ℹ️ <strong>Remember:</strong> Correlation ≠ Causation. This tool shows patterns, not proof.
                 Other factors may influence both variables independently.
             </div>
-        </div>
+        </div >
     );
 }

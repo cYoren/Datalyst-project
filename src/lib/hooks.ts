@@ -4,7 +4,7 @@ import useSWR from 'swr';
 import { Habit } from '@/types';
 
 // Generic fetcher for SWR
-const fetcher = async (url: string) => {
+export const fetcher = async (url: string) => {
     const res = await fetch(url);
     if (!res.ok) {
         if (res.status === 401) {

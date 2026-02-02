@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/ensure-user';
 import { experimentFormSchema } from '@/lib/validations';
+import { generateBlockedSchedule } from '@/stats/analysis';
 
 /**
  * GET /api/experiments
@@ -99,6 +100,12 @@ export async function POST(request: Request) {
                 startDate: data.startDate,
                 endDate: data.endDate,
                 status: data.status || 'PLANNING',
+                type: data.type,
+                randomizationType: data.randomizationType,
+                washoutPeriod: data.washoutPeriod,
+                blockSize: data.blockSize,
+                isBlind: data.isBlind,
+                conditions: JSON.stringify(data.conditions),
             },
             include: {
                 independent: {
@@ -109,6 +116,34 @@ export async function POST(request: Request) {
                 },
             },
         });
+
+        // Generate assignments if randomized
+        if (data.type === 'RANDOMIZED' || data.type === 'BLIND_RCT') {
+            const startDate = new Date(data.startDate);
+            const endDate = new Date(data.endDate);
+            const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+            const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            const conditionLabels = data.conditions.map(c => c.label);
+            const schedule = generateBlockedSchedule(
+                data.startDate,
+                totalDays,
+                data.blockSize,
+                data.washoutPeriod,
+                undefined,
+                conditionLabels
+            );
+
+            await prisma.assignment.createMany({
+                data: schedule.assignments.map(a => ({
+                    experimentId: experiment.id,
+                    date: a.date,
+                    condition: a.condition,
+                    blockIndex: a.blockIndex,
+                    isWashout: a.isWashout,
+                })),
+            });
+        }
 
         return NextResponse.json(experiment, { status: 201 });
     } catch (error) {

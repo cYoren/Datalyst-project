@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 // User validation schemas
 export const createUserSchema = z.object({
-    email: z.string().email('Email inválido'),
+    email: z.string().email('Invalid email'),
     passwordHash: z.string().optional(),
-    timezone: z.string().default('America/Sao_Paulo'),
-    locale: z.string().default('pt-BR'),
+    timezone: z.string().default('UTC'),
+    locale: z.string().default('en-US'),
     theme: z.enum(['LIGHT', 'DARK', 'SYSTEM']).default('SYSTEM'),
 });
 
@@ -52,7 +52,7 @@ export const createEntrySchema = z.object({
             numericValue: z.number(),
             rawValue: z.string().optional(),
         })
-    ).min(1, 'Pelo menos uma subvariável deve ser preenchida'),
+    ).min(1, 'At least one subvariable entry is required'),
 });
 
 export const updateEntrySchema = z.object({
@@ -88,7 +88,25 @@ export const experimentFormSchema = z.object({
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)'),
     status: z.enum(['PLANNING', 'ACTIVE', 'COMPLETED', 'ARCHIVED']).default('PLANNING'),
+
+    // N=1 fields
+    type: z.enum(['OBSERVATIONAL', 'RANDOMIZED', 'BLIND_RCT']).default('OBSERVATIONAL'),
+    randomizationType: z.enum(['SIMPLE', 'BLOCKED']).default('BLOCKED'),
+    washoutPeriod: z.number().int().min(0).max(10).default(2),
+    blockSize: z.number().int().min(2).max(24).default(4),
+    isBlind: z.boolean().default(false),
+    conditions: z.array(z.object({
+        label: z.string().min(1).max(20),
+        dose: z.number().optional(),
+        description: z.string().max(200).optional(),
+    })).min(2).max(8).default([{ label: 'A' }, { label: 'B' }]),
 }).refine(
+    (data) => {
+        if (data.type === 'OBSERVATIONAL') return true;
+        return data.blockSize % data.conditions.length === 0;
+    },
+    { message: 'Block size must be a multiple of the number of conditions', path: ['blockSize'] }
+).refine(
     (data) => data.independentId !== data.dependentId,
     { message: 'Independent and dependent variables must be different', path: ['dependentId'] }
 ).refine(

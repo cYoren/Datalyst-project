@@ -1,14 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { ScrollText, Activity, Clock, Loader2 } from 'lucide-react';
+import { enUS } from 'date-fns/locale';
+import { ScrollText, Activity, Clock, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLogsPage, useUser } from '@/lib/hooks';
+
+const PAGE_SIZE = 50;
 
 export default function LogsPage() {
     const { user, isLoading: userLoading } = useUser();
     const { events, sessions, isLoading: logsLoading } = useLogsPage();
+    const [page, setPage] = useState(0);
 
     const isLoading = userLoading || logsLoading;
 
@@ -31,15 +36,15 @@ export default function LogsPage() {
             <header className="animate-fade-in">
                 <h1 className="text-4xl font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-3">
                     <ScrollText className="h-10 w-10 text-[var(--color-accent)]" suppressHydrationWarning />
-                    Logs do Sistema
+                    System Logs
                 </h1>
                 <p className="text-[var(--text-secondary)] mt-2 text-lg">
-                    Registro bruto de atividades e sessões.
+                    Raw activity and session history.
                 </p>
             </header>
 
             <div className="space-y-4 animate-slide-up">
-                {allLogs.map((log: any) => (
+                {allLogs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((log: any) => (
                     <Card key={log.id} className="p-4 border-l-4 border-l-[var(--color-accent)] hover:bg-[var(--color-bg-subtle)] transition-colors">
                         <div className="flex flex-col md:flex-row justify-between gap-4">
                             <div className="flex items-start gap-3">
@@ -67,7 +72,7 @@ export default function LogsPage() {
 
                             <div className="flex flex-col items-end text-right gap-1">
                                 <span className="text-sm font-medium text-[var(--text-primary)]">
-                                    {format(new Date(log.sortTime), "dd 'de' MMM, HH:mm:ss", { locale: ptBR })}
+                                    {format(new Date(log.sortTime), "MMM dd, HH:mm:ss", { locale: enUS })}
                                 </span>
                                 <span className="text-xs text-[var(--text-tertiary)]">
                                     {user?.email}
@@ -83,8 +88,31 @@ export default function LogsPage() {
                 ))}
 
                 {allLogs.length === 0 && (
-                    <div className="text-center py-12 text-[var(--text-tertiary)]">
-                        Nenhum log encontrado.
+                    <div className="text-center py-12 space-y-4">
+                        <ScrollText className="h-12 w-12 mx-auto text-[var(--text-tertiary)] opacity-50" suppressHydrationWarning />
+                        <div>
+                            <p className="text-[var(--text-secondary)] font-medium">No logs yet</p>
+                            <p className="text-sm text-[var(--text-tertiary)] mt-1">
+                                Activity and session logs will appear here as you use the app.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {allLogs.length > PAGE_SIZE && (
+                    <div className="flex items-center justify-between px-2 pt-4">
+                        <span className="text-sm text-[var(--text-tertiary)]">
+                            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, allLogs.length)} of {allLogs.length}
+                        </span>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                                <ChevronLeft className="h-4 w-4" suppressHydrationWarning /> Prev
+                            </Button>
+                            <Button variant="outline" size="sm" disabled={(page + 1) * PAGE_SIZE >= allLogs.length} onClick={() => setPage(p => p + 1)}>
+                                Next <ChevronRight className="h-4 w-4" suppressHydrationWarning />
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>

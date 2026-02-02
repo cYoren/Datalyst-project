@@ -12,22 +12,22 @@ export class InsightGenerator {
         result: CorrelationResult
     ): string {
         const strength = Math.abs(result.coefficient);
-        const direction = result.coefficient > 0 ? 'positiva' : 'negativa';
+        const direction = result.coefficient > 0 ? 'positive' : 'negative';
         const isSignificant = result.pValue < 0.05;
 
         if (!isSignificant) {
-            return `Não encontramos relação estatisticamente relevante entre ${var1Name} e ${var2Name} nos dados atuais.`;
+            return `No statistically significant relationship found between ${var1Name} and ${var2Name} in the current data.`;
         }
 
         let strengthText = '';
-        if (strength > 0.7) strengthText = 'muito forte';
-        else if (strength > 0.5) strengthText = 'forte';
-        else if (strength > 0.3) strengthText = 'moderada';
-        else strengthText = 'leve';
+        if (strength > 0.7) strengthText = 'very strong';
+        else if (strength > 0.5) strengthText = 'strong';
+        else if (strength > 0.3) strengthText = 'moderate';
+        else strengthText = 'weak';
 
-        const action = result.coefficient > 0 ? 'aumenta' : 'diminui';
+        const action = result.coefficient > 0 ? 'increase' : 'decrease';
 
-        return `Existe uma correlação ${direction} ${strengthText} entre ${var1Name} e ${var2Name}. Geralmente, quando ${var1Name} aumenta, ${var2Name} tende a ${action}.`;
+        return `There is a ${strengthText} ${direction} correlation between ${var1Name} and ${var2Name}. Generally, when ${var1Name} increases, ${var2Name} tends to ${action}.`;
     }
 
     static interpretTTest(
@@ -37,13 +37,13 @@ export class InsightGenerator {
         result: TTestResult
     ): string {
         if (!result.significant) {
-            return `A diferença de ${variableName} entre dias de ${group1Name} e ${group2Name} não é estatisticamente significativa.`;
+            return `The difference in ${variableName} between ${group1Name} days and ${group2Name} days is not statistically significant.`;
         }
 
         const diff = Math.abs(result.meanDiff).toFixed(1);
         const higherGroup = result.meanDiff > 0 ? group1Name : group2Name;
 
-        return `Em dias de ${higherGroup}, seu nível de ${variableName} é, em média, ${diff} pontos maior do que em dias de ${higherGroup === group1Name ? group2Name : group1Name}.`;
+        return `On ${higherGroup} days, your ${variableName} level is on average ${diff} points higher than on ${higherGroup === group1Name ? group2Name : group1Name} days.`;
     }
 
     static interpretChiSquare(
@@ -52,9 +52,9 @@ export class InsightGenerator {
         result: ChiSquareResult
     ): string {
         if (!result.significant) {
-            return `Não parece haver conexão direta entre fazer ${var1Name} e ${var2Name}.`;
+            return `There doesn't appear to be a direct connection between ${var1Name} and ${var2Name}.`;
         }
 
-        return `Existe uma associação significativa entre ${var1Name} e ${var2Name}. Esses hábitos tendem a acontecer (ou não acontecer) juntos com mais frequência do que o acaso explicaria.`;
+        return `There is a significant association between ${var1Name} and ${var2Name}. These habits tend to occur (or not occur) together more often than chance would explain.`;
     }
 }

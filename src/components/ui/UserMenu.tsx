@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { LogOut, Settings, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, ChevronDown, PlusCircle, Microscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UserMenuProps {
@@ -48,9 +48,9 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
             <div className="relative">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex flex-col items-center justify-center p-2 rounded-xl transition-all w-16 text-[var(--text-tertiary)]"
+                    className="flex flex-col items-center justify-center p-2 rounded-[var(--radius-button)] transition-all w-16 min-h-[48px] text-[var(--text-tertiary)]"
                 >
-                    <div className="h-6 w-6 rounded-full bg-[var(--color-primary-100)] text-[var(--color-primary-600)] flex items-center justify-center text-xs font-bold mb-1">
+                    <div className="h-7 w-7 rounded-full bg-[var(--color-accent-light)] text-[var(--color-accent)] flex items-center justify-center text-xs font-bold mb-1">
                         {initials}
                     </div>
                     <span className="text-[10px] font-medium">Profile</span>
@@ -59,33 +59,62 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                 {isOpen && (
                     <>
                         <div
-                            className="fixed inset-0 z-40"
+                            className="fixed inset-0 z-40 bg-[#1C1410]/20 backdrop-blur-sm"
                             onClick={() => setIsOpen(false)}
                         />
-                        <div className="absolute bottom-full right-0 mb-2 w-64 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--color-border)] z-50 overflow-hidden">
-                        <div className="p-4 border-b border-[var(--color-border)]">
-                            <p className="font-medium text-[var(--text-primary)] truncate">
-                                {user.name || 'User'}
-                            </p>
-                            <p className="text-sm text-[var(--text-secondary)] truncate">
-                                {user.email}
-                            </p>
-                        </div>
-                        <Link
-                            href="/settings"
-                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors"
-                        >
-                            <Settings className="h-4 w-4" />
-                            <span>Settings</span>
-                        </Link>
-                        <button
-                            onClick={handleLogout}
-                            disabled={isLoggingOut}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors disabled:opacity-50"
-                            >
-                                <LogOut className="h-4 w-4" />
-                                <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
-                            </button>
+                        <div className="absolute bottom-full right-0 mb-4 w-72 bg-[var(--bg-card)] rounded-[var(--radius-card)] shadow-[var(--shadow-elevated)] border border-[var(--color-border)] z-50 overflow-hidden animate-slide-up">
+                            <div className="p-5 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+                                <p className="font-bold text-[var(--text-primary)] truncate">
+                                    {user.name || 'User'}
+                                </p>
+                                <p className="text-xs text-[var(--text-secondary)] truncate opacity-70">
+                                    {user.email}
+                                </p>
+                            </div>
+
+                            <div className="py-2">
+                                <Link
+                                    href="/habits/new"
+                                    onClick={() => setIsOpen(false)}
+                                    className="w-full flex items-center gap-3 px-5 py-4 text-[var(--text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+                                >
+                                    <div className="p-2 rounded-lg bg-[var(--color-accent-light)] text-[var(--color-accent)]">
+                                        <PlusCircle className="h-4 w-4" />
+                                    </div>
+                                    <span className="font-medium">New Protocol</span>
+                                </Link>
+                                <Link
+                                    href="/about"
+                                    onClick={() => setIsOpen(false)}
+                                    className="w-full flex items-center gap-3 px-5 py-4 text-[var(--text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+                                >
+                                    <div className="p-2 rounded-lg bg-[var(--color-bg-subtle)] text-[var(--text-secondary)]">
+                                        <Microscope className="h-4 w-4" />
+                                    </div>
+                                    <span className="font-medium">About Datalyst</span>
+                                </Link>
+                                <Link
+                                    href="/settings"
+                                    onClick={() => setIsOpen(false)}
+                                    className="w-full flex items-center gap-3 px-5 py-4 text-[var(--text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+                                >
+                                    <div className="p-2 rounded-lg bg-[var(--color-bg-subtle)] text-[var(--text-tertiary)]">
+                                        <Settings className="h-4 w-4" />
+                                    </div>
+                                    <span className="font-medium">Settings</span>
+                                </Link>
+                            </div>
+
+                            <div className="border-t border-[var(--color-border)] bg-[var(--color-bg-subtle)]/50 p-2">
+                                <button
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-[var(--color-error)] hover:bg-[var(--color-error)]/5 rounded-[var(--radius-button)] transition-colors disabled:opacity-50"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    <span className="font-semibold">{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
+                                </button>
+                            </div>
                         </div>
                     </>
                 )}
@@ -98,11 +127,11 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-                    isOpen ? "bg-[var(--color-slate-100)]" : "hover:bg-[var(--color-slate-50)]"
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-[var(--radius-button)] transition-all",
+                    isOpen ? "bg-[var(--color-bg-subtle)]" : "hover:bg-[var(--color-bg-subtle)]"
                 )}
             >
-                <div className="h-10 w-10 rounded-full bg-[var(--color-primary-100)] text-[var(--color-primary-600)] flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-full bg-[var(--color-accent-light)] text-[var(--color-accent)] flex items-center justify-center font-bold">
                     {initials}
                 </div>
                 <div className="flex-1 text-left min-w-0">
@@ -125,10 +154,10 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-[var(--bg-card)] rounded-xl shadow-lg border border-[var(--color-border)] z-50 overflow-hidden">
+                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-[var(--bg-card)] rounded-[var(--radius-card)] shadow-[var(--shadow-elevated)] border border-[var(--color-border)] z-50 overflow-hidden">
                         <Link
                             href="/settings"
-                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
                         >
                             <Settings className="h-4 w-4" />
                             <span>Settings</span>
@@ -136,7 +165,7 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                         <button
                             onClick={handleLogout}
                             disabled={isLoggingOut}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-slate-50)] transition-colors disabled:opacity-50"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors disabled:opacity-50"
                         >
                             <LogOut className="h-4 w-4" />
                             <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>

@@ -2,8 +2,11 @@
 
 import React, { useMemo } from 'react';
 import useSWR from 'swr';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FlaskConical, PlusCircle } from 'lucide-react';
+import { InfoTooltip } from '@/components/ui/Tooltip';
+import { fetcher } from '@/lib/hooks';
 
 interface Variable {
     id: string;
@@ -17,28 +20,28 @@ interface CorrelationData {
     matrix: (number | null)[][];
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 
 /**
  * Get color for correlation value
- * Green = positive, Red = negative, Gray = neutral/no data
+ * Teal = positive, Amber = negative, Warm gray = neutral/no data
  */
 function getCorrelationColor(r: number | null): string {
-    if (r === null) return 'bg-gray-100';
+    if (r === null) return 'bg-[var(--color-bg-subtle)]';
 
     const absR = Math.abs(r);
     if (r > 0) {
-        // Positive: green shades
-        if (absR >= 0.7) return 'bg-green-600 text-white';
-        if (absR >= 0.5) return 'bg-green-500 text-white';
-        if (absR >= 0.3) return 'bg-green-400 text-white';
-        return 'bg-green-200 text-green-800';
+        // Positive: teal shades
+        if (absR >= 0.7) return 'bg-teal-700 text-white';
+        if (absR >= 0.5) return 'bg-teal-600 text-white';
+        if (absR >= 0.3) return 'bg-teal-400 text-white';
+        return 'bg-teal-200 text-teal-900';
     } else {
-        // Negative: red shades
-        if (absR >= 0.7) return 'bg-red-600 text-white';
-        if (absR >= 0.5) return 'bg-red-500 text-white';
-        if (absR >= 0.3) return 'bg-red-400 text-white';
-        return 'bg-red-200 text-red-800';
+        // Negative: amber shades
+        if (absR >= 0.7) return 'bg-amber-700 text-white';
+        if (absR >= 0.5) return 'bg-amber-600 text-white';
+        if (absR >= 0.3) return 'bg-amber-400 text-white';
+        return 'bg-amber-200 text-amber-900';
     }
 }
 
@@ -56,37 +59,50 @@ export default function CorrelationMatrix({ onCellClick }: CorrelationMatrixProp
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+                <Loader2 className="h-6 w-6 animate-spin text-[var(--color-accent)]" />
             </div>
         );
     }
 
-    if (error || !data) {
+    if (error || !data || (data as any).error) {
         return (
-            <div className="text-center py-8 text-gray-500">
-                Failed to load correlation data
+            <div className="text-center py-8 text-[var(--text-tertiary)]">
+                {(data as any)?.error || 'Failed to load correlation data'}
             </div>
         );
     }
 
-    if (data.variables.length < 2) {
+    if (!data.variables || !Array.isArray(data.variables) || data.variables.length < 2) {
         return (
-            <div className="text-center py-8 text-gray-500">
-                Need at least 2 variables with data to show correlations
+            <div className="text-center py-12 space-y-4">
+                <FlaskConical className="h-12 w-12 mx-auto text-[var(--text-tertiary)] opacity-50" suppressHydrationWarning />
+                <div>
+                    <p className="text-[var(--text-secondary)] font-medium">Not enough data yet</p>
+                    <p className="text-sm text-[var(--text-tertiary)] mt-1">
+                        Create at least 2 protocols and log data for 14+ days to see correlations.
+                    </p>
+                </div>
+                <Link
+                    href="/habits/new"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-[var(--radius-button)] text-sm font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
+                >
+                    <PlusCircle className="h-4 w-4" suppressHydrationWarning />
+                    Create Protocol
+                </Link>
             </div>
         );
     }
 
     return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
             <table className="w-full border-collapse">
                 <thead>
                     <tr>
-                        <th className="p-2 text-left text-xs font-medium text-gray-500 w-32"></th>
+                        <th className="p-3 text-left text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider w-32 min-w-[120px]">Variable</th>
                         {data.variables.map((variable, i) => (
                             <th
                                 key={variable.id}
-                                className="p-2 text-center text-xs font-medium text-gray-600 min-w-[80px] max-w-[120px]"
+                                className="p-2 text-center text-xs font-medium text-[var(--text-secondary)] min-w-[80px] max-w-[120px]"
                                 title={`${variable.habitIcon} ${variable.habitName}: ${variable.name}`}
                             >
                                 <div className="truncate">
@@ -100,7 +116,7 @@ export default function CorrelationMatrix({ onCellClick }: CorrelationMatrixProp
                     {data.variables.map((rowVar, rowIndex) => (
                         <tr key={rowVar.id}>
                             <td
-                                className="p-2 text-xs font-medium text-gray-600 truncate max-w-[120px]"
+                                className="p-2 text-xs font-medium text-[var(--text-secondary)] truncate max-w-[120px]"
                                 title={`${rowVar.habitIcon} ${rowVar.habitName}: ${rowVar.name}`}
                             >
                                 {rowVar.habitIcon} {rowVar.name}
@@ -115,10 +131,10 @@ export default function CorrelationMatrix({ onCellClick }: CorrelationMatrixProp
                                         className={cn(
                                             "p-2 text-center text-xs font-medium transition-all",
                                             isDiagonal
-                                                ? "bg-gray-200 text-gray-400"
+                                                ? "bg-[var(--color-border)] text-[var(--text-tertiary)]"
                                                 : getCorrelationColor(correlation),
                                             !isDiagonal && correlation !== null && onCellClick
-                                                ? "cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-purple-400"
+                                                ? "cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-[var(--color-accent)]"
                                                 : ""
                                         )}
                                         onClick={() => {
@@ -144,25 +160,26 @@ export default function CorrelationMatrix({ onCellClick }: CorrelationMatrixProp
             </table>
 
             {/* Legend */}
-            <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-500">
+            <div className="mt-4 flex items-center justify-center gap-4 text-xs text-[var(--text-tertiary)] flex-wrap">
+                <InfoTooltip text="Values range from -1 to +1. Closer to +1 means both variables increase together. Closer to -1 means when one goes up, the other goes down. Values near 0 mean no relationship." />
                 <div className="flex items-center gap-1">
-                    <div className="w-4 h-4 bg-green-600 rounded" />
+                    <div className="w-4 h-4 bg-teal-700 rounded" />
                     <span>Strong +</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <div className="w-4 h-4 bg-green-300 rounded" />
+                    <div className="w-4 h-4 bg-teal-400 rounded" />
                     <span>Moderate +</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <div className="w-4 h-4 bg-gray-200 rounded" />
+                    <div className="w-4 h-4 bg-[var(--color-bg-subtle)] rounded" />
                     <span>Weak/None</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <div className="w-4 h-4 bg-red-300 rounded" />
+                    <div className="w-4 h-4 bg-amber-400 rounded" />
                     <span>Moderate −</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <div className="w-4 h-4 bg-red-600 rounded" />
+                    <div className="w-4 h-4 bg-amber-700 rounded" />
                     <span>Strong −</span>
                 </div>
             </div>

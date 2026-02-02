@@ -29,7 +29,7 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                 "relative overflow-hidden transition-all duration-300 group cursor-pointer border-0",
                 isCompleted
                     ? "bg-[var(--color-bg-subtle)] shadow-none opacity-80"
-                    : "bg-white hover:-translate-y-1 hover:shadow-[var(--shadow-hover)]"
+                    : "bg-[var(--color-bg-card)] paper-lift"
             )}
             onClick={onRegister}
         >
@@ -38,7 +38,7 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                     {/* Icon Container */}
                     <div
                         className={cn(
-                            "h-14 w-14 rounded-2xl flex items-center justify-center text-2xl transition-colors",
+                            "h-14 w-14 rounded-[var(--radius-card)] flex items-center justify-center text-2xl transition-colors",
                             isCompleted
                                 ? "bg-[var(--color-border)] text-[var(--color-text-tertiary)] grayscale"
                                 : "bg-[var(--color-accent-light)] text-[var(--color-accent)]"
@@ -51,7 +51,7 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
                     {/* Text Info */}
                     <div>
                         <h3 className={cn(
-                            "text-lg font-semibold transition-colors",
+                            "text-lg font-semibold transition-colors font-display",
                             isCompleted ? "text-[var(--text-secondary)] line-through decoration-[var(--color-border)]" : "text-[var(--text-primary)]"
                         )}>
                             {habit.name}
@@ -64,12 +64,13 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
 
                 {/* Action Indicators */}
                 <div className="flex items-center gap-2">
-                    {/* Edit Button - Always visible */}
+                    {/* Edit Button - Visible on mobile/touch, or on hover on desktop */}
                     <button
                         onClick={handleEdit}
                         className={cn(
-                            "h-10 w-10 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100",
-                            "bg-[var(--color-slate-100)] text-[var(--text-secondary)] hover:bg-[var(--color-slate-200)] hover:text-[var(--text-primary)]"
+                            "h-10 w-10 rounded-[var(--radius-button)] flex items-center justify-center transition-all",
+                            "bg-[var(--color-bg-subtle)] text-[var(--text-secondary)] hover:bg-[var(--color-border)] hover:text-[var(--text-primary)]",
+                            "opacity-100 sm:opacity-0 sm:group-hover:opacity-100" // Always visible on mobile
                         )}
                         title="Edit habit"
                     >
@@ -78,11 +79,16 @@ export const HabitCard = ({ habit, onRegister, isCompleted = false }: HabitCardP
 
                     {/* Completion Indicator */}
                     {isCompleted ? (
-                        <div className="h-10 w-10 rounded-full bg-[var(--color-success)]/10 text-[var(--color-success)] flex items-center justify-center animate-scale-in">
+                        <div className="h-10 w-10 rounded-[var(--radius-button)] bg-[var(--color-success)]/10 text-[var(--color-success)] flex items-center justify-center animate-scale-in">
                             <Check className="h-5 w-5" suppressHydrationWarning />
                         </div>
                     ) : (
-                        <div className="h-10 w-10 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] flex items-center justify-center group-hover:bg-[var(--color-accent)] group-hover:text-white transition-all">
+                        <div className={cn(
+                            "h-10 w-10 rounded-[var(--radius-button)] flex items-center justify-center transition-all",
+                            "bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)]",
+                            "sm:group-hover:bg-[var(--color-accent)] sm:group-hover:text-white",
+                            "group-active:bg-[var(--color-accent)] group-active:text-white" // Feedback on tap
+                        )}>
                             <Plus className="h-5 w-5" suppressHydrationWarning />
                         </div>
                     )}

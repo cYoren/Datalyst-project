@@ -247,6 +247,20 @@ export class DashboardService {
     }
 
     /**
+     * Get total unique logging days for the user (for insights countdown)
+     */
+    static async getTotalLoggingDays(userId: string): Promise<number> {
+        const entries = await prisma.habitEntry.findMany({
+            where: { userId },
+            select: { logicalDate: true },
+        });
+
+        return new Set(
+            entries.map(e => format(new Date(e.logicalDate), 'yyyy-MM-dd'))
+        ).size;
+    }
+
+    /**
      * Get habits scheduled for today
      */
     static async getTodayHabits(userId: string) {

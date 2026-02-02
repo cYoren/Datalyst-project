@@ -8,6 +8,7 @@ import { SubvariableType } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarDays, Trash2, Loader2 } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
 
 interface EntryEditFormProps {
     entry: {
@@ -42,6 +43,7 @@ interface EntryEditFormProps {
 export const EntryEditForm = ({ entry, onSuccess, onCancel, onDelete }: EntryEditFormProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [values, setValues] = useState<Record<string, number>>({});
     const [note, setNote] = useState(entry.note || '');
     const [logicalDate, setLogicalDate] = useState(
@@ -100,10 +102,7 @@ export const EntryEditForm = ({ entry, onSuccess, onCancel, onDelete }: EntryEdi
     };
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
-            return;
-        }
-
+        setShowDeleteConfirm(false);
         setIsDeleting(true);
 
         try {
@@ -243,7 +242,7 @@ export const EntryEditForm = ({ entry, onSuccess, onCancel, onDelete }: EntryEdi
                 <Button
                     type="button"
                     variant="ghost"
-                    onClick={handleDelete}
+                    onClick={() => setShowDeleteConfirm(true)}
                     disabled={isDeleting}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
@@ -269,6 +268,30 @@ export const EntryEditForm = ({ entry, onSuccess, onCancel, onDelete }: EntryEdi
                     Save Changes
                 </Button>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                title="Delete Entry?"
+            >
+                <div className="space-y-4">
+                    <p className="text-[var(--text-secondary)]">
+                        Are you sure you want to delete this entry? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 justify-end">
+                        <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleDelete}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </form>
     );
 };

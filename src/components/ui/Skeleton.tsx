@@ -10,9 +10,10 @@ export function Skeleton({ className }: SkeletonProps) {
     return (
         <div
             className={cn(
-                "animate-pulse rounded-md bg-[var(--color-bg-subtle)]",
+                "rounded-md bg-[var(--color-bg-subtle)]",
                 className
             )}
+            style={{ animation: 'pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}
         />
     );
 }
@@ -42,8 +43,8 @@ export function SkeletonHabitCard() {
                     <Skeleton className="h-5 w-32" />
                     <Skeleton className="h-4 w-48" />
                     <div className="flex gap-2 pt-2">
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                        <Skeleton className="h-6 w-20 rounded-full" />
+                        <Skeleton className="h-6 w-16 rounded-[var(--radius-button)]" />
+                        <Skeleton className="h-6 w-20 rounded-[var(--radius-button)]" />
                     </div>
                 </div>
                 <Skeleton className="h-9 w-20 rounded-lg" />

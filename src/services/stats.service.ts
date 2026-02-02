@@ -24,7 +24,7 @@ export class StatsService {
             orderBy: { logicalDate: 'asc' }
         });
 
-        if (entries.length < 5) return []; // Not enough data
+        if (entries.length < 14) return []; // Need at least 14 data points for meaningful correlations
 
         // 2. Pivot data: Date -> { subvarId: value }
         const dataByDate: Record<string, Record<string, number>> = {};
@@ -52,7 +52,10 @@ export class StatsService {
         const uniqueSubvars = Array.from(subvarIds);
         const results = [];
 
-        // 3. Calculate correlations for every pair
+        // 3. Calculate correlations for every pair (with Bonferroni correction)
+        const numTests = (uniqueSubvars.length * (uniqueSubvars.length - 1)) / 2;
+        const adjustedAlpha = numTests > 0 ? 0.05 / numTests : 0.05;
+
         for (let i = 0; i < uniqueSubvars.length; i++) {
             for (let j = i + 1; j < uniqueSubvars.length; j++) {
                 const id1 = uniqueSubvars[i];
@@ -69,7 +72,7 @@ export class StatsService {
                     }
                 });
 
-                if (x.length < 5) continue; // Need minimum overlap
+                if (x.length < 14) continue; // Need minimum 14 overlapping data points
 
                 // Choose method based on types
                 // If both are numeric continuous -> Pearson
@@ -83,7 +86,7 @@ export class StatsService {
                     ? calculateSpearmanCorrelation(x, y)
                     : calculatePearsonCorrelation(x, y);
 
-                if (correlation && correlation.pValue < 0.05 && Math.abs(correlation.coefficient) > 0.3) {
+                if (correlation && correlation.pValue < adjustedAlpha && Math.abs(correlation.coefficient) > 0.3) {
                     const info1 = subvarInfo[id1];
                     const info2 = subvarInfo[id2];
 

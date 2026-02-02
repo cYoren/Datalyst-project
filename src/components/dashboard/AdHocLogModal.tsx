@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { Search, Plus, Clock, X, Loader2 } from 'lucide-react';
+import { fetcher } from '@/lib/hooks';
 
 interface AdHocHabit {
     id: string;
@@ -26,7 +27,7 @@ interface AdHocLogModalProps {
     onLogComplete?: () => void;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 
 export default function AdHocLogModal({ isOpen, onClose, onLogComplete }: AdHocLogModalProps) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -41,16 +42,12 @@ export default function AdHocLogModal({ isOpen, onClose, onLogComplete }: AdHocL
     );
 
     // Filter habits by search query
-    const filteredHabits = useMemo(() => {
-        if (!habits) return [];
-        if (!searchQuery.trim()) return habits;
-
-        const query = searchQuery.toLowerCase();
-        return habits.filter(h =>
-            h.name.toLowerCase().includes(query) ||
-            h.subvariables.some(s => s.name.toLowerCase().includes(query))
-        );
-    }, [habits, searchQuery]);
+    const filteredHabits = Array.isArray(habits) ? (
+        !searchQuery.trim() ? habits : habits.filter(h =>
+            h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            h.subvariables.some(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+    ) : [];
 
     // Handle value change for a subvariable
     const handleValueChange = (subId: string, value: number) => {

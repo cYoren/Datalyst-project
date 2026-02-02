@@ -1,4 +1,5 @@
 import * as ss from 'simple-statistics';
+import { tTestPValue } from './pvalue';
 
 export interface CorrelationResult {
     coefficient: number;
@@ -70,20 +71,6 @@ function rankData(data: number[]): number[] {
     });
 }
 
-// Helper: Approximate p-value from t-statistic
-// Degrees of freedom (df) = n - 2
 function calculatePValueFromT(t: number, df: number): number {
-    const absT = Math.abs(t);
-    // Very rough approximation for now, sufficient for "significance" indication
-    // In a real scientific app we'd use jstat or similar
-    if (df <= 0) return 1.0;
-
-    // Simple heuristic for common thresholds
-    if (absT > 3.291) return 0.001; // p < 0.001
-    if (absT > 2.576) return 0.01;  // p < 0.01
-    if (absT > 1.960) return 0.05;  // p < 0.05
-    if (absT > 1.645) return 0.10;  // p < 0.10
-
-    // Linear interpolation for values in between (very rough)
-    return 1.0 / (1 + absT);
+    return tTestPValue(t, df);
 }

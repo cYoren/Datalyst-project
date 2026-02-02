@@ -1,4 +1,5 @@
 import * as ss from 'simple-statistics';
+import { tTestPValue } from './pvalue';
 
 export interface TTestResult {
     tStatistic: number;
@@ -101,16 +102,8 @@ export function performChiSquareTest(table: number[][]): ChiSquareResult | null 
     };
 }
 
-// Helper: Reusing the t-test p-value approximation from correlations
-// In a real app, we'd extract this to a shared utility
 function calculatePValueFromT(t: number, df: number): number {
-    const absT = Math.abs(t);
-    if (df <= 0) return 1.0;
-    if (absT > 3.291) return 0.001;
-    if (absT > 2.576) return 0.01;
-    if (absT > 1.960) return 0.05;
-    if (absT > 1.645) return 0.10;
-    return 1.0 / (1 + absT);
+    return tTestPValue(t, df);
 }
 
 function getChiSquarePValue(chi2: number, df: number): number {

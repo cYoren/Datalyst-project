@@ -22,20 +22,18 @@ export async function GET() {
         // Fetch core data in parallel - don't wait for insights
         const [
             habits,
-            streak,
             weeklyCompletion,
-            consistency,
             dailyProgress,
             weeklySummary,
+            totalLoggingDays,
             user,
             cachedInsights
         ] = await Promise.all([
             HabitService.getUserHabits(userId),
-            DashboardService.calculateUserStreak(userId),
             DashboardService.getCompletionRate(userId, 7),
-            DashboardService.getConsistencyScore(userId),
             DashboardService.getDailyProgress(userId),
             DashboardService.getWeeklySummary(userId),
+            DashboardService.getTotalLoggingDays(userId),
             prisma.user.findUnique({
                 where: { id: userId },
                 select: { email: true, name: true }
@@ -84,11 +82,10 @@ export async function GET() {
         return NextResponse.json({
             habits,
             stats: {
-                streak,
                 weeklyCompletion,
-                consistency,
                 dailyProgress,
-                weeklySummary
+                weeklySummary,
+                totalLoggingDays
             },
             insights,
             user

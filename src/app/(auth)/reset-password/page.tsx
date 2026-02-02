@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
 
             setSuccess(true);
         } catch (err: any) {
-            setError(err.message || 'Erro ao enviar email de recuperação');
+            setError(err.message || 'Failed to send recovery email');
         } finally {
             setLoading(false);
         }
@@ -45,14 +45,14 @@ export default function ResetPasswordPage() {
                         </div>
                     </div>
                     <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
-                        Email enviado!
+                        Email sent!
                     </h2>
                     <p className="text-[var(--text-secondary)] mb-6">
-                        Enviamos um link de recuperação para <strong>{email}</strong>.
-                        Clique no link para redefinir sua senha.
+                        We sent a recovery link to <strong>{email}</strong>.
+                        Click the link to reset your password.
                     </p>
                     <Button onClick={() => window.location.href = '/login'} className="w-full">
-                        Voltar para login
+                        Back to login
                     </Button>
                 </Card>
             </div>
@@ -64,10 +64,10 @@ export default function ResetPasswordPage() {
             <Card className="w-full max-w-md p-8">
                 <div className="mb-8 text-center">
                     <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-                        Recuperar senha
+                        Reset password
                     </h1>
                     <p className="text-[var(--text-secondary)]">
-                        Digite seu email para receber um link de recuperação
+                        Enter your email to receive a recovery link
                     </p>
                 </div>
 
@@ -90,7 +90,7 @@ export default function ResetPasswordPage() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="seu@email.com"
+                                placeholder="you@email.com"
                                 required
                                 className="pl-10"
                             />
@@ -101,18 +101,18 @@ export default function ResetPasswordPage() {
                         {loading ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" suppressHydrationWarning />
-                                Enviando...
+                                Sending...
                             </>
                         ) : (
-                            'Enviar link de recuperação'
+                            'Send recovery link'
                         )}
                     </Button>
                 </form>
 
                 <p className="mt-8 text-center text-sm text-[var(--text-secondary)]">
-                    Lembrou sua senha?{' '}
+                    Remember your password?{' '}
                     <Link href="/login" className="text-[var(--color-accent)] hover:underline font-medium">
-                        Voltar para login
+                        Back to login
                     </Link>
                 </p>
             </Card>

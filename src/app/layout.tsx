@@ -1,9 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Crimson_Pro, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { CookieNotice } from "@/components/ui/CookieNotice";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 
-const inter = Inter({ subsets: ["latin"] });
+const crimsonPro = Crimson_Pro({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Datalyst | N=1 Self-Experimentation Platform",
@@ -27,7 +38,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Datalyst",
   },
   icons: {
@@ -45,9 +56,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  themeColor: "#3b82f6",
+  viewportFit: "cover",
+  themeColor: "#0F766E",
 };
 
 export default function RootLayout({
@@ -57,15 +67,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Additional favicon formats for maximum compatibility */}
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      </head>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={`${dmSans.variable} ${crimsonPro.variable} font-[family-name:var(--font-body)]`} suppressHydrationWarning>
+        <ServiceWorkerRegister />
         {children}
         <CookieNotice />
       </body>
