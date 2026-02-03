@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Loader2, ArrowRight, Target, Sparkles, Play, Package, Check } from 'lucide-react';
+import { Loader2, ArrowRight, Target, Sparkles, Play, Package, Check, ClipboardList, TrendingUp, FlaskConical, BadgeCheck } from 'lucide-react';
 import { getBundlesForFocusArea, getTemplateById, type ProtocolBundle } from '@/lib/templates';
 
 export default function OnboardingPage() {
@@ -111,7 +111,7 @@ export default function OnboardingPage() {
             <Card className="w-full max-w-lg p-8">
                 {/* Progress Bar */}
                 <div className="flex gap-2 mb-8">
-                    {[1, 2, 3].map(i => (
+                    {[1, 2, 3, 4].map(i => (
                         <div
                             key={i}
                             className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'
@@ -130,11 +130,11 @@ export default function OnboardingPage() {
                                 Welcome to Datalyst!
                             </h1>
                             <p className="text-[var(--text-secondary)] mt-2">
-                                Unlike habit trackers, Datalyst helps you run personal experiments. Track inputs (what you do) and outputs (how you feel) — we'll find the connections.
+                                Unlike habit trackers, Datalyst helps you run personal experiments. Track inputs (what you do) and outputs (how you feel). We'll find the connections.
                             </p>
                         </div>
                         <Button onClick={() => setStep(2)} className="w-full" size="lg">
-                            Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                            See How It Works <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
 
                         <div className="relative">
@@ -176,6 +176,48 @@ export default function OnboardingPage() {
                 {step === 2 && (
                     <div className="animate-fade-in space-y-6">
                         <div className="text-center">
+                            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">
+                                The Science of Self-Discovery
+                            </h2>
+                            <p className="text-sm text-[var(--text-secondary)]">
+                                Four simple steps to personal insights
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+                            {[
+                                { icon: ClipboardList, color: 'bg-blue-100 text-blue-600', title: '1. Track daily', desc: 'Log what you do (caffeine, exercise) and how you feel (sleep quality, mood)' },
+                                { icon: TrendingUp, color: 'bg-amber-100 text-amber-600', title: '2. Discover patterns', desc: 'After 14 days, we calculate correlations: connections you\'d never spot manually' },
+                                { icon: FlaskConical, color: 'bg-purple-100 text-purple-600', title: '3. Test with experiments', desc: 'Found a correlation? Run a controlled experiment to see if it\'s real causation' },
+                                { icon: BadgeCheck, color: 'bg-green-100 text-green-600', title: '4. Know what works', desc: 'Build personal knowledge backed by your own data, not generic advice' },
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-bg-subtle)]">
+                                    <div className={`p-2 rounded-lg ${item.color} shrink-0`}>
+                                        <item.icon className="h-4 w-4" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-[var(--text-primary)] text-sm">{item.title}</h3>
+                                        <p className="text-xs text-[var(--text-secondary)] mt-0.5">{item.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 rounded-xl p-4 text-center">
+                            <p className="text-sm text-[var(--text-secondary)]">
+                                <strong className="text-[var(--text-primary)]">Why this matters:</strong> Correlation shows a pattern. Experimentation proves the cause. Most apps stop at step 1. Datalyst takes you all the way.
+                            </p>
+                        </div>
+
+                        <Button onClick={() => setStep(3)} className="w-full" size="lg">
+                            Choose My Focus <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+
+                {step === 3 && (
+                    <div className="animate-fade-in space-y-6">
+                        <div className="text-center">
                             <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Target className="h-8 w-8 text-purple-600" />
                             </div>
@@ -191,7 +233,7 @@ export default function OnboardingPage() {
                             {['Productivity', 'Physical Health', 'Mental Wellness', 'Learning', 'Finance'].map((opt) => (
                                 <button
                                     key={opt}
-                                    onClick={() => { setFocus(opt); setStep(3); }}
+                                    onClick={() => { setFocus(opt); setStep(4); }}
                                     className="p-4 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-subtle)] transition-all text-left font-medium text-[var(--text-primary)]"
                                 >
                                     {opt}
@@ -201,7 +243,7 @@ export default function OnboardingPage() {
                     </div>
                 )}
 
-                {step === 3 && (
+                {step === 4 && (
                     <div className="animate-fade-in space-y-6">
                         <div className="text-center">
                             <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -214,7 +256,7 @@ export default function OnboardingPage() {
                                 Each bundle includes 2-3 protocols designed to reveal real correlations.
                             </p>
                             <p className="text-xs text-[var(--text-tertiary)] mt-2">
-                                A <strong className="text-[var(--text-secondary)]">protocol</strong> is a set of variables you track daily — like Sleep (hours + quality + refreshed?).
+                                A <strong className="text-[var(--text-secondary)]">protocol</strong> is a set of variables you track daily, like Sleep (hours + quality + refreshed?).
                             </p>
                         </div>
 
@@ -293,7 +335,7 @@ export default function OnboardingPage() {
                         </Button>
 
                         <button
-                            onClick={() => setStep(2)}
+                            onClick={() => setStep(3)}
                             className="w-full text-sm text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
                         >
                             Change focus area

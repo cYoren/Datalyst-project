@@ -21,10 +21,10 @@ export default function DataPage() {
                 <header className="animate-fade-in">
                     <h1 className="text-4xl font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-3">
                         <BarChart3 className="h-10 w-10 text-[var(--color-accent)]" suppressHydrationWarning />
-                        Data Insights
+                        Charts
                     </h1>
                     <p className="text-[var(--text-secondary)] mt-2 text-lg">
-                        Visualize your habit progress in tables and charts.
+                        Visualize your protocol data in tables and charts.
                     </p>
                 </header>
 
@@ -37,7 +37,7 @@ export default function DataPage() {
                             Your data will appear here
                         </h2>
                         <p className="text-[var(--text-secondary)]">
-                            As soon as you start logging your habits, we will generate detailed charts and tables for you to track your progress.
+                            As soon as you start logging your protocols, we'll generate detailed charts and tables for you to track your progress.
                         </p>
 
                         {/* Mock Graph Preview */}

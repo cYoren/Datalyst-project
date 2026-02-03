@@ -74,7 +74,7 @@ export default function LabPage() {
             {/* Explainer Banner */}
             <Card className="p-4 border-l-4 border-l-purple-500 bg-purple-50/50">
                 <p className="text-sm text-[var(--text-secondary)]">
-                    The Lab lets you test specific interventions with randomized experiments. Your Dashboard shows automatic correlations from your data — the Lab goes further by controlling variables to prove causation.
+                    The Lab lets you test specific interventions with randomized experiments. Your Dashboard shows automatic correlations from your data. The Lab goes further by controlling variables to prove causation.
                 </p>
             </Card>
 

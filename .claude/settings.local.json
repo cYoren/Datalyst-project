@@ -12,7 +12,8 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(npx prisma db push:*)",
       "Bash(npx next lint)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

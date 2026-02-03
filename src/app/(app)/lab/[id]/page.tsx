@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
-import { FlaskConical, ArrowLeft, Play, CheckCircle, Archive, Loader2, Download, ShieldCheck, ChevronDown, AlertTriangle } from 'lucide-react';
+import { FlaskConical, ArrowLeft, Play, CheckCircle, Archive, Loader2, Download, ShieldCheck, ChevronDown, AlertTriangle, HelpCircle } from 'lucide-react';
+import { InfoTooltip } from '@/components/ui/Tooltip';
 import ExperimentChart from '@/components/lab/ExperimentChart';
 import { exportRawData } from '@/stats/analysis';
 import { fetcher } from '@/lib/hooks';
@@ -192,10 +193,10 @@ function DataQualitySection({ stats, experiment }: { stats: ExperimentResults['s
                                 <span className="text-xs font-semibold text-[var(--text-primary)]">Interim analysis: </span>
                                 <span className="text-xs text-[var(--text-secondary)]">
                                     {n1.sequentialBoundary!.canRejectNull
-                                        ? 'Effect crossed the significance boundary — you may stop early.'
+                                        ? 'Effect crossed the significance boundary. You may stop early.'
                                         : `${(n1.sequentialBoundary!.dataFraction * 100).toFixed(0)}% of data collected. Continue gathering data.`
                                     }
-                                    {n1.sequentialBoundary!.canStopForFutility && ' Effect is very small — consider stopping for futility.'}
+                                    {n1.sequentialBoundary!.canStopForFutility && ' Effect is very small. Consider stopping for futility.'}
                                 </span>
                             </div>
                         </div>
@@ -444,12 +445,13 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                                 </span>
                                 {stats.n1.tTest && (
                                     <span className={cn(
-                                        'text-xs font-medium px-2 py-0.5 rounded',
+                                        'text-xs font-medium px-2 py-0.5 rounded inline-flex items-center gap-1',
                                         stats.n1.tTest.significant
                                             ? 'text-green-700 bg-green-50'
                                             : 'text-gray-600 bg-gray-100'
                                     )}>
                                         p = {stats.n1.tTest.pValue.toFixed(3)}
+                                        <InfoTooltip text={`p-value measures the probability of seeing this result by chance. p < 0.05 means less than 5% chance it's random, which is generally considered statistically significant. Your p = ${stats.n1.tTest.pValue.toFixed(3)} is ${stats.n1.tTest.significant ? 'significant' : 'not significant (could be random)'}.`} />
                                     </span>
                                 )}
                             </div>
@@ -461,7 +463,7 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                 </div>
             )}
 
-            {/* Data Quality — grouped collapsible section */}
+            {/* Data Quality: grouped collapsible section */}
             <DataQualitySection stats={stats} experiment={experiment} />
 
             {/* Chart */}

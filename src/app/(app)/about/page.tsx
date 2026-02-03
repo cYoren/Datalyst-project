@@ -66,12 +66,13 @@ export default function AboutPage() {
                 <Card className="p-8 border-l-4 border-l-[var(--color-success)]">
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
                         <Brain className="h-6 w-6 text-[var(--color-success)]" suppressHydrationWarning />
-                        Personal RCT Platform
+                        N=1 Trial Platform
                     </h2>
                     <p className="text-[var(--text-secondary)] leading-relaxed">
-                        Think of Datalyst as your personal <strong>Randomized Controlled Trial</strong> platform.
-                        Change one variable, keep others constant, and measure the outcome. Scientific rigor
-                        applied to your daily life, turning intuition into evidence.
+                        <strong>N=1</strong> means "sample size of one": you're the only subject, testing on yourself.
+                        This is <em>single-subject experimentation</em>: change one variable, keep others constant,
+                        measure outcomes over time. It's not the same as a large population study, but it reveals
+                        what works for <em>your</em> unique biology and lifestyle.
                     </p>
                 </Card>
 
@@ -88,28 +89,47 @@ export default function AboutPage() {
                 </Card>
             </div>
 
+            {/* Correlation vs Causation */}
+            <Card className="p-6 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800">
+                <h3 className="font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+                    ⚠️ Correlation ≠ Causation
+                </h3>
+                <p className="text-[var(--text-secondary)] text-sm mb-4">
+                    When we show "Caffeine correlates with poor sleep," it means the pattern exists in your data.
+                    But it doesn't prove caffeine <em>caused</em> the bad sleep. Maybe you drink coffee on stressful days, and stress causes both.
+                </p>
+                <p className="text-[var(--text-secondary)] text-sm">
+                    <strong>To prove causation</strong>, use the Lab to run a controlled experiment: randomize your caffeine intake
+                    and see if the effect persists. That's real science.
+                </p>
+            </Card>
+
             {/* Getting Started */}
             <Card className="p-6 bg-[var(--color-bg-subtle)] border-dashed">
                 <h3 className="font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-[var(--color-accent)]" suppressHydrationWarning />
-                    How to Run Your First Experiment
+                    The Full Journey
                 </h3>
                 <ol className="space-y-3 text-[var(--text-secondary)]">
                     <li className="flex gap-3">
                         <span className="font-bold text-[var(--color-accent)]">1.</span>
-                        <span><strong>Create a Protocol</strong> with the variables you want to track (e.g., "Sleep Optimization")</span>
+                        <span><strong>Create Protocols</strong>: Track what you do (inputs) and how you feel (outputs)</span>
                     </li>
                     <li className="flex gap-3">
                         <span className="font-bold text-[var(--color-accent)]">2.</span>
-                        <span><strong>Log daily</strong> using the Today's Log widget—takes seconds</span>
+                        <span><strong>Log daily for 14+ days</strong>: Build a dataset for meaningful analysis</span>
                     </li>
                     <li className="flex gap-3">
                         <span className="font-bold text-[var(--color-accent)]">3.</span>
-                        <span><strong>Introduce an intervention</strong> (e.g., "No screens after 9pm")</span>
+                        <span><strong>Discover correlations</strong>: Dashboard shows patterns in your data automatically</span>
                     </li>
                     <li className="flex gap-3">
                         <span className="font-bold text-[var(--color-accent)]">4.</span>
-                        <span><strong>Compare your data</strong> before vs after to see the real impact</span>
+                        <span><strong>Test in the Lab</strong>: Click any insight to run a controlled experiment</span>
+                    </li>
+                    <li className="flex gap-3">
+                        <span className="font-bold text-[var(--color-accent)]">5.</span>
+                        <span><strong>Know what works</strong>: Prove causation with your own data, not generic advice</span>
                     </li>
                 </ol>
             </Card>

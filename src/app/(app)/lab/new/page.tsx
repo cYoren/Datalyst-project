@@ -294,8 +294,8 @@ export default function NewExperimentPage() {
                                     : "border-[var(--color-border)] hover:border-[var(--text-tertiary)]"
                             )}
                         >
-                            <p className="font-bold text-[var(--text-primary)]">Blind RCT</p>
-                            <p className="text-xs text-[var(--text-secondary)] mt-1">The Gold Standard. Substance labels are hidden to avoid placebo effect.</p>
+                            <p className="font-bold text-[var(--text-primary)]">Label-Hidden</p>
+                            <p className="text-xs text-[var(--text-secondary)] mt-1">Condition names hidden during logging (shows "Condition 1/2"). Reduces expectation bias but not true double-blind.</p>
                         </button>
                     </div>
 

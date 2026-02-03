@@ -329,7 +329,7 @@ export const PROTOCOL_BUNDLES: ProtocolBundle[] = [
         name: 'Mindful Wellness',
         emoji: '🧘',
         description: 'Track meditation, mood, and sleep together',
-        whyItCorrelates: 'Meditation improves sleep quality and mood — see it in your data',
+        whyItCorrelates: 'Meditation improves sleep quality and mood. See it in your data',
         protocolIds: ['meditation', 'mood', 'sleep'],
         focusAreas: ['Mental Wellness']
     },

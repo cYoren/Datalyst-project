@@ -272,12 +272,12 @@ export default function DashboardPage() {
                             <h3 className="font-semibold text-[var(--text-primary)] font-display">
                                 {(stats?.totalLoggingDays || 0) >= 14
                                     ? 'Insights are cooking...'
-                                    : 'Insights unlock soon'}
+                                    : 'Building your dataset'}
                             </h3>
                             <p className="text-sm text-[var(--text-secondary)] mt-1">
                                 {(stats?.totalLoggingDays || 0) >= 14
                                     ? 'You have enough data! Correlations will appear once calculated.'
-                                    : `Log daily for ${14 - (stats?.totalLoggingDays || 0)} more day${14 - (stats?.totalLoggingDays || 0) !== 1 ? 's' : ''} to discover correlations between your protocols.`}
+                                    : `${14 - (stats?.totalLoggingDays || 0)} more day${14 - (stats?.totalLoggingDays || 0) !== 1 ? 's' : ''} until pattern detection activates. We need 14+ data points to find statistically meaningful correlations.`}
                             </p>
                             <div className="mt-3">
                                 <div className="flex justify-between text-xs text-[var(--text-tertiary)] mb-1">
@@ -291,6 +291,11 @@ export default function DashboardPage() {
                                     />
                                 </div>
                             </div>
+                            {(stats?.totalLoggingDays || 0) < 14 && (
+                                <p className="text-xs text-[var(--text-tertiary)] mt-3 italic">
+                                    Example: "Caffeine intake correlates with sleep quality (r = -0.72, p &lt; 0.05)"
+                                </p>
+                            )}
                         </div>
                     </div>
                 </Card>
@@ -323,7 +328,7 @@ export default function DashboardPage() {
                             Start Your First Experiment
                         </h2>
                         <p className="text-[var(--text-secondary)] mb-8 max-w-sm mx-auto">
-                            A protocol tracks multiple variables — like Sleep (hours + quality). Log daily for 14 days, and Datalyst will find correlations you'd never spot manually.
+                            A protocol tracks multiple variables, like Sleep (hours + quality). Log daily for 14 days, and Datalyst will find correlations you'd never spot manually.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -426,11 +431,16 @@ export default function DashboardPage() {
             {/* Insights Section */}
             {insights?.correlations && insights.correlations.length > 0 && (
                 <section className="space-y-6 pt-10 border-t border-[var(--color-border)] animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                    <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2 font-display">
-                        <Brain className="h-6 w-6 text-[var(--color-accent)]" suppressHydrationWarning />
-                        Insights
-                        <InfoTooltip text="Correlations are calculated from your logged data. Higher confidence means the pattern is statistically significant. This is not proof of causation — experiment to find out!" />
-                    </h2>
+                    <div>
+                        <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2 font-display">
+                            <Brain className="h-6 w-6 text-[var(--color-accent)]" suppressHydrationWarning />
+                            Insights
+                            <InfoTooltip text="Correlations are calculated from your logged data. Higher confidence means the pattern is statistically significant. This is not proof of causation. Run an experiment to find out!" />
+                        </h2>
+                        <p className="text-sm text-[var(--text-secondary)] mt-1">
+                            Patterns in your data. Click any to test if it's real causation.
+                        </p>
+                    </div>
 
                     {/* Hero Card - Top Insight */}
                     {insights.correlations[0] && (
@@ -465,7 +475,7 @@ export default function DashboardPage() {
                                     </div>
                                     <span className="flex items-center gap-1 text-sm text-teal-100 font-medium group-hover:text-white transition-colors">
                                         <FlaskConical className="h-4 w-4" suppressHydrationWarning />
-                                        Test this
+                                        Run experiment →
                                     </span>
                                 </div>
                             </div>
@@ -505,7 +515,7 @@ export default function DashboardPage() {
                                         </div>
                                         <span className="flex items-center gap-1 text-xs text-[var(--color-accent)] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                                             <FlaskConical className="h-3.5 w-3.5" suppressHydrationWarning />
-                                            Test this
+                                            Run experiment →
                                         </span>
                                     </div>
                                 </Card>

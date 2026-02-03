@@ -363,7 +363,7 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                     </h3>
                 </div>
                 <p className="text-xs text-[var(--text-tertiary)]">
-                    Track both what you do (inputs) and what happens (outputs). Example: &apos;Duration&apos; + &apos;Effort&apos; + &apos;Satisfaction&apos;.
+                    Track both what you do (<strong>inputs</strong>) and how you feel (<strong>outputs</strong>). Example: 'Duration' (input) + 'Satisfaction' (output). This lets us find correlations between your actions and results.
                 </p>
 
                 <div className="space-y-3">
@@ -441,6 +441,12 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                         <Plus className="h-4 w-4 mr-1" suppressHydrationWarning /> Category
                     </Button>
                 </div>
+
+                {subvariables.length === 1 && (
+                    <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
+                        💡 Tip: Protocols with 2+ variables can reveal correlations. Add an output variable (like "Mood" or "Energy") to see how your inputs affect outcomes.
+                    </p>
+                )}
             </section>
 
             <div className="pt-6 border-t border-[var(--color-slate-200)]">
