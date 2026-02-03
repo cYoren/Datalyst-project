@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HabitForm } from '@/components/forms/HabitForm';
+import { BookOpen } from 'lucide-react';
 
 export default function NewHabitPage() {
     const router = useRouter();
@@ -40,9 +42,18 @@ export default function NewHabitPage() {
 
     return (
         <div className="space-y-6">
-            <header>
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">New Protocol</h1>
-                <p className="text-[var(--text-secondary)]">Configure what you want to track and measure.</p>
+            <header className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-[var(--text-primary)]">New Protocol</h1>
+                    <p className="text-[var(--text-secondary)]">Configure what you want to track and measure.</p>
+                </div>
+                <Link
+                    href="/habits/templates"
+                    className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] hover:underline"
+                >
+                    <BookOpen className="h-4 w-4" />
+                    Browse Templates
+                </Link>
             </header>
 
             <HabitForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />

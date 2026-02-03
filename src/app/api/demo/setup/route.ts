@@ -4,6 +4,53 @@ import { prisma } from '@/lib/prisma';
 import { DEMO_PROTOCOLS, generateMockEntries } from '@/lib/demo-data';
 
 /**
+ * DELETE /api/demo/setup
+ * Archives all protocols for the authenticated user (start fresh).
+ */
+export async function DELETE(request: NextRequest) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const dbUser = await prisma.user.findUnique({
+            where: { email: user.email! }
+        });
+
+        if (!dbUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        // Delete all entries first (foreign key constraint), then habits
+        await prisma.subvariableEntry.deleteMany({
+            where: { habitEntry: { userId: dbUser.id } }
+        });
+
+        await prisma.habitEntry.deleteMany({
+            where: { userId: dbUser.id }
+        });
+
+        const deleted = await prisma.habit.deleteMany({
+            where: { userId: dbUser.id }
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: `Archived ${deleted.count} protocols`
+        });
+    } catch (error) {
+        console.error('Archive all error:', error);
+        return NextResponse.json(
+            { error: 'Failed to archive protocols', details: String(error) },
+            { status: 500 }
+        );
+    }
+}
+
+/**
  * POST /api/demo/setup
  * Creates demo protocols and entries for the authenticated user
  * to showcase the platform's capabilities.

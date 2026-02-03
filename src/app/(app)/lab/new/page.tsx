@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -22,12 +22,13 @@ interface Habit {
 
 export default function NewExperimentPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: habits, isLoading } = useSWR<Habit[]>('/api/habits', fetcher);
 
     const [name, setName] = useState('');
     const [hypothesis, setHypothesis] = useState('');
-    const [independentId, setIndependentId] = useState('');
-    const [dependentId, setDependentId] = useState('');
+    const [independentId, setIndependentId] = useState(searchParams.get('independent') || '');
+    const [dependentId, setDependentId] = useState(searchParams.get('dependent') || '');
     const [startDate, setStartDate] = useState(() => {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -50,6 +51,20 @@ export default function NewExperimentPage() {
     const [conditions, setConditions] = useState<{ label: string; dose?: number }[]>([
         { label: 'A' }, { label: 'B' },
     ]);
+
+    // Auto-generate name when pre-filled from query params
+    useEffect(() => {
+        if (!habits || name) return;
+        const indParam = searchParams.get('independent');
+        const depParam = searchParams.get('dependent');
+        if (indParam && depParam) {
+            const indHabit = habits.find(h => h.id === indParam);
+            const depHabit = habits.find(h => h.id === depParam);
+            if (indHabit && depHabit) {
+                setName(`Does ${indHabit.name} affect ${depHabit.name}?`);
+            }
+        }
+    }, [habits]);
 
     // Reset blockSize to nearest valid multiple when conditions change
     useEffect(() => {

@@ -362,6 +362,9 @@ export const HabitForm = ({ initialData, onSubmit, isSubmitting }: HabitFormProp
                         <InfoTooltip text="Numeric: any number (weight, duration, reps). Scale 0-10: a rating slider. Yes/No: a simple toggle. Category: pick from a list of options." />
                     </h3>
                 </div>
+                <p className="text-xs text-[var(--text-tertiary)]">
+                    Track both what you do (inputs) and what happens (outputs). Example: &apos;Duration&apos; + &apos;Effort&apos; + &apos;Satisfaction&apos;.
+                </p>
 
                 <div className="space-y-3">
                     {subvariables.map((sub, index) => (

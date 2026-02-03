@@ -71,6 +71,13 @@ export default function LabPage() {
                 </Link>
             </div>
 
+            {/* Explainer Banner */}
+            <Card className="p-4 border-l-4 border-l-purple-500 bg-purple-50/50">
+                <p className="text-sm text-[var(--text-secondary)]">
+                    The Lab lets you test specific interventions with randomized experiments. Your Dashboard shows automatic correlations from your data — the Lab goes further by controlling variables to prove causation.
+                </p>
+            </Card>
+
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="p-4 text-center">
@@ -127,7 +134,7 @@ export default function LabPage() {
                         No experiments yet
                     </h3>
                     <p className="text-[var(--text-secondary)] mb-4">
-                        Create your first experiment to discover correlations between your protocols.
+                        Ready to test a theory? Pick a cause (e.g., Caffeine) and an effect (e.g., Sleep), and Datalyst will randomize your days and run the statistics.
                     </p>
                     <Link href="/lab/new" className={cn(buttonVariants({ variant: 'secondary' }), "gap-2")}>
                         <Plus className="h-4 w-4" />

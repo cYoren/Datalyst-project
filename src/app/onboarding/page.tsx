@@ -130,7 +130,7 @@ export default function OnboardingPage() {
                                 Welcome to Datalyst!
                             </h1>
                             <p className="text-[var(--text-secondary)] mt-2">
-                                Let's set up your space so you can start mastering your habits.
+                                Unlike habit trackers, Datalyst helps you run personal experiments. Track inputs (what you do) and outputs (how you feel) — we'll find the connections.
                             </p>
                         </div>
                         <Button onClick={() => setStep(2)} className="w-full" size="lg">
@@ -212,6 +212,9 @@ export default function OnboardingPage() {
                             </h2>
                             <p className="text-[var(--text-secondary)] mt-2">
                                 Each bundle includes 2-3 protocols designed to reveal real correlations.
+                            </p>
+                            <p className="text-xs text-[var(--text-tertiary)] mt-2">
+                                A <strong className="text-[var(--text-secondary)]">protocol</strong> is a set of variables you track daily — like Sleep (hours + quality + refreshed?).
                             </p>
                         </div>
 

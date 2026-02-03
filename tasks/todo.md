@@ -20,23 +20,51 @@
 - [x] Bug: `adaptationPeriod` → `washoutPeriod` (matched schema field)
 - [x] Bug: Fix Correlation Matrix TypeError & AdHocModal hardening
 
-## Phase 3: Multi-Condition & Dose-Finding
-- [ ] 3.1 Schema migration for multi-arm
-- [ ] 3.2 Generalize blocked randomization to N conditions
-- [ ] 3.3 Multi-arm statistics
-- [ ] 3.4 API & UI updates
+## Phase 3a: Multi-Condition Schema + UI ✅
+- [x] 3a.1 Schema migration, schedule generation, creation form, results route
+- [x] 3a.2 Polish: dynamic condition labels, blinding, trial preview, empty label validation
 
-## Phase 4: Blinding & Integrity
-- [ ] 4.1 Per-block blind guess collection
-- [ ] 4.2 Aggregate Bang Index
-- [ ] 4.3 Physical blinding guide
-
-## Phase 5: Results Gating & Transparency
-- [ ] 5.1 Gate results behind end date
-- [ ] 5.2 Pre-registration immutability
-- [ ] 5.3 Enhanced audit report
+## Phases 3b-5: Deferred
+_Paused per product audit recommendation: "Fix the flow first. Fix the math second. Build new features third."_
+_Revisit when usage data shows users hitting limits of 2-condition analysis._
 
 ---
 
-## Review Notes
-_(Added after each phase completion)_
+## Product Audit — Activation & Retention
+
+### Audit Phase 1: Activation & Education ✅
+- [x] Protocol bundles (9 bundles in templates.ts)
+- [x] Wire bundles into onboarding Step 2→3
+- [x] Insights countdown on dashboard (14-day progress bar)
+- [x] First-insight celebration modal
+- [x] Fix Logs page language (now English)
+- [x] Min N changed from 5 to 14
+- [x] Empty states with CTAs (CorrelationMatrix, DataDashboard)
+- [x] Breadcrumbs component wired into layout
+- [x] p-value calculation replaced with proper t-distribution CDF
+- [x] Bonferroni correction in stats service
+- [x] "Save as Template" on habit edit page
+- [x] "New insight discovered" banner on dashboard
+- [x] Mobile nav has "+" button for protocol creation
+
+### Audit Phase 2: Retention & Education (CURRENT)
+
+#### A. Template Library Page (biggest remaining activation gap)
+- [x] A1. Create `/habits/templates` page — browsable grid of starter + user templates
+- [x] A2. Add "Browse Templates" link in sidebar nav and habit creation page
+- [x] A3. "Use Template" action → create habit → redirect to dashboard
+
+#### B. Contextual Tooltips (education)
+- [x] B1. CorrelationMatrix: already has InfoTooltip in legend explaining r-values
+- [x] B2. Dashboard: tooltips on Weekly Completion, This Week stats
+- [x] B3. Insight cards: tooltip on "Confidence" explaining what it means
+
+#### C. Weekly Summary Card (retention hook)
+- [x] C1. "This Week" summary on dashboard: entries, days active, avg/day
+
+#### D. Backdate Awareness (retention — low effort)
+- [x] D1. Backdate hint shown when today is fully logged
+
+### Verification
+- [x] `npx tsc --noEmit` clean
+- [ ] Spot check new pages/components

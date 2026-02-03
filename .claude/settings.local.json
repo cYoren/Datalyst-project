@@ -10,7 +10,9 @@
       "Bash(npx prisma validate:*)",
       "Bash(npx tsc:*)",
       "Bash(npx prisma migrate dev:*)",
-      "Bash(npx prisma db push:*)"
+      "Bash(npx prisma db push:*)",
+      "Bash(npx next lint)",
+      "Bash(dir:*)"
     ]
   }
 }

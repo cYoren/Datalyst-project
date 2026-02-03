@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Calendar, BarChart2, PlusCircle, Settings, ScrollText, BarChart3, Microscope, FlaskConical } from 'lucide-react';
+import { Calendar, BarChart2, PlusCircle, Settings, ScrollText, BarChart3, Microscope, FlaskConical, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/ui/UserMenu';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -53,9 +53,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const navItems = [
         { href: '/dashboard', icon: Calendar, label: 'Dashboard' },
-        { href: '/lab', icon: FlaskConical, label: 'Lab' },
+        { href: '/lab', icon: FlaskConical, label: 'Lab', title: 'Run structured experiments' },
         { href: '/data', icon: BarChart3, label: 'Data' },
         { href: '/logs', icon: ScrollText, label: 'Logs' },
+        { href: '/habits/templates', icon: BookOpen, label: 'Templates' },
         { href: '/habits/new', icon: PlusCircle, label: 'Protocol' },
         { href: '/about', icon: Microscope, label: 'About' },
         { href: '/settings', icon: Settings, label: 'Settings' },
@@ -94,6 +95,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                 key={item.href}
                                 href={item.href}
                                 suppressHydrationWarning
+                                {...('title' in item && item.title ? { title: item.title } : {})}
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-[var(--radius-button)] transition-all font-medium",
                                     isActive

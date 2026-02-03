@@ -11,7 +11,8 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
-import { TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3, Plus, Sparkles, Hash } from 'lucide-react';
+import { TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3, Plus, Sparkles, Hash, FlaskConical } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useDashboard } from '@/lib/hooks';
 import { InfoTooltip } from '@/components/ui/Tooltip';
 import ActiveTrialWidget from '@/components/lab/ActiveTrialWidget';
@@ -32,6 +33,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+    const router = useRouter();
     const { habits, stats, insights, user, isLoading, refresh: refreshHabits } = useDashboard();
     const [selectedHabit, setSelectedHabit] = useState<any | null>(null);
     const [isAdHocModalOpen, setIsAdHocModalOpen] = useState(false);
@@ -39,6 +41,8 @@ export default function DashboardPage() {
     const [newInsightText, setNewInsightText] = useState<string | null>(null);
     const [currentDate, setCurrentDate] = useState('');
     const [greeting, setGreeting] = useState('');
+    const [showArchiveAll, setShowArchiveAll] = useState(false);
+    const [isArchivingAll, setIsArchivingAll] = useState(false);
 
     // First-insight celebration + new insight detection
     useEffect(() => {
@@ -73,6 +77,30 @@ export default function DashboardPage() {
     const handleRegisterSuccess = () => {
         setSelectedHabit(null);
         refreshHabits();
+    };
+
+    const handleTestCorrelation = (corr: any) => {
+        const habit1 = habits.find(h => h.name === corr.variable1.habit);
+        const habit2 = habits.find(h => h.name === corr.variable2.habit);
+        const params = new URLSearchParams();
+        if (habit1) params.set('independent', habit1.id);
+        if (habit2) params.set('dependent', habit2.id);
+        router.push(`/lab/new?${params.toString()}`);
+    };
+
+    const handleArchiveAll = async () => {
+        setIsArchivingAll(true);
+        try {
+            const res = await fetch('/api/demo/setup', { method: 'DELETE' });
+            if (res.ok) {
+                refreshHabits();
+                setShowArchiveAll(false);
+            }
+        } catch (err) {
+            console.error('Failed to archive all:', err);
+        } finally {
+            setIsArchivingAll(false);
+        }
     };
 
     const userName = user?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
@@ -166,7 +194,7 @@ export default function DashboardPage() {
                                 <p className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">
                                     {stats?.weeklyCompletion || 0}%
                                 </p>
-                                <p className="text-xs text-[var(--text-tertiary)]">Week</p>
+                                <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1">Week <InfoTooltip text="Percentage of scheduled protocols you logged this week." /></p>
                             </div>
                         </div>
                     </Card>
@@ -181,12 +209,33 @@ export default function DashboardPage() {
                                 <p className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">
                                     {stats?.weeklySummary.daysActive || 0}/7
                                 </p>
-                                <p className="text-xs text-[var(--text-tertiary)]">This Week</p>
+                                <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-1">This Week <InfoTooltip text="Number of days this week you logged at least one entry." /></p>
                             </div>
                         </div>
                     </Card>
                 </div>
             </header>
+
+            {/* Weekly Summary */}
+            {stats && stats.weeklySummary.totalEntries > 0 && (
+                <Card className="p-5 animate-fade-in">
+                    <h3 className="text-sm font-bold text-[var(--text-tertiary)] uppercase tracking-wider mb-3">This Week</h3>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{stats.weeklySummary.totalEntries}</div>
+                            <div className="text-xs text-[var(--text-tertiary)]">Entries</div>
+                        </div>
+                        <div>
+                            <div className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{stats.weeklySummary.daysActive}/7</div>
+                            <div className="text-xs text-[var(--text-tertiary)]">Days Active</div>
+                        </div>
+                        <div>
+                            <div className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{stats.weeklySummary.avgEntriesPerDay.toFixed(1)}</div>
+                            <div className="text-xs text-[var(--text-tertiary)]">Avg/Day</div>
+                        </div>
+                    </div>
+                </Card>
+            )}
 
             {/* Active Experiment Guidance */}
             <ActiveTrialWidget />
@@ -250,6 +299,13 @@ export default function DashboardPage() {
             {/* Today's Log Widget - Sticky Section */}
             <TodaysLogWidget />
 
+            {/* Backdate hint */}
+            {habits.length > 0 && (stats?.dailyProgress.percentage ?? 0) >= 100 && (
+                <p className="text-xs text-[var(--text-tertiary)] text-center -mt-4">
+                    Forgot to log yesterday? Tap any protocol and change the date to backfill.
+                </p>
+            )}
+
             {/* Protocols List */}
             <div className="space-y-6 animate-slide-up">
                 {habits.length === 0 ? (
@@ -267,8 +323,7 @@ export default function DashboardPage() {
                             Start Your First Experiment
                         </h2>
                         <p className="text-[var(--text-secondary)] mb-8 max-w-sm mx-auto">
-                            Create a protocol to track something you care about.
-                            Discover patterns and correlations in your data.
+                            A protocol tracks multiple variables — like Sleep (hours + quality). Log daily for 14 days, and Datalyst will find correlations you'd never spot manually.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -310,6 +365,7 @@ export default function DashboardPage() {
                                         habit={habit}
                                         isCompleted={false}
                                         onRegister={() => setSelectedHabit(habit)}
+                                        onArchive={refreshHabits}
                                     />
                                 ))}
                             </div>
@@ -328,11 +384,41 @@ export default function DashboardPage() {
                                             habit={habit}
                                             isCompleted={true}
                                             onRegister={() => { }}
+                                            onArchive={refreshHabits}
                                         />
                                     ))}
                                 </div>
                             </div>
                         )}
+
+                        {/* Archive All */}
+                        <div className="text-center pt-4">
+                            {!showArchiveAll ? (
+                                <button
+                                    onClick={() => setShowArchiveAll(true)}
+                                    className="text-xs text-[var(--text-tertiary)] hover:text-red-500 transition-colors"
+                                >
+                                    Archive all protocols
+                                </button>
+                            ) : (
+                                <div className="inline-flex items-center gap-3 text-sm">
+                                    <span className="text-[var(--text-secondary)]">Archive all protocols?</span>
+                                    <button
+                                        onClick={handleArchiveAll}
+                                        disabled={isArchivingAll}
+                                        className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 disabled:opacity-50"
+                                    >
+                                        {isArchivingAll ? 'Archiving...' : 'Confirm'}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowArchiveAll(false)}
+                                        className="text-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </>
                 )}
             </div>
@@ -348,7 +434,10 @@ export default function DashboardPage() {
 
                     {/* Hero Card - Top Insight */}
                     {insights.correlations[0] && (
-                        <Card className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-hover)] text-white border-none p-8 relative overflow-hidden group">
+                        <Card
+                            className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-hover)] text-white border-none p-8 relative overflow-hidden group cursor-pointer"
+                            onClick={() => handleTestCorrelation(insights.correlations[0])}
+                        >
                             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <TrendingUp className="h-32 w-32" suppressHydrationWarning />
                             </div>
@@ -361,17 +450,23 @@ export default function DashboardPage() {
                                 <h3 className="text-2xl font-bold mb-4 leading-tight font-display">
                                     {insights.correlations[0].text}
                                 </h3>
-                                <div className="flex items-center gap-6 text-sm text-teal-50">
-                                    <div className="flex flex-col">
-                                        <span className="text-teal-100 text-xs uppercase">Confidence</span>
-                                        <span className="font-mono font-medium tabular-nums">
-                                            {((1 - insights.correlations[0].pValue) * 100).toFixed(1)}%
-                                        </span>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-6 text-sm text-teal-50">
+                                        <div className="flex flex-col">
+                                            <span className="text-teal-100 text-xs uppercase flex items-center gap-1">Confidence <InfoTooltip text="How likely this correlation is real and not due to chance. Higher = more reliable." /></span>
+                                            <span className="font-mono font-medium tabular-nums">
+                                                {((1 - insights.correlations[0].pValue) * 100).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-teal-100 text-xs uppercase">Sample</span>
+                                            <span className="font-mono font-medium tabular-nums">{insights.correlations[0].n} days</span>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-teal-100 text-xs uppercase">Sample</span>
-                                        <span className="font-mono font-medium tabular-nums">{insights.correlations[0].n} days</span>
-                                    </div>
+                                    <span className="flex items-center gap-1 text-sm text-teal-100 font-medium group-hover:text-white transition-colors">
+                                        <FlaskConical className="h-4 w-4" suppressHydrationWarning />
+                                        Test this
+                                    </span>
                                 </div>
                             </div>
                         </Card>
@@ -381,7 +476,11 @@ export default function DashboardPage() {
                     {insights.correlations.length > 1 && (
                         <div className="grid gap-6">
                             {insights.correlations.slice(1, 4).map((corr: any, i: number) => (
-                                <Card key={i} className="p-6 hover:shadow-[var(--shadow-hover)] transition-all cursor-pointer group border-l-4 border-l-[var(--color-accent)]">
+                                <Card
+                                    key={i}
+                                    className="p-6 hover:shadow-[var(--shadow-hover)] transition-all cursor-pointer group border-l-4 border-l-[var(--color-accent)]"
+                                    onClick={() => handleTestCorrelation(corr)}
+                                >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="bg-[var(--color-bg-subtle)] px-3 py-1 rounded-[var(--radius-input)] text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
                                             Correlation
@@ -393,15 +492,21 @@ export default function DashboardPage() {
                                         {corr.text}
                                     </h4>
 
-                                    <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)] mt-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-[var(--text-tertiary)] text-xs uppercase">Confidence</span>
-                                            <span className="font-mono font-medium tabular-nums">{((1 - corr.pValue) * 100).toFixed(1)}%</span>
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)]">
+                                            <div className="flex flex-col">
+                                                <span className="text-[var(--text-tertiary)] text-xs uppercase">Confidence</span>
+                                                <span className="font-mono font-medium tabular-nums">{((1 - corr.pValue) * 100).toFixed(1)}%</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[var(--text-tertiary)] text-xs uppercase">Sample</span>
+                                                <span className="font-mono font-medium tabular-nums">{corr.n} days</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[var(--text-tertiary)] text-xs uppercase">Sample</span>
-                                            <span className="font-mono font-medium tabular-nums">{corr.n} days</span>
-                                        </div>
+                                        <span className="flex items-center gap-1 text-xs text-[var(--color-accent)] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <FlaskConical className="h-3.5 w-3.5" suppressHydrationWarning />
+                                            Test this
+                                        </span>
                                     </div>
                                 </Card>
                             ))}
