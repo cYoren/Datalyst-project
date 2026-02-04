@@ -3,6 +3,14 @@
 import useSWR from 'swr';
 
 // Types for Today's Log - designed for easy React Native migration
+export interface ActiveAssignment {
+    experimentId: string;
+    experimentName: string;
+    condition: string;
+    isWashout: boolean;
+    conditionLabel?: string;
+}
+
 export interface TodayVariable {
     id: string;
     name: string;
@@ -28,6 +36,10 @@ export interface TodayVariable {
         numericValue: number;
         rawValue?: string;
     };
+    // N=1 experiment integration
+    activeAssignment?: ActiveAssignment | null;
+    // Flag: if true, this variable is controlled by ProtocolCommandCenter (hide from TodaysLogWidget)
+    isExperimentIndependent?: boolean;
 }
 
 export interface TodayLogSummary {
@@ -62,7 +74,8 @@ export function useTodaysLog() {
         {
             revalidateOnFocus: true,  // Refresh when user returns
             refreshInterval: 60000,   // Refresh every minute
-            dedupingInterval: 5000,   // Dedupe rapid requests
+            dedupingInterval: 30000,  // Dedupe requests for 30s
+            keepPreviousData: true,   // Show cached data while revalidating
         }
     );
 
@@ -70,7 +83,8 @@ export function useTodaysLog() {
         habitId: string,
         subvariableId: string,
         numericValue: number,
-        rawValue?: string
+        rawValue?: string,
+        followedAssignment?: boolean
     ): Promise<boolean> => {
         const today = new Date().toISOString().split('T')[0];
 
@@ -115,6 +129,7 @@ export function useTodaysLog() {
                             numericValue,
                             rawValue,
                             logicalDate: today,
+                            followedAssignment,
                         }),
                     });
 

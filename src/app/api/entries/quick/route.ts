@@ -11,6 +11,7 @@ const quickEntrySchema = z.object({
     numericValue: z.number(),
     rawValue: z.string().optional(),
     logicalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),  // YYYY-MM-DD format
+    followedAssignment: z.boolean().optional(), // N=1 compliance tracking
 });
 
 /**
@@ -54,6 +55,48 @@ export async function POST(request: Request) {
         const dayStart = startOfDay(logicalDate);
         const dayEnd = endOfDay(logicalDate);
 
+        // ========== EXPERIMENT ENFORCEMENT ==========
+        // Check if this habit is the independent variable in an active experiment
+        const activeExperiment = await prisma.experiment.findFirst({
+            where: {
+                independentId: body.habitId,
+                userId: user.id,
+                status: 'ACTIVE',
+                startDate: { lte: body.logicalDate },
+                endDate: { gte: body.logicalDate },
+            },
+            include: {
+                assignments: {
+                    where: { date: body.logicalDate },
+                },
+            },
+        });
+
+        let experimentWarning: string | null = null;
+        let autoFollowedAssignment: boolean | undefined = body.followedAssignment;
+
+        if (activeExperiment && activeExperiment.assignments.length > 0) {
+            const todayAssignment = activeExperiment.assignments[0];
+
+            // If not explicitly set, try to infer from value
+            // Condition 'A' (first) typically means intervention (value 1)
+            // Other conditions typically mean control/variant (value 0 for binary)
+            const expectedValue = todayAssignment.condition === 'A' ? 1 : 0;
+            const actualValue = body.numericValue;
+
+            if (body.followedAssignment === undefined) {
+                // User is manually logging without using Protocol Command Center
+                // Infer compliance based on whether the value matches expected
+                if (!todayAssignment.isWashout) {
+                    autoFollowedAssignment = actualValue === expectedValue;
+                    if (!autoFollowedAssignment) {
+                        experimentWarning = `This entry conflicts with today's protocol assignment. Your compliance was logged as deviated.`;
+                    }
+                }
+            }
+        }
+        // ========== END EXPERIMENT ENFORCEMENT ==========
+
         // Check if an entry already exists for this habit on this day
         let habitEntry = await prisma.habitEntry.findFirst({
             where: {
@@ -71,16 +114,24 @@ export async function POST(request: Request) {
 
         // If no entry exists, create one
         if (!habitEntry) {
-            habitEntry = await prisma.habitEntry.create({
+            const newEntry = await prisma.habitEntry.create({
                 data: {
                     habitId: body.habitId,
                     userId: user.id,
                     logicalDate: logicalDate,
+                    followedAssignment: autoFollowedAssignment,
                     timestamp: new Date(),
                 },
                 include: {
                     subvariableEntries: true,
                 },
+            });
+            habitEntry = newEntry;
+        } else if (autoFollowedAssignment !== undefined) {
+            // Update compliance on existing entry
+            await prisma.habitEntry.update({
+                where: { id: habitEntry.id },
+                data: { followedAssignment: autoFollowedAssignment },
             });
         }
 
@@ -122,6 +173,7 @@ export async function POST(request: Request) {
                 numericValue: subvariableEntry.numericValue,
                 rawValue: subvariableEntry.rawValue,
             },
+            ...(experimentWarning && { warning: experimentWarning }),
         }, { status: existingSubEntry ? 200 : 201 });
     } catch (error) {
         if (error instanceof z.ZodError) {

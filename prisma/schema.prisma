@@ -115,6 +115,7 @@ model User {
   userEvents     UserEvent[]
   experiments    Experiment[]
   insightsCache  InsightsCache?
+  apiKeys        ApiKey[]
   
   @@index([email])
 }
@@ -257,6 +258,9 @@ model HabitEntry {
   
   // Optional note from user
   note         String?
+
+  // N=1 compliance tracking
+  followedAssignment Boolean? // null = no experiment, true = followed, false = deviated
   
   // Timestamps
   createdAt    DateTime @default(now())
@@ -289,6 +293,7 @@ model SubvariableEntry {
   habitEntry    HabitEntry   @relation(fields: [habitEntryId], references: [id], onDelete: Cascade)
   subvariable   Subvariable  @relation(fields: [subvariableId], references: [id], onDelete: Cascade)
   
+  @@unique([habitEntryId, subvariableId])
   @@index([habitEntryId])
   @@index([subvariableId])
 }
@@ -366,6 +371,18 @@ model Experiment {
   // Status workflow
   status          ExperimentStatus @default(PLANNING)
 
+  // Protocol link (for N=x aggregation)
+  protocolId      String?
+  protocol        Protocol?        @relation(fields: [protocolId], references: [id])
+
+  // EAS Attestation (Base L2)
+  attestationUid  String?          // EAS unique ID
+  attestationTx   String?          // Base transaction hash
+
+  // Viral Share
+  slug            String?          @unique
+  isPublic        Boolean          @default(false)
+
   // Timestamps
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -379,6 +396,8 @@ model Experiment {
   @@index([userId])
   @@index([status])
   @@index([userId, status])
+  @@index([protocolId])
+  @@index([slug])
 }
 
 // Daily condition assignment for an experiment's A/B schedule
@@ -397,4 +416,59 @@ model Assignment {
 
   @@unique([experimentId, date])
   @@index([experimentId])
+}
+
+// ========================================
+// PROTOCOL & AGENT API MODELS
+// ========================================
+
+// Standardized experiment protocols for N=x aggregation
+model Protocol {
+  id          String       @id @default(cuid())
+  slug        String       @unique  // e.g., "magnesium-sleep-v1"
+  name        String                // "Magnesium for Sleep Quality"
+  description String?
+  version     String       @default("1.0")
+  
+  // Defines the expected independent and dependent variable structure
+  // JSON: { name, type, unit, metadata }
+  independentTemplate Json
+  dependentTemplate   Json
+  
+  // Recommended experiment parameters
+  recommendedDuration Int   @default(14)  // days
+  recommendedWashout  Int   @default(2)   // days
+  
+  isPublic    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  experiments Experiment[]
+  
+  @@index([slug])
+  @@index([isPublic])
+}
+
+// API keys for external agents (Moltbot, OpenClaw, etc.)
+model ApiKey {
+  id          String   @id @default(cuid())
+  key         String   @unique  // The actual API key (hashed in production)
+  name        String            // e.g., "Moltbot Production"
+  agentId     String?           // Optional agent identifier
+  
+  // Rate limiting
+  rateLimitPerMinute Int @default(60)
+  
+  // Ownership
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  lastUsedAt  DateTime?
+  
+  @@index([key])
+  @@index([userId])
 }

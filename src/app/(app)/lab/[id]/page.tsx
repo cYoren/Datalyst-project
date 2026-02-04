@@ -239,7 +239,11 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
 
     const { data: results, isLoading, error, mutate } = useSWR<ExperimentResults>(
         `/api/experiments/${id}/results`,
-        fetcher
+        fetcher,
+        {
+            keepPreviousData: true,
+            dedupingInterval: 120000,
+        }
     );
 
     const handleStatusChange = async (newStatus: string) => {
@@ -344,12 +348,21 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                         </Button>
                     )}
                     {experiment.status === 'ACTIVE' && (
-                        <Button onClick={() => handleStatusChange('COMPLETED')} className="gap-2 bg-green-600 hover:bg-green-700">
-                            <CheckCircle className="h-4 w-4" />
-                            Mark Complete
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                const reason = prompt('Why are you dropping out of this experiment?');
+                                if (reason) {
+                                    handleStatusChange('ARCHIVED');
+                                }
+                            }}
+                            className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                            <Archive className="h-4 w-4" />
+                            Drop Out
                         </Button>
                     )}
-                    {experiment.status !== 'ARCHIVED' && (
+                    {experiment.status !== 'ARCHIVED' && experiment.status !== 'ACTIVE' && (
                         <Button variant="ghost" onClick={() => handleStatusChange('ARCHIVED')} className="gap-2 text-gray-500">
                             <Archive className="h-4 w-4" />
                         </Button>

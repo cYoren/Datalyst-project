@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { HabitCard } from '@/components/habits/HabitCard';
 import { QuickEntryForm } from '@/components/forms/QuickEntryForm';
 import { TodaysLogWidget } from '@/components/dashboard/TodaysLogWidget';
+import { ProtocolCommandCenter } from '@/components/dashboard/ProtocolCommandCenter';
 import AdHocLogModal from '@/components/dashboard/AdHocLogModal';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -15,7 +16,6 @@ import { TrendingUp, Brain, ArrowUpRight, Target, Calendar, BarChart3, Plus, Spa
 import { useRouter } from 'next/navigation';
 import { useDashboard } from '@/lib/hooks';
 import { InfoTooltip } from '@/components/ui/Tooltip';
-import ActiveTrialWidget from '@/components/lab/ActiveTrialWidget';
 
 interface DashboardStats {
     weeklyCompletion: number;
@@ -237,9 +237,6 @@ export default function DashboardPage() {
                 </Card>
             )}
 
-            {/* Active Experiment Guidance */}
-            <ActiveTrialWidget />
-
             {/* New Insight Banner */}
             {newInsightText && (
                 <Card className="p-4 border-l-4 border-l-[var(--color-accent)] animate-fade-in">
@@ -300,6 +297,9 @@ export default function DashboardPage() {
                     </div>
                 </Card>
             )}
+
+            {/* Protocol Command Center - Active Trial Execution */}
+            <ProtocolCommandCenter />
 
             {/* Today's Log Widget - Sticky Section */}
             <TodaysLogWidget />

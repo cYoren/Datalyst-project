@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/ui/UserMenu';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { SWRProvider } from '@/providers/SWRProvider';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -150,10 +151,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Main Content */}
             <main className="max-w-4xl mx-auto p-4 sm:p-8 animate-fade-in min-h-screen">
-                <ToastProvider>
-                    <Breadcrumbs />
-                    {children}
-                </ToastProvider>
+                <SWRProvider>
+                    <ToastProvider>
+                        <Breadcrumbs />
+                        {children}
+                    </ToastProvider>
+                </SWRProvider>
             </main>
         </div>
     );

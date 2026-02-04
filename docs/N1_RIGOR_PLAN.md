@@ -203,10 +203,10 @@ The most impactful feature expansion. Enables the "find my optimal dose" use cas
 - [x] 2.6 Frontend: collapsible Data Quality section with grouped warnings
 
 ### Phase 3 — Multi-Condition
-- [ ] 3.1 Schema migration for multi-arm conditions
-- [ ] 3.2 Generalize blocked randomization to N conditions
+- [ ] 3.1 Schema migration for multi-arm conditions (schema already supports labels, no migration needed)
+- [x] 3.2 Generalize blocked randomization to N conditions
 - [ ] 3.3 Multi-arm statistics (Kruskal-Wallis, dose-response)
-- [ ] 3.4 Update API, creation form, and results UI
+- [x] 3.4 Update API, creation form, and results UI (partial: UI exists, stats pending)
 
 ### Phase 4 — Blinding
 - [ ] 4.1 Per-block blind guess collection (schema + UI)

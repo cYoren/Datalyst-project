@@ -53,7 +53,11 @@ export default function CorrelationMatrix({ onCellClick }: CorrelationMatrixProp
     const { data, isLoading, error } = useSWR<CorrelationData>(
         '/api/correlations',
         fetcher,
-        { revalidateOnFocus: false }
+        {
+            revalidateOnFocus: false,
+            keepPreviousData: true,
+            dedupingInterval: 120000,
+        }
     );
 
     if (isLoading) {

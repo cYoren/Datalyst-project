@@ -38,7 +38,10 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function LabPage() {
-    const { data: experiments, isLoading, error } = useSWR<Experiment[]>('/api/experiments', fetcher);
+    const { data: experiments, isLoading, error } = useSWR<Experiment[]>('/api/experiments', fetcher, {
+        keepPreviousData: true,
+        dedupingInterval: 120000,
+    });
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
     const experimentsList = Array.isArray(experiments) ? experiments : [];

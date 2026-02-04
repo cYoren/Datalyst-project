@@ -10,6 +10,11 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
+    "@ethereum-attestation-service/eas-sdk": "^2.9.0",
     "@prisma/client": "^6.19.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.8.0",
@@ -27,6 +32,7 @@
     "simple-statistics": "^7.8.8",
     "swr": "^2.3.8",
     "tailwind-merge": "^3.4.0",
+    "viem": "^2.45.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -34,6 +40,7 @@
     "@types/node": "^20.19.25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.9.19",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "^16.0.10",

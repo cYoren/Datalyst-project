@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Datalyst</string>
+    <string name="title_activity_main">Datalyst</string>
+    <string name="package_name">com.datalyst.app</string>
+    <string name="custom_url_scheme">com.datalyst.app</string>
+</resources>

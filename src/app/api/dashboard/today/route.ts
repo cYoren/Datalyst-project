@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/ensure-user';
-import { startOfDay, endOfDay, getDay } from 'date-fns';
+import { startOfDay, endOfDay, getDay, format } from 'date-fns';
 import { ScheduleType } from '@prisma/client';
 
 /**
@@ -21,6 +21,34 @@ export async function GET() {
         const todayStart = startOfDay(now);
         const todayEnd = endOfDay(now);
         const todayDayOfWeek = getDay(now); // 0 = Sunday, 1 = Monday...
+        const todayStr = format(now, 'yyyy-MM-dd');
+
+        // Fetch active experiment for this user to link with habits
+        const activeExperiment = await prisma.experiment.findFirst({
+            where: {
+                userId: user.id,
+                status: 'ACTIVE',
+            },
+            include: {
+                assignments: {
+                    where: { date: todayStr }
+                }
+            }
+        });
+
+        // Parse condition labels if experiment exists
+        let conditionLabels: string[] = ['A', 'B'];
+        if (activeExperiment) {
+            try {
+                const raw = (activeExperiment as any).conditions;
+                if (raw && typeof raw === 'string') {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length >= 2) {
+                        conditionLabels = parsed.map((c: any) => c.label);
+                    }
+                }
+            } catch { /* use default */ }
+        }
 
         // Fetch all active habits with their subvariables
         const habits = await prisma.habit.findMany({
@@ -148,6 +176,20 @@ export async function GET() {
                         numericValue: todayEntry.numericValue,
                         rawValue: todayEntry.rawValue,
                     } : undefined,
+                    // Active Assignment details for the dashboard banner
+                    activeAssignment: activeExperiment && activeExperiment.independentId === habit.id ? {
+                        experimentId: activeExperiment.id,
+                        experimentName: activeExperiment.name,
+                        condition: activeExperiment.assignments[0]?.condition,
+                        isWashout: activeExperiment.assignments[0]?.isWashout || false,
+                        conditionLabel: activeExperiment.assignments[0]?.condition ?
+                            (activeExperiment.assignments[0].condition === 'A' ? conditionLabels[0] :
+                                activeExperiment.assignments[0].condition === 'B' ? conditionLabels[1] :
+                                    activeExperiment.assignments[0].condition) : undefined
+                    } : null,
+                    // Flag to indicate if this variable is the independent variable in an active experiment
+                    // When true, the variable should be hidden from TodaysLogWidget (managed by ProtocolCommandCenter)
+                    isExperimentIndependent: activeExperiment && activeExperiment.independentId === habit.id,
                 });
             }
         }

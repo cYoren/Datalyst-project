@@ -18,10 +18,14 @@ export const fetcher = async (url: string) => {
 };
 
 // SWR configuration for optimal caching
+// Note: Global config is set in SWRProvider, but these can override per-hook
 const swrConfig = {
     revalidateOnFocus: false, // Don't refetch when window regains focus
     revalidateOnReconnect: true,
-    dedupingInterval: 60000, // Dedupe requests within 60 seconds
+    revalidateIfStale: true, // Still revalidate stale data in background
+    keepPreviousData: true, // Show cached data while revalidating (no loading spinner)
+    dedupingInterval: 120000, // Dedupe requests within 2 minutes
+    focusThrottleInterval: 60000, // Throttle focus revalidation to 1 minute
     errorRetryCount: 2,
 };
 

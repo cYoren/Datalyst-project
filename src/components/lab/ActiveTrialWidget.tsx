@@ -14,7 +14,10 @@ import { fetcher } from '@/lib/hooks';
 
 export default function ActiveTrialWidget() {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const { data, error, isLoading, mutate } = useSWR(`/api/experiments/active-assignment?date=${todayStr}`, fetcher);
+    const { data, error, isLoading, mutate } = useSWR(`/api/experiments/active-assignment?date=${todayStr}`, fetcher, {
+        keepPreviousData: true,
+        dedupingInterval: 120000,
+    });
 
     if (isLoading) {
         return (

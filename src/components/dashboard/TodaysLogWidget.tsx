@@ -5,12 +5,84 @@ import { useTodaysLog, TodayVariable } from '@/lib/useTodaysLog';
 import { Card } from '@/components/ui/Card';
 import { Slider } from '@/components/ui/Slider';
 import { cn } from '@/lib/utils';
-import { Check, Loader2, FlaskConical, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Loader2, FlaskConical, ChevronDown, ChevronUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+
+// Intervention Banner Component for active experiments
+const InterventionBanner = ({ assignment }: { assignment: TodayVariable['activeAssignment'] }) => {
+    if (!assignment) return null;
+
+    const isWashout = assignment.isWashout;
+    const isIntervention = assignment.condition === 'A'; // Typically A = intervention
+
+    const label = isWashout
+        ? '💧 Washout Day - No intervention'
+        : isIntervention
+            ? `💊 ${assignment.conditionLabel || 'Intervention'} Today`
+            : `🚫 ${assignment.conditionLabel || 'Control'} - Avoid Today`;
+
+    const bgColor = isWashout
+        ? 'bg-amber-500/10 border-amber-500/30'
+        : isIntervention
+            ? 'bg-emerald-500/10 border-emerald-500/30'
+            : 'bg-rose-500/10 border-rose-500/30';
+
+    const textColor = isWashout
+        ? 'text-amber-700'
+        : isIntervention
+            ? 'text-emerald-700'
+            : 'text-rose-700';
+
+    return (
+        <div className={cn(
+            "mb-3 px-3 py-2 rounded-lg border-2 flex items-center gap-2",
+            bgColor
+        )}>
+            <FlaskConical className={cn("h-4 w-4", textColor)} />
+            <span className={cn("text-xs font-bold uppercase tracking-wide", textColor)}>
+                {label}
+            </span>
+        </div>
+    );
+};
+
+// Compliance Toggle Component
+const ComplianceToggle = ({
+    checked,
+    onChange,
+    disabled
+}: {
+    checked: boolean | null;
+    onChange: (value: boolean) => void;
+    disabled?: boolean;
+}) => {
+    return (
+        <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+            <label className="flex items-center gap-2 cursor-pointer">
+                <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onChange(!checked)}
+                    className={cn(
+                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                        checked
+                            ? "bg-emerald-500 border-emerald-500 text-white"
+                            : "bg-white border-[var(--color-border)] hover:border-emerald-500"
+                    )}
+                >
+                    {checked && <Check className="h-3 w-3" />}
+                </button>
+                <span className="text-xs text-[var(--text-secondary)]">
+                    I followed the protocol today
+                </span>
+            </label>
+        </div>
+    );
+};
 
 // Inline variable item component
 interface VariableItemProps {
     variable: TodayVariable;
-    onLog: (value: number, rawValue?: string) => Promise<void>;
+    onLog: (value: number, rawValue?: string, followedAssignment?: boolean) => Promise<void>;
     isLogging: boolean;
     isOptimisticLogged?: boolean;
 }
@@ -19,15 +91,17 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
     const [localValue, setLocalValue] = useState<number>(
         variable.todayEntry?.numericValue ?? (variable.type === 'SCALE_0_10' ? 5 : 0)
     );
+    const [followedProtocol, setFollowedProtocol] = useState<boolean | null>(null);
     const isLogged = !!variable.todayEntry || isOptimisticLogged;
+    const hasActiveExperiment = !!variable.activeAssignment;
 
     const handleBooleanClick = async (value: number) => {
         setLocalValue(value);
-        await onLog(value, value === 1 ? 'Yes' : 'No');
+        await onLog(value, value === 1 ? 'Yes' : 'No', hasActiveExperiment ? followedProtocol ?? undefined : undefined);
     };
 
     const handleNumericSubmit = async () => {
-        await onLog(localValue);
+        await onLog(localValue, undefined, hasActiveExperiment ? followedProtocol ?? undefined : undefined);
     };
 
     const handleSliderChange = (value: number) => {
@@ -35,18 +109,23 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
     };
 
     const handleSliderCommit = async () => {
-        await onLog(localValue);
+        await onLog(localValue, undefined, hasActiveExperiment ? followedProtocol ?? undefined : undefined);
     };
 
     return (
         <div
             className={cn(
                 "p-4 rounded-xl transition-all duration-300",
-                isLogged
-                    ? "bg-[var(--color-success)]/5 border border-[var(--color-success)]/20"
-                    : "bg-[var(--color-bg-subtle)] border border-transparent hover:border-[var(--color-border)]"
+                hasActiveExperiment
+                    ? "ring-2 ring-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20"
+                    : isLogged
+                        ? "bg-[var(--color-success)]/5 border border-[var(--color-success)]/20"
+                        : "bg-[var(--color-bg-subtle)] border border-transparent hover:border-[var(--color-border)]"
             )}
         >
+            {/* Intervention Banner for active experiments */}
+            {hasActiveExperiment && <InterventionBanner assignment={variable.activeAssignment} />}
+
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -161,6 +240,15 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
                     </button>
                 </div>
             )}
+
+            {/* Compliance Toggle for active experiments */}
+            {hasActiveExperiment && !isLogged && (
+                <ComplianceToggle
+                    checked={followedProtocol}
+                    onChange={setFollowedProtocol}
+                    disabled={isLogging}
+                />
+            )}
         </div>
     );
 };
@@ -175,12 +263,13 @@ export const TodaysLogWidget = () => {
         habitId: string,
         subvariableId: string,
         numericValue: number,
-        rawValue?: string
+        rawValue?: string,
+        followedAssignment?: boolean
     ) => {
         setLoggingIds(prev => new Set(prev).add(subvariableId));
         setOptimisticLoggedIds(prev => new Set(prev).add(subvariableId)); // Instant optimistic update
 
-        await logVariable(habitId, subvariableId, numericValue, rawValue);
+        await logVariable(habitId, subvariableId, numericValue, rawValue, followedAssignment);
 
         setLoggingIds(prev => {
             const next = new Set(prev);
@@ -193,6 +282,7 @@ export const TodaysLogWidget = () => {
     }, [logVariable]);
 
     // Group variables by time block - MUST be before any conditional return
+    // Filter out independent variables (managed by ProtocolCommandCenter)
     const groupedVariables = React.useMemo(() => {
         const groups: Record<string, TodayVariable[]> = {
             'MORNING': [],
@@ -201,7 +291,11 @@ export const TodaysLogWidget = () => {
             'ANYTIME': []
         };
 
-        summary.variables.forEach(variable => {
+        // Filter out variables that are the independent variable in an active experiment
+        // Those are managed by ProtocolCommandCenter, not this widget
+        const filteredVariables = summary.variables.filter(v => !v.isExperimentIndependent);
+
+        filteredVariables.forEach(variable => {
             const block = variable.timeBlock || 'ANYTIME';
             if (!groups[block]) groups[block] = [];
             groups[block].push(variable);
@@ -209,6 +303,9 @@ export const TodaysLogWidget = () => {
 
         return groups;
     }, [summary.variables]);
+
+    // Check if any variable has an active experiment
+    const hasActiveExperiment = summary.variables.some(v => !!v.activeAssignment);
 
     const getBlockLabel = (block: string) => {
         switch (block) {
@@ -240,7 +337,8 @@ export const TodaysLogWidget = () => {
         <Card
             className={cn(
                 "z-20 p-0 overflow-hidden shadow-lg border-0 bg-white/95 backdrop-blur-sm transition-all duration-300",
-                "rounded-[var(--radius-card)]"
+                "rounded-[var(--radius-card)]",
+                hasActiveExperiment && "ring-2 ring-[var(--color-accent)]/20"
             )}
         >
             {/* Header */}
@@ -249,7 +347,12 @@ export const TodaysLogWidget = () => {
                 onClick={() => setIsCollapsed(!isCollapsed)}
             >
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-hover)]">
+                    <div className={cn(
+                        "p-2 rounded-lg bg-gradient-to-br",
+                        hasActiveExperiment
+                            ? "from-purple-500 to-pink-500"
+                            : "from-[var(--color-accent)] to-[var(--color-accent-hover)]"
+                    )}>
                         <FlaskConical className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -258,6 +361,11 @@ export const TodaysLogWidget = () => {
                         </h2>
                         <p className="text-sm text-[var(--text-secondary)]">
                             {isLoading ? 'Loading...' : `${summary.logged + optimisticLoggedIds.size}/${summary.total} logged`}
+                            {hasActiveExperiment && (
+                                <span className="ml-2 text-xs text-[var(--color-accent)] font-medium">
+                                    • Experiment Active
+                                </span>
+                            )}
                         </p>
                     </div>
                 </div>
@@ -323,11 +431,12 @@ export const TodaysLogWidget = () => {
                                                 <VariableItem
                                                     key={variable.id}
                                                     variable={variable}
-                                                    onLog={(value, rawValue) => handleLog(
+                                                    onLog={(value, rawValue, followedAssignment) => handleLog(
                                                         variable.habitId,
                                                         variable.id,
                                                         value,
-                                                        rawValue
+                                                        rawValue,
+                                                        followedAssignment
                                                     )}
                                                     isLogging={loggingIds.has(variable.id)}
                                                     isOptimisticLogged={optimisticLoggedIds.has(variable.id)}
@@ -357,4 +466,3 @@ export const TodaysLogWidget = () => {
 };
 
 export default TodaysLogWidget;
-

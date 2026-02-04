@@ -38,7 +38,11 @@ export default function AdHocLogModal({ isOpen, onClose, onLogComplete }: AdHocL
     // Fetch ADHOC habits
     const { data: habits, isLoading } = useSWR<AdHocHabit[]>(
         isOpen ? '/api/habits/adhoc' : null,
-        fetcher
+        fetcher,
+        {
+            keepPreviousData: true,
+            dedupingInterval: 120000,
+        }
     );
 
     // Filter habits by search query
