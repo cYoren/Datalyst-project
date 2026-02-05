@@ -138,6 +138,9 @@ export default function AboutPage() {
                 <p className="text-[var(--text-tertiary)] italic">
                     "The goal is not to track more. It's to understand more."
                 </p>
+                <p className="text-[var(--text-tertiary)] text-xs mt-4">
+                    © {new Date().getFullYear()} Datalyst • CNPJ: 64.661.660/0001-04
+                </p>
             </div>
         </div>
     );

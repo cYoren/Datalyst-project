@@ -94,7 +94,7 @@ export default async function Home() {
       <footer className="border-t border-[var(--color-border)] bg-[var(--bg-card)] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[var(--text-tertiary)] text-sm">
-            © {new Date().getFullYear()} Datalyst. All rights reserved.
+            © {new Date().getFullYear()} Datalyst. All rights reserved. • CNPJ: 64.661.660/0001-04
           </p>
           <div className="flex items-center gap-6 text-sm text-[var(--text-secondary)]">
             <Link href="/privacy" className="hover:text-[var(--text-primary)]">Privacy</Link>
