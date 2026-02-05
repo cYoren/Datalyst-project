@@ -8,6 +8,8 @@ import {
     testPeriodEffect,
     calculateSequentialBoundary,
     calculateBayesianPosterior,
+    performMultiArmAnalysis,
+    interpretResults,
     zFromP,
     normalCDF,
 } from '@/stats/analysis';
@@ -236,6 +238,63 @@ export async function GET(request: Request, { params }: RouteParams) {
         const isMultiArm = conditionLabels.length > 2;
         const n1Stats = isMultiArm ? null : performN1Stats(condA, condB, temporalValues, blockAnalysis, carryoverTest, periodEffect, sequentialBoundary);
 
+        // Multi-arm analysis (3+ conditions)
+        let multiArmResults = null;
+        if (isMultiArm) {
+            // Parse doses if available
+            const conditionDoses = new Map<string, number>();
+            try {
+                const raw = (experiment as any).conditions;
+                if (raw && typeof raw === 'string') {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach((c: { label: string; dose?: number }) => {
+                            if (c.dose !== undefined) {
+                                conditionDoses.set(c.label, c.dose);
+                            }
+                        });
+                    }
+                }
+            } catch { /* no doses */ }
+
+            multiArmResults = performMultiArmAnalysis(
+                conditionGroups,
+                conditionDoses.size > 0 ? conditionDoses : undefined,
+                temporalValues
+            );
+        }
+
+        // ========== RESULTS GATING ==========
+        // For ACTIVE experiments, gate inferential statistics to prevent peeking bias
+        if (experiment.status === 'ACTIVE') {
+            const loggedDays = pairedValues.length;
+            const totalDays = chartData.length;
+            const complianceRate = totalDays > 0 ? Math.round((loggedDays / totalDays) * 100) : 0;
+
+            return NextResponse.json({
+                gated: true,
+                message: 'Results are locked until experiment completion. This prevents peeking bias which can invalidate N=1 studies.',
+                experiment: {
+                    id: experiment.id,
+                    name: experiment.name,
+                    status: experiment.status,
+                    startDate: experiment.startDate,
+                    endDate: experiment.endDate,
+                },
+                progress: {
+                    totalDays,
+                    loggedDays,
+                    complianceRate,
+                    daysRemaining: Math.max(0, Math.ceil((new Date(experiment.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))),
+                },
+                // Only show sequential boundary if it allows stopping
+                sequentialBoundary: sequentialBoundary?.canRejectNull || sequentialBoundary?.canStopForFutility
+                    ? sequentialBoundary
+                    : null,
+            });
+        }
+        // ========== END RESULTS GATING ==========
+
         // Calculate Pearson correlation
         const correlation = calculatePearsonCorrelation(pairedValues);
 
@@ -272,9 +331,16 @@ export async function GET(request: Request, { params }: RouteParams) {
                 correlationType: 'pearson',
                 strength: getCorrelationStrength(correlation),
                 n1: n1Stats,
-                multiArm: isMultiArm ? null : undefined,
-                multiArmPending: isMultiArm ? true : undefined,
+                multiArm: multiArmResults,
                 conditionLabels,
+                interpretation: interpretResults(
+                    n1Stats,
+                    multiArmResults,
+                    conditionLabels,
+                    experiment.dependent.name,
+                    experiment.independent.name,
+                    'HIGHER_BETTER' // TODO: get from habit goal direction
+                ),
             },
         });
     } catch (error) {

@@ -2,17 +2,27 @@
 
 import React, { use, useState } from 'react';
 import useSWR from 'swr';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
-import { FlaskConical, ArrowLeft, Play, CheckCircle, Archive, Loader2, Download, ShieldCheck, ChevronDown, AlertTriangle, HelpCircle } from 'lucide-react';
+import { FlaskConical, ArrowLeft, Play, CheckCircle, Archive, Loader2, Download, ShieldCheck, ChevronDown, AlertTriangle, HelpCircle, Lock, TrendingUp } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/Tooltip';
 import ExperimentChart from '@/components/lab/ExperimentChart';
 import { exportRawData } from '@/stats/analysis';
 import { fetcher } from '@/lib/hooks';
 
 interface ExperimentResults {
+    // For gated results (ACTIVE experiments)
+    gated?: boolean;
+    message?: string;
+    progress?: {
+        totalDays: number;
+        loggedDays: number;
+        complianceRate: number;
+        daysRemaining: number;
+    };
     experiment: {
         id: string;
         name: string;
@@ -24,34 +34,35 @@ interface ExperimentResults {
         washoutPeriod?: number;
         blockSize?: number;
         isBlind?: boolean;
+        hypothesis?: string;
+        hypothesisLockedAt?: string;
     };
-    independent: {
+    independent?: {
         name: string;
         icon: string;
         variable: string;
         unit: string;
     };
-    dependent: {
+    dependent?: {
         name: string;
         icon: string;
         variable: string;
         unit: string;
     };
-    chartData: {
+    chartData?: {
         date: string;
         independent: number | null;
         dependent: number | null;
         isWashout: boolean;
         condition: string | null;
     }[];
-    stats: {
+    stats?: {
         totalDays: number;
         loggedDays: number;
         correlation: number | null;
         correlationType: 'pearson' | 'spearman';
         strength: string;
         conditionLabels?: string[];
-        multiArmPending?: boolean;
         n1?: {
             conditionAMean: number;
             conditionBMean: number;
@@ -100,6 +111,28 @@ interface ExperimentResults {
                 canStopForFutility: boolean;
             } | null;
         };
+        multiArm?: {
+            nConditions: number;
+            conditionStats: { label: string; mean: number; std: number; n: number; dose?: number }[];
+            kruskalWallis: { H: number; pValue: number; significant: boolean } | null;
+            pairwiseComparisons: { conditionA: string; conditionB: string; meanDiff: number; pValue: number; significant: boolean }[];
+            doseResponse: {
+                slope: number;
+                intercept: number;
+                r2: number;
+                pValue: number;
+                optimalDose: number | null;
+            } | null;
+        } | null;
+        interpretation?: {
+            headline: string;
+            effectDescription: string;
+            confidenceStatement: string;
+            magnitude: 'negligible' | 'small' | 'moderate' | 'large' | 'very_large';
+            recommendation: string;
+            nextSteps: string[];
+            emoji: string;
+        };
     };
 }
 
@@ -107,6 +140,7 @@ interface ExperimentResults {
 
 function DataQualitySection({ stats, experiment }: { stats: ExperimentResults['stats']; experiment: ExperimentResults['experiment'] }) {
     const [expanded, setExpanded] = useState(false);
+    if (!stats) return null;
     const n1 = stats.n1;
     if (!n1) return null;
 
@@ -280,6 +314,113 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
 
     const { experiment, independent, dependent, chartData, stats } = results;
 
+    // ========== GATED RESULTS UI ==========
+    // For ACTIVE experiments, show progress instead of full stats
+    if (results.gated) {
+        return (
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" onClick={() => router.push('/lab')}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600">
+                            <FlaskConical className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold text-[var(--text-primary)]">
+                                {experiment.name}
+                            </h1>
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                In Progress
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Gated Message */}
+                <Card className="p-6 border-2 border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                            <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-amber-800 dark:text-amber-200">
+                                Results Locked Until Completion
+                            </h2>
+                            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                                {results.message || 'To maintain scientific rigor, statistical results are hidden while the experiment is active. This prevents peeking bias which can invalidate your N=1 study.'}
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Progress Card */}
+                <Card className="p-6">
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                        Experiment Progress
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-4 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="text-2xl font-bold text-[var(--text-primary)]">
+                                {results.progress?.loggedDays || 0}
+                            </div>
+                            <div className="text-xs text-[var(--text-tertiary)]">Days Logged</div>
+                        </div>
+                        <div className="text-center p-4 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="text-2xl font-bold text-[var(--text-primary)]">
+                                {results.progress?.totalDays || 0}
+                            </div>
+                            <div className="text-xs text-[var(--text-tertiary)]">Total Days</div>
+                        </div>
+                        <div className="text-center p-4 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="text-2xl font-bold text-emerald-600">
+                                {results.progress?.complianceRate || 0}%
+                            </div>
+                            <div className="text-xs text-[var(--text-tertiary)]">Compliance</div>
+                        </div>
+                        <div className="text-center p-4 rounded-lg bg-[var(--bg-secondary)]">
+                            <div className="text-2xl font-bold text-blue-600">
+                                {results.progress?.daysRemaining || 0}
+                            </div>
+                            <div className="text-xs text-[var(--text-tertiary)]">Days Left</div>
+                        </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="mt-4">
+                        <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
+                                style={{ width: `${results.progress?.complianceRate || 0}%` }}
+                            />
+                        </div>
+                    </div>
+                </Card>
+
+                <div className="text-center">
+                    <Button variant="secondary" onClick={() => router.push('/dashboard')}>
+                        Return to Dashboard
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+    // ========== END GATED RESULTS UI ==========
+
+    // Guard: ensure all required data is present (not gated means completed experiment)
+    if (!stats || !independent || !dependent || !chartData) {
+        return (
+            <Card className="p-8 text-center">
+                <p className="text-red-500 mb-4">Incomplete experiment data</p>
+                <Button variant="secondary" onClick={() => router.back()}>
+                    Go Back
+                </Button>
+            </Card>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -335,10 +476,34 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                     <Button
                         variant="ghost"
                         className="gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                        onClick={() => alert(`Scientific Audit for: ${experiment.name}\n\nMethodology: ${experiment.type || 'Standard'}\nRandomization: ${experiment.randomizationType || 'Fixed'}\nWashout Period: ${experiment.washoutPeriod ?? 0} days\nBlock Size: ${experiment.blockSize || 'N/A'}\nBlinding: ${experiment.isBlind ? 'Yes (Double blind)' : 'No'}`)}
+                        onClick={async () => {
+                            if (experiment.status === 'ACTIVE' || experiment.status === 'PLANNING') {
+                                alert('Audit reports are available after your experiment completes. This ensures results aren\'t biased by early analysis.');
+                                return;
+                            }
+                            try {
+                                const res = await fetch(`/api/experiments/${experiment.id}/audit`);
+                                if (!res.ok) {
+                                    const data = await res.json();
+                                    alert(data.message || 'Failed to generate audit report');
+                                    return;
+                                }
+                                const auditData = await res.json();
+                                const blob = new Blob([JSON.stringify(auditData, null, 2)], { type: 'application/json' });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${experiment.name.replace(/\s+/g, '_')}_audit.json`;
+                                a.click();
+                            } catch (err) {
+                                console.error('Failed to export audit:', err);
+                                alert('Failed to generate audit report');
+                            }
+                        }}
+                        title="Export comprehensive audit report for transparency and reproducibility"
                     >
                         <ShieldCheck className="h-4 w-4" />
-                        <span className="hidden sm:inline">Scientific Audit</span>
+                        <span className="hidden sm:inline">Export Audit</span>
                     </Button>
 
                     {experiment.status === 'PLANNING' && (
@@ -370,15 +535,164 @@ export default function ExperimentDetailsPage({ params }: { params: Promise<{ id
                 </div>
             </div>
 
-            {/* Multi-arm pending notice */}
-            {stats.multiArmPending && (
+            {/* ========== INTERPRETATION CARD (Plain English Results) ========== */}
+            {stats.interpretation && (
+                <Card className={cn(
+                    "p-6 border-l-4 animate-fade-in",
+                    stats.interpretation.magnitude === 'negligible' ? 'border-l-gray-400 bg-gray-50/50 dark:bg-gray-800/20' :
+                        stats.interpretation.magnitude === 'small' ? 'border-l-blue-400 bg-blue-50/50 dark:bg-blue-900/10' :
+                            stats.interpretation.magnitude === 'moderate' ? 'border-l-green-400 bg-green-50/50 dark:bg-green-900/10' :
+                                'border-l-purple-400 bg-purple-50/50 dark:bg-purple-900/10'
+                )}>
+                    <div className="flex items-start gap-4">
+                        <span className="text-4xl">{stats.interpretation.emoji}</span>
+                        <div className="flex-1">
+                            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">
+                                {stats.interpretation.headline}
+                            </h2>
+                            <p className="text-[var(--text-secondary)] mb-3">
+                                {stats.interpretation.effectDescription}
+                            </p>
+                            <p className="text-sm text-[var(--text-tertiary)] mb-4">
+                                {stats.interpretation.confidenceStatement}
+                            </p>
+
+                            {/* Recommendation */}
+                            <div className="p-3 rounded-lg bg-[var(--bg-secondary)] mb-4">
+                                <div className="text-sm font-medium text-[var(--text-primary)]">
+                                    💡 {stats.interpretation.recommendation}
+                                </div>
+                            </div>
+
+                            {/* Next Steps */}
+                            {stats.interpretation.nextSteps.length > 0 && (
+                                <div className="mb-4">
+                                    <div className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-2">
+                                        What to do next
+                                    </div>
+                                    <ul className="space-y-1">
+                                        {stats.interpretation.nextSteps.map((step, i) => (
+                                            <li key={i} className="text-sm text-[var(--text-secondary)] flex items-center gap-2">
+                                                <span className="text-green-500">→</span> {step}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Action Buttons for Completed Experiments */}
+                            {experiment.status === 'COMPLETED' && (
+                                <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border-color)]">
+                                    <Link
+                                        href={`/lab/new?followup=${experiment.id}&independent=${encodeURIComponent(independent.name)}&dependent=${encodeURIComponent(dependent.name)}`}
+                                        className={cn(buttonVariants({ size: 'sm' }), "gap-2")}
+                                    >
+                                        <FlaskConical className="h-4 w-4" />
+                                        Start Follow-up Experiment
+                                    </Link>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="gap-2"
+                                        onClick={() => {
+                                            navigator.share?.({
+                                                title: `My ${experiment.name} Results`,
+                                                text: `${stats.interpretation?.headline || 'Check out my experiment results!'}`,
+                                                url: window.location.href,
+                                            }).catch(() => {
+                                                // Fallback to clipboard
+                                                navigator.clipboard.writeText(window.location.href);
+                                                alert('Link copied to clipboard!');
+                                            });
+                                        }}
+                                    >
+                                        <TrendingUp className="h-4 w-4" />
+                                        Share Results
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* Multi-arm analysis results */}
+            {stats.multiArm && (
+                <Card className="p-6 border-l-4 border-l-purple-400 bg-purple-50/50 dark:bg-purple-900/10 animate-fade-in">
+                    <div className="flex items-center gap-3 mb-4">
+                        <FlaskConical className="h-5 w-5 text-purple-500 shrink-0" />
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">Multi-Arm Analysis ({stats.multiArm.nConditions} Conditions)</h3>
+                    </div>
+
+                    {/* Condition Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                        {stats.multiArm.conditionStats.map(cs => (
+                            <div key={cs.label} className="p-3 rounded-lg bg-[var(--bg-secondary)]">
+                                <div className="text-sm font-medium text-[var(--text-primary)]">{cs.label}</div>
+                                <div className="text-lg font-bold">{cs.mean.toFixed(2)}</div>
+                                <div className="text-xs text-[var(--text-tertiary)]">
+                                    n={cs.n}, σ={cs.std.toFixed(2)}{cs.dose !== undefined ? `, dose=${cs.dose}` : ''}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Kruskal-Wallis Test */}
+                    {stats.multiArm.kruskalWallis && (
+                        <div className="p-3 rounded-lg bg-[var(--bg-secondary)] mb-3">
+                            <div className="text-sm font-medium text-[var(--text-primary)] mb-1">Kruskal-Wallis Test</div>
+                            <div className="text-sm text-[var(--text-secondary)]">
+                                H = {stats.multiArm.kruskalWallis.H.toFixed(2)}, p = {stats.multiArm.kruskalWallis.pValue.toFixed(4)}
+                                <span className={cn('ml-2 px-2 py-0.5 rounded-full text-xs',
+                                    stats.multiArm.kruskalWallis.significant
+                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                )}>
+                                    {stats.multiArm.kruskalWallis.significant ? 'Significant' : 'Not Significant'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pairwise Comparisons */}
+                    {stats.multiArm.pairwiseComparisons.length > 0 && (
+                        <div className="text-sm">
+                            <div className="font-medium text-[var(--text-primary)] mb-1">Pairwise Comparisons (Bonferroni)</div>
+                            <div className="space-y-1">
+                                {stats.multiArm.pairwiseComparisons.map((pc, i) => (
+                                    <div key={i} className="text-[var(--text-secondary)] text-xs">
+                                        {pc.conditionA} vs {pc.conditionB}: Δ = {pc.meanDiff.toFixed(2)}, p = {pc.pValue.toFixed(4)}
+                                        {pc.significant && <span className="ml-1 text-green-600">*</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Dose-Response */}
+                    {stats.multiArm.doseResponse && (
+                        <div className="mt-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                            <div className="text-sm font-medium text-[var(--text-primary)] mb-1">Dose-Response Regression</div>
+                            <div className="text-sm text-[var(--text-secondary)]">
+                                Slope: {stats.multiArm.doseResponse.slope.toFixed(3)}, R² = {stats.multiArm.doseResponse.r2.toFixed(3)}
+                                {stats.multiArm.doseResponse.optimalDose && (
+                                    <span className="ml-2 text-blue-600">Optimal dose: {stats.multiArm.doseResponse.optimalDose}</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </Card>
+            )}
+
+            {/* Legacy multi-arm pending notice (for backwards compat if multiArm is undefined for old experiments) */}
+            {!stats.n1 && !stats.multiArm && (stats.conditionLabels?.length ?? 2) > 2 && (
                 <Card className="p-6 border-l-4 border-l-blue-400 bg-blue-50/50 animate-fade-in">
                     <div className="flex items-center gap-3">
                         <FlaskConical className="h-5 w-5 text-blue-500 shrink-0" />
                         <div>
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Multi-arm analysis coming soon</h3>
+                            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Multi-arm analysis</h3>
                             <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-                                Your {stats.conditionLabels?.length ?? 3}+ condition experiment is collecting data. Advanced multi-arm analysis will be available in a future update.
+                                Your {stats.conditionLabels?.length ?? 3}+ condition experiment analysis is processing.
                             </p>
                         </div>
                     </div>

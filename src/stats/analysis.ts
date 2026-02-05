@@ -113,6 +113,207 @@ export interface AuditReport {
 }
 
 // ========================================
+// MULTI-ARM ANALYSIS TYPES
+// ========================================
+
+export interface ConditionStats {
+  label: string;
+  mean: number;
+  std: number;
+  n: number;
+  dose?: number;
+}
+
+export interface PairwiseComparison {
+  conditionA: string;
+  conditionB: string;
+  meanDiff: number;
+  pValue: number;
+  significant: boolean;
+}
+
+export interface DoseResponseResult {
+  slope: number;
+  intercept: number;
+  r2: number;
+  pValue: number;
+  optimalDose: number | null; // Dose that maximizes/minimizes outcome
+  curve: { dose: number; predicted: number }[];
+}
+
+export interface MultiArmResult {
+  nConditions: number;
+  conditionStats: ConditionStats[];
+  kruskalWallis: { H: number; pValue: number; significant: boolean } | null;
+  pairwiseComparisons: PairwiseComparison[];
+  doseResponse: DoseResponseResult | null;
+  autocorrelation: AutocorrelationResult;
+}
+
+// ========================================
+// RESULT INTERPRETATION (Plain English)
+// ========================================
+
+export interface ResultInterpretation {
+  headline: string;           // "Your sleep improved on magnesium days"
+  effectDescription: string;  // "0.7 hours better on average"
+  confidenceStatement: string; // "82% confident this is real"
+  magnitude: 'negligible' | 'small' | 'moderate' | 'large' | 'very_large';
+  recommendation: string;     // "Worth continuing"
+  nextSteps: string[];        // ["Run 2 more weeks", "Try increasing dose"]
+  emoji: string;              // Contextual emoji
+}
+
+/**
+ * Interprets statistical results into plain English for users.
+ * Designed for laypeople who don't understand p-values or Cohen's d.
+ */
+export function interpretResults(
+  n1Stats: N1TrialResult | null,
+  multiArm: MultiArmResult | null,
+  conditionLabels: string[],
+  dependentName: string,
+  independentName: string,
+  goalDirection: 'HIGHER_BETTER' | 'LOWER_BETTER' | 'NEUTRAL' = 'HIGHER_BETTER'
+): ResultInterpretation {
+  // Multi-arm interpretation
+  if (multiArm && multiArm.kruskalWallis) {
+    const best = multiArm.conditionStats.reduce((a, b) =>
+      goalDirection === 'HIGHER_BETTER' ? (a.mean > b.mean ? a : b) : (a.mean < b.mean ? a : b)
+    );
+    const worst = multiArm.conditionStats.reduce((a, b) =>
+      goalDirection === 'HIGHER_BETTER' ? (a.mean < b.mean ? a : b) : (a.mean > b.mean ? a : b)
+    );
+
+    const diff = Math.abs(best.mean - worst.mean);
+    const isSignificant = multiArm.kruskalWallis.significant;
+
+    return {
+      headline: isSignificant
+        ? `${best.label} performed best for ${dependentName}`
+        : `No clear winner among conditions`,
+      effectDescription: `${best.label}: ${best.mean.toFixed(1)} vs ${worst.label}: ${worst.mean.toFixed(1)}`,
+      confidenceStatement: isSignificant
+        ? `Statistically significant difference (p=${multiArm.kruskalWallis.pValue.toFixed(3)})`
+        : `Differences could be random chance`,
+      magnitude: diff > 1 ? 'large' : diff > 0.5 ? 'moderate' : 'small',
+      recommendation: isSignificant ? `Focus on ${best.label}` : 'Consider running longer',
+      nextSteps: isSignificant
+        ? [`Continue with ${best.label}`, `Test ${best.label} vs a new condition`]
+        : ['Run 2 more weeks for clarity', 'Check your logging consistency'],
+      emoji: isSignificant ? '🎯' : '🤔',
+    };
+  }
+
+  // Binary N1 interpretation  
+  if (!n1Stats) {
+    return {
+      headline: 'Not enough data yet',
+      effectDescription: 'Keep logging to see results',
+      confidenceStatement: 'Collecting more data...',
+      magnitude: 'negligible',
+      recommendation: 'Continue your experiment',
+      nextSteps: ['Log daily for accurate results'],
+      emoji: '📊',
+    };
+  }
+
+  const { effectSize, bayesian, conditionAMean, conditionBMean } = n1Stats;
+  const absEffect = Math.abs(effectSize);
+  const condA = conditionLabels[0] || 'Condition A';
+  const condB = conditionLabels[1] || 'Condition B';
+
+  // Determine which condition is "better" based on goal direction
+  const aBetter = goalDirection === 'HIGHER_BETTER'
+    ? conditionAMean > conditionBMean
+    : conditionAMean < conditionBMean;
+  const betterCondition = aBetter ? condA : condB;
+  const worseCondition = aBetter ? condB : condA;
+  const diff = Math.abs(conditionAMean - conditionBMean);
+
+  // Effect magnitude thresholds (Cohen's d)
+  let magnitude: ResultInterpretation['magnitude'];
+  let magnitudeWord: string;
+  if (absEffect < 0.2) {
+    magnitude = 'negligible';
+    magnitudeWord = 'negligible';
+  } else if (absEffect < 0.5) {
+    magnitude = 'small';
+    magnitudeWord = 'small';
+  } else if (absEffect < 0.8) {
+    magnitude = 'moderate';
+    magnitudeWord = 'moderate';
+  } else if (absEffect < 1.2) {
+    magnitude = 'large';
+    magnitudeWord = 'substantial';
+  } else {
+    magnitude = 'very_large';
+    magnitudeWord = 'dramatic';
+  }
+
+  // Confidence interpretation
+  const prob = bayesian.probabilityOfEffect;
+  let confidenceLevel: 'low' | 'moderate' | 'high' | 'very_high';
+  let confidenceWord: string;
+  if (prob < 0.6) {
+    confidenceLevel = 'low';
+    confidenceWord = 'uncertain';
+  } else if (prob < 0.75) {
+    confidenceLevel = 'moderate';
+    confidenceWord = 'somewhat confident';
+  } else if (prob < 0.9) {
+    confidenceLevel = 'high';
+    confidenceWord = 'confident';
+  } else {
+    confidenceLevel = 'very_high';
+    confidenceWord = 'very confident';
+  }
+
+  // Build interpretation
+  const directionWord = goalDirection === 'HIGHER_BETTER' ? 'higher' : 'lower';
+  const improvementWord = magnitude === 'negligible' ? 'similar' :
+    (goalDirection === 'HIGHER_BETTER' ? 'better' : 'improved');
+
+  let headline: string;
+  let emoji: string;
+  let recommendation: string;
+  let nextSteps: string[];
+
+  if (magnitude === 'negligible') {
+    headline = `${condA} and ${condB} performed similarly`;
+    emoji = '➖';
+    recommendation = 'No clear difference detected';
+    nextSteps = ['Try increasing the intervention dose', 'Test for a longer period', 'Consider a different outcome measure'];
+  } else if (confidenceLevel === 'low') {
+    headline = `${betterCondition} might be ${improvementWord}, but uncertain`;
+    emoji = '🤔';
+    recommendation = 'Need more data to be sure';
+    nextSteps = ['Run 1-2 more weeks', 'Check your logging consistency'];
+  } else {
+    headline = `${betterCondition} ${improvementWord} for ${dependentName}`;
+    emoji = magnitude === 'large' || magnitude === 'very_large' ? '🎉' : '✅';
+    recommendation = confidenceLevel === 'very_high'
+      ? `Strong evidence: stick with ${betterCondition}!`
+      : `${betterCondition} appears beneficial`;
+    nextSteps = [
+      `Continue with ${betterCondition}`,
+      `Test ${betterCondition} at different levels`,
+      'Share your results',
+    ];
+  }
+
+  return {
+    headline,
+    effectDescription: `${diff.toFixed(2)} ${directionWord} on ${betterCondition} days (${magnitudeWord} effect)`,
+    confidenceStatement: `${Math.round(prob * 100)}% ${confidenceWord} this is real, not random chance`,
+    magnitude,
+    recommendation,
+    nextSteps,
+    emoji,
+  };
+}
+
+// ========================================
 // POWER ESTIMATION
 // ========================================
 
@@ -877,5 +1078,286 @@ function seededRandom(seed: number): () => number {
     let t = Math.imul(s ^ (s >>> 15), 1 | s);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ========================================
+// MULTI-ARM ANALYSIS (3+ CONDITIONS)
+// ========================================
+
+/**
+ * Chi-squared CDF approximation for Kruskal-Wallis p-value calculation.
+ * Uses Wilson-Hilferty normal approximation for large df.
+ */
+function chiSquaredCDF(x: number, df: number): number {
+  if (x <= 0) return 0;
+  if (df <= 0) return 1;
+
+  // Wilson-Hilferty approximation
+  const z = Math.pow(x / df, 1 / 3) - (1 - 2 / (9 * df));
+  const se = Math.sqrt(2 / (9 * df));
+  return normalCDF(z / se);
+}
+
+/**
+ * Performs Kruskal-Wallis H test for comparing 3+ groups.
+ * Non-parametric alternative to one-way ANOVA.
+ * 
+ * H = (12 / N(N+1)) * Σ(Rᵢ²/nᵢ) - 3(N+1)
+ */
+export function performKruskalWallisTest(
+  groups: number[][],
+): { H: number; pValue: number; significant: boolean } | null {
+  if (groups.length < 2) return null;
+
+  // Remove empty groups
+  const validGroups = groups.filter(g => g.length > 0);
+  if (validGroups.length < 2) return null;
+
+  // Combine all values with group labels
+  const allValues: { value: number; group: number }[] = [];
+  validGroups.forEach((group, groupIdx) => {
+    group.forEach(value => {
+      allValues.push({ value, group: groupIdx });
+    });
+  });
+
+  const N = allValues.length;
+  if (N < 5) return null;
+
+  // Rank all values (handling ties with average ranks)
+  allValues.sort((a, b) => a.value - b.value);
+  const ranks: number[] = new Array(N);
+
+  let i = 0;
+  while (i < N) {
+    let j = i;
+    // Find tie group
+    while (j < N && allValues[j].value === allValues[i].value) {
+      j++;
+    }
+    // Average rank for tie group
+    const avgRank = (i + j + 1) / 2;
+    for (let k = i; k < j; k++) {
+      ranks[k] = avgRank;
+    }
+    i = j;
+  }
+
+  // Reassign ranks to original data structure
+  allValues.forEach((item, idx) => {
+    (item as { value: number; group: number; rank?: number }).rank = ranks[idx];
+  });
+
+  // Sum of ranks for each group
+  const rankSums: number[] = new Array(validGroups.length).fill(0);
+  const groupSizes: number[] = validGroups.map(g => g.length);
+
+  allValues.forEach((item, idx) => {
+    rankSums[item.group] += ranks[idx];
+  });
+
+  // Calculate H statistic
+  let H = 0;
+  for (let g = 0; g < validGroups.length; g++) {
+    H += (rankSums[g] * rankSums[g]) / groupSizes[g];
+  }
+  H = (12 / (N * (N + 1))) * H - 3 * (N + 1);
+
+  // Degrees of freedom = k - 1
+  const df = validGroups.length - 1;
+
+  // p-value from chi-squared distribution
+  const pValue = 1 - chiSquaredCDF(H, df);
+
+  return {
+    H,
+    pValue,
+    significant: pValue < 0.05,
+  };
+}
+
+/**
+ * Performs linear dose-response regression.
+ * If conditions have numeric doses, fits Y = a + b*dose.
+ */
+export function performDoseResponseRegression(
+  doses: number[],
+  outcomes: number[],
+): DoseResponseResult | null {
+  if (doses.length < 3 || doses.length !== outcomes.length) return null;
+
+  // Check if doses have variance
+  const uniqueDoses = new Set(doses);
+  if (uniqueDoses.size < 2) return null;
+
+  const n = doses.length;
+  const meanDose = ss.mean(doses);
+  const meanOutcome = ss.mean(outcomes);
+
+  // Calculate slope and intercept
+  let numerator = 0;
+  let denominator = 0;
+  for (let i = 0; i < n; i++) {
+    numerator += (doses[i] - meanDose) * (outcomes[i] - meanOutcome);
+    denominator += (doses[i] - meanDose) * (doses[i] - meanDose);
+  }
+
+  if (denominator === 0) return null;
+
+  const slope = numerator / denominator;
+  const intercept = meanOutcome - slope * meanDose;
+
+  // Calculate R²
+  let ssRes = 0;
+  let ssTot = 0;
+  for (let i = 0; i < n; i++) {
+    const predicted = intercept + slope * doses[i];
+    ssRes += (outcomes[i] - predicted) ** 2;
+    ssTot += (outcomes[i] - meanOutcome) ** 2;
+  }
+  const r2 = ssTot === 0 ? 0 : 1 - ssRes / ssTot;
+
+  // F-test for significance
+  const dfReg = 1;
+  const dfRes = n - 2;
+  const msReg = (ssTot - ssRes) / dfReg;
+  const msRes = ssRes / dfRes;
+  const fStat = msRes === 0 ? 0 : msReg / msRes;
+
+  // Approximate p-value from F distribution (using normal approximation)
+  // For simple regression, t = slope / SE(slope), and F = t²
+  const t = Math.sqrt(fStat);
+  const pValue = dfRes > 0 ? tTestPValue(t, dfRes) : 1;
+
+  // Find optimal dose (within observed range)
+  const minDose = Math.min(...doses);
+  const maxDose = Math.max(...doses);
+
+  // Generate curve points
+  const curve: { dose: number; predicted: number }[] = [];
+  const steps = 10;
+  for (let i = 0; i <= steps; i++) {
+    const dose = minDose + (maxDose - minDose) * (i / steps);
+    curve.push({ dose, predicted: intercept + slope * dose });
+  }
+
+  // Optimal dose: if slope > 0, max dose; if slope < 0, min dose
+  // (This is a simple heuristic; real optimization would consider constraints)
+  const optimalDose = slope > 0 ? maxDose : minDose;
+
+  return {
+    slope,
+    intercept,
+    r2,
+    pValue,
+    optimalDose: pValue < 0.05 ? optimalDose : null,
+    curve,
+  };
+}
+
+/**
+ * Main orchestrator for multi-arm (3+) condition analysis.
+ * 
+ * @param conditionData Map of condition label → outcome values
+ * @param conditionDoses Optional map of condition label → numeric dose
+ * @param temporalValues Optional chronologically ordered values for autocorrelation
+ */
+export function performMultiArmAnalysis(
+  conditionData: Map<string, number[]>,
+  conditionDoses?: Map<string, number>,
+  temporalValues?: number[],
+): MultiArmResult | null {
+  const conditions = Array.from(conditionData.keys());
+  if (conditions.length < 2) return null;
+
+  // Calculate stats for each condition
+  const conditionStats: ConditionStats[] = conditions.map(label => {
+    const values = conditionData.get(label) || [];
+    return {
+      label,
+      mean: values.length > 0 ? ss.mean(values) : 0,
+      std: values.length > 1 ? ss.standardDeviation(values) : 0,
+      n: values.length,
+      dose: conditionDoses?.get(label),
+    };
+  }).filter(cs => cs.n > 0);
+
+  if (conditionStats.length < 2) return null;
+
+  // Prepare groups for Kruskal-Wallis
+  const groups = conditionStats.map(cs => conditionData.get(cs.label) || []);
+  const kruskalWallis = performKruskalWallisTest(groups);
+
+  // Pairwise comparisons with Bonferroni correction
+  const pairwiseComparisons: PairwiseComparison[] = [];
+  const nComparisons = (conditionStats.length * (conditionStats.length - 1)) / 2;
+  const bonferroniAlpha = 0.05 / nComparisons;
+
+  for (let i = 0; i < conditionStats.length; i++) {
+    for (let j = i + 1; j < conditionStats.length; j++) {
+      const valuesA = conditionData.get(conditionStats[i].label) || [];
+      const valuesB = conditionData.get(conditionStats[j].label) || [];
+
+      if (valuesA.length < 2 || valuesB.length < 2) continue;
+
+      // Welch's t-test for pairwise comparison
+      const meanA = ss.mean(valuesA);
+      const meanB = ss.mean(valuesB);
+      const seA = ss.standardDeviation(valuesA) / Math.sqrt(valuesA.length);
+      const seB = ss.standardDeviation(valuesB) / Math.sqrt(valuesB.length);
+      const seDiff = Math.sqrt(seA * seA + seB * seB);
+
+      if (seDiff > 0) {
+        const t = (meanA - meanB) / seDiff;
+        const dfNum = Math.pow(seA * seA + seB * seB, 2);
+        const dfDen = Math.pow(seA * seA, 2) / (valuesA.length - 1) +
+          Math.pow(seB * seB, 2) / (valuesB.length - 1);
+        const df = dfNum / dfDen;
+        const pValue = tTestPValue(t, df);
+
+        pairwiseComparisons.push({
+          conditionA: conditionStats[i].label,
+          conditionB: conditionStats[j].label,
+          meanDiff: meanA - meanB,
+          pValue,
+          significant: pValue < bonferroniAlpha,
+        });
+      }
+    }
+  }
+
+  // Dose-response regression (if doses provided)
+  let doseResponse: DoseResponseResult | null = null;
+  if (conditionDoses && conditionDoses.size > 0) {
+    const doses: number[] = [];
+    const outcomes: number[] = [];
+
+    for (const [label, values] of conditionData) {
+      const dose = conditionDoses.get(label);
+      if (dose !== undefined) {
+        for (const v of values) {
+          doses.push(dose);
+          outcomes.push(v);
+        }
+      }
+    }
+
+    if (doses.length >= 3) {
+      doseResponse = performDoseResponseRegression(doses, outcomes);
+    }
+  }
+
+  // Autocorrelation on temporal values
+  const allValues = temporalValues ?? Array.from(conditionData.values()).flat();
+  const autocorrelation = calculateAutocorrelation(allValues);
+
+  return {
+    nConditions: conditionStats.length,
+    conditionStats,
+    kruskalWallis,
+    pairwiseComparisons,
+    doseResponse,
+    autocorrelation,
   };
 }

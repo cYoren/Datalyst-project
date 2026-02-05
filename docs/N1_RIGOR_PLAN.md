@@ -205,8 +205,8 @@ The most impactful feature expansion. Enables the "find my optimal dose" use cas
 ### Phase 3 — Multi-Condition
 - [ ] 3.1 Schema migration for multi-arm conditions (schema already supports labels, no migration needed)
 - [x] 3.2 Generalize blocked randomization to N conditions
-- [ ] 3.3 Multi-arm statistics (Kruskal-Wallis, dose-response)
-- [x] 3.4 Update API, creation form, and results UI (partial: UI exists, stats pending)
+- [x] 3.3 Multi-arm statistics (Kruskal-Wallis, dose-response)
+- [x] 3.4 Update API, creation form, and results UI
 
 ### Phase 4 — Blinding
 - [ ] 4.1 Per-block blind guess collection (schema + UI)
@@ -214,6 +214,6 @@ The most impactful feature expansion. Enables the "find my optimal dose" use cas
 - [ ] 4.3 Physical blinding guide component
 
 ### Phase 5 — Results Gating
-- [ ] 5.1 Hide inferential stats during active experiments
-- [ ] 5.2 Enforce pre-registration immutability
-- [ ] 5.3 Enhanced audit report with all new metrics
+- [x] 5.1 Hide inferential stats during active experiments
+- [x] 5.2 Enforce pre-registration immutability
+- [x] 5.3 Enhanced audit report with all new metrics

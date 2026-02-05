@@ -131,19 +131,80 @@ export default function LabPage() {
                     <p className="text-red-500">Failed to load experiments</p>
                 </Card>
             ) : filteredExperiments.length === 0 ? (
-                <Card className="p-8 text-center">
-                    <FlaskConical className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
-                        No experiments yet
-                    </h3>
-                    <p className="text-[var(--text-secondary)] mb-4">
-                        Ready to test a theory? Pick a cause (e.g., Caffeine) and an effect (e.g., Sleep), and Datalyst will randomize your days and run the statistics.
-                    </p>
-                    <Link href="/lab/new" className={cn(buttonVariants({ variant: 'secondary' }), "gap-2")}>
-                        <Plus className="h-4 w-4" />
-                        Create Experiment
-                    </Link>
-                </Card>
+                <div className="space-y-6">
+                    <Card className="p-8 text-center">
+                        <FlaskConical className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+                            Start Your First Experiment
+                        </h3>
+                        <p className="text-[var(--text-secondary)] mb-4 max-w-md mx-auto">
+                            Test what actually works for you. Pick a cause and effect, and we&apos;ll randomize your days and run the statistics.
+                        </p>
+                        <Link href="/lab/new" className={cn(buttonVariants(), "gap-2")}>
+                            <Plus className="h-4 w-4" />
+                            Create Custom Experiment
+                        </Link>
+                    </Card>
+
+                    {/* Popular Starter Experiments */}
+                    <div>
+                        <h3 className="text-sm font-semibold text-[var(--text-tertiary)] uppercase tracking-wide mb-3">
+                            🎯 Popular First Experiments
+                        </h3>
+                        <div className="grid gap-3 md:grid-cols-3">
+                            <Card className="p-4 hover:border-purple-300 hover:bg-purple-50/30 transition-colors cursor-pointer group">
+                                <Link href="/lab/new?template=caffeine" className="block">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-2xl">☕</span>
+                                        <div>
+                                            <div className="font-medium text-[var(--text-primary)] group-hover:text-purple-600">
+                                                Caffeine → Focus
+                                            </div>
+                                            <div className="text-xs text-[var(--text-tertiary)]">14 days</div>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-[var(--text-secondary)]">
+                                        Does coffee actually help you focus? Find out with a randomized test.
+                                    </p>
+                                </Link>
+                            </Card>
+
+                            <Card className="p-4 hover:border-blue-300 hover:bg-blue-50/30 transition-colors cursor-pointer group">
+                                <Link href="/lab/new?template=sleep" className="block">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-2xl">😴</span>
+                                        <div>
+                                            <div className="font-medium text-[var(--text-primary)] group-hover:text-blue-600">
+                                                Sleep Duration → Mood
+                                            </div>
+                                            <div className="text-xs text-[var(--text-tertiary)]">21 days</div>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-[var(--text-secondary)]">
+                                        Test if more sleep actually improves your daily mood.
+                                    </p>
+                                </Link>
+                            </Card>
+
+                            <Card className="p-4 hover:border-green-300 hover:bg-green-50/30 transition-colors cursor-pointer group">
+                                <Link href="/lab/new?template=exercise" className="block">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-2xl">🏃</span>
+                                        <div>
+                                            <div className="font-medium text-[var(--text-primary)] group-hover:text-green-600">
+                                                Exercise → Energy
+                                            </div>
+                                            <div className="text-xs text-[var(--text-tertiary)]">14 days</div>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-[var(--text-secondary)]">
+                                        Does working out boost your energy levels the next day?
+                                    </p>
+                                </Link>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
             ) : (
                 <div className="grid gap-4">
                     {filteredExperiments.map(exp => (

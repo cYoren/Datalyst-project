@@ -87,10 +87,28 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         // Build update data
         const updateData: any = {};
         if (body.name !== undefined) updateData.name = body.name;
-        if (body.hypothesis !== undefined) updateData.hypothesis = body.hypothesis;
         if (body.startDate !== undefined) updateData.startDate = body.startDate;
         if (body.endDate !== undefined) updateData.endDate = body.endDate;
         if (body.status !== undefined) updateData.status = body.status;
+
+        // ========== PRE-REGISTRATION LOCK ==========
+        // If hypothesis is locked, prevent changes
+        if (existing.hypothesisLockedAt && body.hypothesis !== undefined && body.hypothesis !== existing.hypothesis) {
+            return NextResponse.json({
+                error: 'Hypothesis is locked',
+                message: 'Your hypothesis was locked when the trial started to prevent p-hacking. This ensures scientific integrity.',
+                lockedAt: existing.hypothesisLockedAt,
+            }, { status: 403 });
+        }
+
+        // Allow hypothesis update if not locked
+        if (body.hypothesis !== undefined) updateData.hypothesis = body.hypothesis;
+
+        // Auto-lock hypothesis when transitioning to ACTIVE
+        if (body.status === 'ACTIVE' && existing.status !== 'ACTIVE' && !existing.hypothesisLockedAt) {
+            updateData.hypothesisLockedAt = new Date();
+        }
+        // ========== END PRE-REGISTRATION LOCK ==========
 
         const updated = await prisma.experiment.update({
             where: { id },
