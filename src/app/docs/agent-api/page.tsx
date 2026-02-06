@@ -65,11 +65,11 @@ export default function AgentApiDocsPage() {
                                 {`curl -X POST -H "X-API-Key: sk_your_key" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "trialId": "trial_abc123",
+    "trialId": "cmlb87yie00073j9ok1fmjw8u",
     "date": "2025-01-15",
     "entries": [
-      {"subvariableId": "sv_intervention", "value": true},
-      {"subvariableId": "sv_outcome", "value": 7.5}
+      {"subvariableId": "cmlb87xic00043j9o9u7u6ij4", "value": true},
+      {"subvariableId": "cmlb87xic00053j9okcpua2af", "value": 7.5}
     ]
   }' \\
   ${baseUrl}/api/v1/agent/log`}
@@ -82,6 +82,47 @@ export default function AgentApiDocsPage() {
                                 {`curl -H "X-API-Key: sk_your_key" \\
   ${baseUrl}/api/v1/agent/results/trial_abc123`}
                             </pre>
+                        </div>
+                    </div>
+                </section>
+
+                {/* cURL Examples */}
+                <section className="mb-12 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+                    <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
+                        🧪 Example cURL Commands
+                    </h2>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Invalid API key (401)</h3>
+                            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
+                                {`curl -i -X POST ${baseUrl}/api/v1/agent/trial \\
+  -H "X-API-Key: sk_invalid" \\
+  -H "Content-Type: application/json" \\
+  -d '{"protocolId":"magnesium-sleep-v1"}'`}
+                            </pre>
+                        </div>
+
+                        <div>
+                            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Validation error (400)</h3>
+                            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
+                                {`curl -i -X POST ${baseUrl}/api/v1/agent/log \\
+  -H "X-API-Key: sk_your_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"trialId":"trial_abc123","date":"2026/02/06","entries":[]}'`}
+                            </pre>
+                        </div>
+
+                        <div>
+                            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Rate limit headers</h3>
+                            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
+                                {`curl -i -X POST ${baseUrl}/api/v1/agent/log \\
+  -H "X-API-Key: sk_your_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"trialId":"trial_abc123","date":"2026-02-06","entries":[{"subvariableId":"sv_x","value":1}]}'`}
+                            </pre>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                                Check <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, and <code>X-RateLimit-Reset</code> in the response headers.
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -230,6 +271,9 @@ export default function AgentApiDocsPage() {
                             </tr>
                         </tbody>
                     </table>
+                    <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                        Some API keys may be provisioned with lower limits. Use response headers to monitor remaining quota.
+                    </p>
                 </section>
 
                 {/* Footer */}

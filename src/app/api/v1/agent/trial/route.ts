@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateAgent, unauthorizedResponse } from '@/lib/agent-auth';
 import { z } from 'zod';
+import { generateBlockedSchedule } from '@/stats/analysis';
+import { appendRateLimitHeaders, checkAgentRateLimit, rateLimitedResponse } from '@/lib/agent-rate-limit';
 
 const StartTrialSchema = z.object({
     protocolId: z.string().min(1, 'protocolId is required'),
@@ -25,15 +27,21 @@ export async function POST(request: NextRequest) {
         return unauthorizedResponse();
     }
 
+    const rateLimit = checkAgentRateLimit(`agent:${agent.apiKeyId}:trial`, agent.rateLimitPerMinute);
+    if (!rateLimit.allowed) {
+        return rateLimitedResponse(rateLimit);
+    }
+    const withRateLimit = (response: NextResponse) => appendRateLimitHeaders(response, rateLimit);
+
     try {
         const body = await request.json();
         const parsed = StartTrialSchema.safeParse(body);
 
         if (!parsed.success) {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 { success: false, error: 'Invalid request', details: parsed.error.flatten() },
                 { status: 400 }
-            );
+            ));
         }
 
         const { protocolId, duration, externalUserId } = parsed.data;
@@ -50,10 +58,10 @@ export async function POST(request: NextRequest) {
             });
 
             if (!protocolBySlug) {
-                return NextResponse.json(
+                return withRateLimit(NextResponse.json(
                     { success: false, error: `Protocol not found: ${protocolId}` },
                     { status: 404 }
-                );
+                ));
             }
         }
 
@@ -62,17 +70,17 @@ export async function POST(request: NextRequest) {
         });
 
         if (!resolvedProtocol) {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 { success: false, error: `Protocol not found: ${protocolId}` },
                 { status: 404 }
-            );
+            ));
         }
 
         // Calculate date range
         const trialDuration = duration || resolvedProtocol.recommendedDuration;
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setDate(endDate.getDate() + trialDuration);
+        endDate.setDate(endDate.getDate() + Math.max(0, trialDuration - 1));
 
         const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
@@ -160,8 +168,27 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Generate randomized assignments so results can split baseline/intervention correctly.
+        const schedule = generateBlockedSchedule(
+            formatDate(startDate),
+            trialDuration,
+            4,
+            resolvedProtocol.recommendedWashout,
+            undefined,
+            ['A', 'B']
+        );
+        await prisma.assignment.createMany({
+            data: schedule.assignments.map((assignment) => ({
+                experimentId: experiment.id,
+                date: assignment.date,
+                condition: assignment.condition,
+                blockIndex: assignment.blockIndex,
+                isWashout: assignment.isWashout,
+            })),
+        });
+
         // Return the trial info with logging schema
-        return NextResponse.json({
+        return withRateLimit(NextResponse.json({
             success: true,
             trial: {
                 id: experiment.id,
@@ -191,14 +218,13 @@ export async function POST(request: NextRequest) {
             endpoints: {
                 log: `/api/v1/agent/log`,
                 results: `/api/v1/agent/results/${experiment.id}`,
-                schema: `/api/v1/agent/trial/${experiment.id}/schema`,
             },
-        });
+        }));
     } catch (error) {
         console.error('[Agent API] Failed to start trial:', error);
-        return NextResponse.json(
+        return withRateLimit(NextResponse.json(
             { success: false, error: 'Failed to start trial' },
             { status: 500 }
-        );
+        ));
     }
 }

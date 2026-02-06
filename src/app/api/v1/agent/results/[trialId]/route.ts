@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { authenticateAgent, unauthorizedResponse } from '@/lib/agent-auth';
 import { calculateRigorScore, RigorScoreInput } from '@/stats/rigor';
 import { getAttestationExplorerUrl } from '@/lib/crypto/eas';
+import { appendRateLimitHeaders, checkAgentRateLimit, rateLimitedResponse } from '@/lib/agent-rate-limit';
 
 interface RouteParams {
     params: Promise<{ trialId: string }>;
@@ -21,6 +22,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (!agent) {
         return unauthorizedResponse();
     }
+
+    const rateLimit = checkAgentRateLimit(`agent:${agent.apiKeyId}:results`, agent.rateLimitPerMinute);
+    if (!rateLimit.allowed) {
+        return rateLimitedResponse(rateLimit);
+    }
+    const withRateLimit = (response: NextResponse) => appendRateLimitHeaders(response, rateLimit);
 
     try {
         const { trialId } = await params;
@@ -44,20 +51,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         });
 
         if (!experiment) {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 { success: false, error: `Trial not found: ${trialId}` },
                 { status: 404 }
-            );
+            ));
         }
 
         const independentSub = experiment.independent.subvariables[0];
         const dependentSub = experiment.dependent.subvariables[0];
 
         if (!independentSub || !dependentSub) {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 { success: false, error: 'Variables must have at least one subvariable' },
                 { status: 400 }
-            );
+            ));
         }
 
         // Fetch entries for both variables
@@ -159,7 +166,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             }
             : { verified: false };
 
-        return NextResponse.json({
+        return withRateLimit(NextResponse.json({
             success: true,
             trial: {
                 id: experiment.id,
@@ -200,12 +207,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             shareUrl: experiment.slug && experiment.isPublic
                 ? `${process.env.NEXT_PUBLIC_APP_URL || ''}/share/${experiment.slug}`
                 : null,
-        });
+        }));
     } catch (error) {
         console.error('[Agent API] Failed to get results:', error);
-        return NextResponse.json(
+        return withRateLimit(NextResponse.json(
             { success: false, error: 'Failed to get results' },
             { status: 500 }
-        );
+        ));
     }
 }

@@ -1,7 +1,5 @@
 /**
  * OpenAPI 3.0 Specification for Datalyst Agent API
- * 
- * This endpoint serves the OpenAPI spec for AI agents to discover and use the API.
  */
 
 import { NextResponse } from 'next/server';
@@ -10,29 +8,8 @@ const openApiSpec = {
     openapi: '3.0.3',
     info: {
         title: 'Datalyst Agent API',
-        description: `
-# Datalyst Agent API
-
-Run scientifically rigorous N=1 experiments for your users. This API allows AI agents to:
-
-1. **Discover Protocols** - Browse standardized experiment templates
-2. **Start Trials** - Initiate experiments based on protocols
-3. **Log Data** - Record daily measurements with strict validation
-4. **Get Results** - Retrieve statistical analysis with blockchain verification
-
-## Authentication
-
-All endpoints require an API key in the \`X-API-Key\` header:
-
-\`\`\`
-X-API-Key: sk_your_api_key_here
-\`\`\`
-
-## Blockchain Verification
-
-Results are attested on Base L2 using EAS (Ethereum Attestation Service), providing tamper-proof verification without requiring user wallets.
-    `,
-        version: '1.0.0',
+        version: '1.1.0',
+        description: 'Run scientifically rigorous N=1 experiments for your users.',
         contact: {
             email: 'support@datalyst.app',
         },
@@ -47,17 +24,16 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
             description: 'Development',
         },
     ],
-    security: [
-        {
-            ApiKeyAuth: [],
-        },
+    tags: [
+        { name: 'Protocols' },
+        { name: 'Trials' },
+        { name: 'Results' },
     ],
     paths: {
         '/api/v1/protocols': {
             get: {
                 operationId: 'listProtocols',
                 summary: 'List available experiment protocols',
-                description: 'Returns all public protocols that can be used to start trials. Each protocol defines a standardized experiment template.',
                 tags: ['Protocols'],
                 responses: {
                     '200': {
@@ -78,6 +54,14 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                             },
                         },
                     },
+                    '500': {
+                        description: 'Server error',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
                 },
             },
         },
@@ -85,8 +69,8 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
             post: {
                 operationId: 'startTrial',
                 summary: 'Start a new trial from a protocol',
-                description: 'Creates a new experiment instance based on a protocol template. Returns the trial ID and schema for logging data.',
                 tags: ['Trials'],
+                security: [{ ApiKeyAuth: [] }],
                 requestBody: {
                     required: true,
                     content: {
@@ -97,13 +81,18 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                                 properties: {
                                     protocolId: {
                                         type: 'string',
-                                        description: 'The protocol ID or slug to use',
+                                        description: 'Protocol id or slug',
                                         example: 'magnesium-sleep-v1',
                                     },
                                     duration: {
                                         type: 'integer',
-                                        description: 'Duration in days (default: protocol recommended)',
+                                        minimum: 7,
+                                        maximum: 90,
                                         example: 14,
+                                    },
+                                    externalUserId: {
+                                        type: 'string',
+                                        description: 'Optional agent-side user identifier',
                                     },
                                 },
                             },
@@ -113,20 +102,51 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                 responses: {
                     '200': {
                         description: 'Trial created successfully',
+                        headers: {
+                            'X-RateLimit-Limit': { schema: { type: 'string' } },
+                            'X-RateLimit-Remaining': { schema: { type: 'string' } },
+                            'X-RateLimit-Reset': { schema: { type: 'string' } },
+                        },
                         content: {
                             'application/json': {
-                                schema: {
-                                    type: 'object',
-                                    properties: {
-                                        success: { type: 'boolean', example: true },
-                                        trial: { $ref: '#/components/schemas/Trial' },
-                                    },
-                                },
+                                schema: { $ref: '#/components/schemas/TrialCreatedResponse' },
                             },
                         },
                     },
                     '400': {
                         description: 'Invalid request',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '401': {
+                        description: 'Unauthorized',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '404': {
+                        description: 'Protocol not found',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '429': {
+                        description: 'Rate limit exceeded',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '500': {
+                        description: 'Server error',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/Error' },
@@ -140,8 +160,8 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
             post: {
                 operationId: 'logData',
                 summary: 'Log data for an active trial',
-                description: 'Records data entries for a specific date. Validates against the protocol schema.',
                 tags: ['Trials'],
+                security: [{ ApiKeyAuth: [] }],
                 requestBody: {
                     required: true,
                     content: {
@@ -150,42 +170,31 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                                 type: 'object',
                                 required: ['trialId', 'date', 'entries'],
                                 properties: {
-                                    trialId: {
-                                        type: 'string',
-                                        description: 'The trial ID',
-                                    },
+                                    trialId: { type: 'string' },
                                     date: {
                                         type: 'string',
                                         format: 'date',
-                                        description: 'Date in YYYY-MM-DD format',
-                                        example: '2025-01-15',
+                                        example: '2026-02-06',
                                     },
                                     entries: {
                                         type: 'array',
-                                        description: 'Data entries to log',
+                                        minItems: 1,
                                         items: {
                                             type: 'object',
                                             required: ['subvariableId', 'value'],
                                             properties: {
-                                                subvariableId: {
-                                                    type: 'string',
-                                                    description: 'The subvariable ID from the trial schema',
-                                                },
+                                                subvariableId: { type: 'string' },
                                                 value: {
                                                     oneOf: [
                                                         { type: 'number' },
                                                         { type: 'boolean' },
                                                         { type: 'string' },
                                                     ],
-                                                    description: 'The value to log',
                                                 },
                                             },
                                         },
                                     },
-                                    note: {
-                                        type: 'string',
-                                        description: 'Optional note for this entry',
-                                    },
+                                    note: { type: 'string' },
                                 },
                             },
                         },
@@ -194,22 +203,54 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                 responses: {
                     '200': {
                         description: 'Data logged successfully',
+                        headers: {
+                            'X-RateLimit-Limit': { schema: { type: 'string' } },
+                            'X-RateLimit-Remaining': { schema: { type: 'string' } },
+                            'X-RateLimit-Reset': { schema: { type: 'string' } },
+                        },
                         content: {
                             'application/json': {
-                                schema: {
-                                    type: 'object',
-                                    properties: {
-                                        success: { type: 'boolean', example: true },
-                                        logged: {
-                                            type: 'object',
-                                            properties: {
-                                                trialId: { type: 'string' },
-                                                date: { type: 'string' },
-                                                entriesCount: { type: 'integer' },
-                                            },
-                                        },
-                                    },
-                                },
+                                schema: { $ref: '#/components/schemas/LogResponse' },
+                            },
+                        },
+                    },
+                    '400': {
+                        description: 'Validation or state error',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '401': {
+                        description: 'Unauthorized',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '404': {
+                        description: 'Trial not found',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '429': {
+                        description: 'Rate limit exceeded',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '500': {
+                        description: 'Server error',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
                             },
                         },
                     },
@@ -219,24 +260,68 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
         '/api/v1/agent/results/{trialId}': {
             get: {
                 operationId: 'getResults',
-                summary: 'Get trial results',
-                description: 'Returns statistical analysis, rigor score, and blockchain verification for a trial.',
+                summary: 'Get trial analysis',
                 tags: ['Results'],
+                security: [{ ApiKeyAuth: [] }],
                 parameters: [
                     {
                         name: 'trialId',
                         in: 'path',
                         required: true,
                         schema: { type: 'string' },
-                        description: 'The trial ID',
                     },
                 ],
                 responses: {
                     '200': {
                         description: 'Trial results',
+                        headers: {
+                            'X-RateLimit-Limit': { schema: { type: 'string' } },
+                            'X-RateLimit-Remaining': { schema: { type: 'string' } },
+                            'X-RateLimit-Reset': { schema: { type: 'string' } },
+                        },
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/TrialResults' },
+                                schema: { $ref: '#/components/schemas/TrialResultsResponse' },
+                            },
+                        },
+                    },
+                    '400': {
+                        description: 'Invalid trial shape',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '401': {
+                        description: 'Unauthorized',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '404': {
+                        description: 'Trial not found',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '429': {
+                        description: 'Rate limit exceeded',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
+                            },
+                        },
+                    },
+                    '500': {
+                        description: 'Server error',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Error' },
                             },
                         },
                     },
@@ -250,7 +335,6 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                 type: 'apiKey',
                 in: 'header',
                 name: 'X-API-Key',
-                description: 'API key for authentication. Contact support@datalyst.app to obtain one.',
             },
         },
         schemas: {
@@ -258,85 +342,99 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                 type: 'object',
                 properties: {
                     id: { type: 'string' },
-                    slug: { type: 'string', example: 'magnesium-sleep-v1' },
-                    name: { type: 'string', example: 'Magnesium for Sleep Quality' },
+                    slug: { type: 'string' },
+                    name: { type: 'string' },
                     description: { type: 'string' },
-                    version: { type: 'string', example: '1.0' },
-                    recommendedDuration: { type: 'integer', example: 14 },
-                    recommendedWashout: { type: 'integer', example: 2 },
-                    independentTemplate: {
-                        type: 'object',
-                        description: 'Template for the intervention variable',
-                    },
-                    dependentTemplate: {
-                        type: 'object',
-                        description: 'Template for the outcome variable',
-                    },
+                    version: { type: 'string' },
+                    recommendedDuration: { type: 'integer' },
+                    recommendedWashout: { type: 'integer' },
+                    independentTemplate: { type: 'object' },
+                    dependentTemplate: { type: 'object' },
                 },
             },
-            Trial: {
+            TrialCreatedResponse: {
                 type: 'object',
                 properties: {
-                    id: { type: 'string' },
-                    protocolId: { type: 'string' },
-                    protocolName: { type: 'string' },
-                    startDate: { type: 'string', format: 'date' },
-                    endDate: { type: 'string', format: 'date' },
-                    status: { type: 'string', enum: ['ACTIVE', 'COMPLETED', 'CANCELLED'] },
-                    loggingSchema: {
-                        type: 'object',
-                        description: 'Schema describing what data to log each day',
-                    },
-                    endpoints: {
-                        type: 'object',
-                        properties: {
-                            log: { type: 'string', description: 'Endpoint to log data' },
-                            results: { type: 'string', description: 'Endpoint to get results' },
-                        },
-                    },
-                },
-            },
-            TrialResults: {
-                type: 'object',
-                properties: {
-                    success: { type: 'boolean' },
+                    success: { type: 'boolean', example: true },
                     trial: {
                         type: 'object',
                         properties: {
                             id: { type: 'string' },
-                            name: { type: 'string' },
+                            slug: { type: 'string' },
+                            protocolId: { type: 'string' },
+                            protocolSlug: { type: 'string' },
+                            startDate: { type: 'string', format: 'date' },
+                            endDate: { type: 'string', format: 'date' },
                             status: { type: 'string' },
                         },
                     },
-                    statistics: {
+                    loggingSchema: {
                         type: 'object',
                         properties: {
-                            effectSize: { type: 'number', example: 0.45 },
-                            pValue: { type: 'number', example: 0.023 },
-                            conditionAMean: { type: 'number' },
-                            conditionBMean: { type: 'number' },
-                            nA: { type: 'integer' },
-                            nB: { type: 'integer' },
-                            interpretation: { type: 'string' },
+                            independent: { type: 'object' },
+                            dependent: { type: 'object' },
                         },
                     },
-                    rigorScore: {
+                    endpoints: {
                         type: 'object',
                         properties: {
-                            score: { type: 'integer', minimum: 0, maximum: 100 },
-                            grade: { type: 'string', example: 'A' },
+                            log: { type: 'string' },
+                            results: { type: 'string' },
+                        },
+                    },
+                },
+            },
+            LogResponse: {
+                type: 'object',
+                properties: {
+                    success: { type: 'boolean', example: true },
+                    logged: {
+                        type: 'object',
+                        properties: {
+                            trialId: { type: 'string' },
+                            date: { type: 'string', format: 'date' },
+                            entriesCount: { type: 'integer' },
+                            results: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        habitId: { type: 'string' },
+                                        entryId: { type: 'string' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            TrialResultsResponse: {
+                type: 'object',
+                properties: {
+                    success: { type: 'boolean', example: true },
+                    trial: { type: 'object' },
+                    results: {
+                        type: 'object',
+                        properties: {
+                            conditionA: { type: 'object' },
+                            conditionB: { type: 'object' },
+                            effectSize: { type: 'number' },
+                            effectLabel: { type: 'string' },
+                            pValue: { type: 'number', nullable: true },
+                            significant: { type: 'boolean' },
+                        },
+                    },
+                    rigor: {
+                        type: 'object',
+                        properties: {
+                            score: { type: 'integer' },
+                            grade: { type: 'string' },
+                            breakdown: { type: 'array', items: { type: 'object' } },
                             tips: { type: 'array', items: { type: 'string' } },
                         },
                     },
-                    verification: {
-                        type: 'object',
-                        properties: {
-                            isVerified: { type: 'boolean' },
-                            attestationUid: { type: 'string' },
-                            explorerUrl: { type: 'string', format: 'uri' },
-                            chain: { type: 'string', example: 'Base' },
-                        },
-                    },
+                    attestation: { type: 'object' },
+                    shareUrl: { type: 'string', nullable: true },
                 },
             },
             Error: {
@@ -345,6 +443,7 @@ Results are attested on Base L2 using EAS (Ethereum Attestation Service), provid
                     success: { type: 'boolean', example: false },
                     error: { type: 'string' },
                     details: { type: 'object' },
+                    retryAfterSeconds: { type: 'integer' },
                 },
             },
         },

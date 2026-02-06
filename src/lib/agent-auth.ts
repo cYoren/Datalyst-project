@@ -12,6 +12,7 @@ export interface AuthenticatedAgent {
     userId: string;
     agentName: string;
     agentId?: string;
+    rateLimitPerMinute: number;
 }
 
 /**
@@ -55,6 +56,7 @@ export async function authenticateAgent(
             userId: keyRecord.userId,
             agentName: keyRecord.name,
             agentId: keyRecord.agentId ?? undefined,
+            rateLimitPerMinute: keyRecord.rateLimitPerMinute,
         };
     } catch (error) {
         console.error('[Agent Auth] Failed to authenticate:', error);

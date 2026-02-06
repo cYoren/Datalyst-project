@@ -1,0 +1,524 @@
+[
+  {
+    "device": "iPhone 15",
+    "colorScheme": "light",
+    "routes": [],
+    "error": "Login failed, still on /login. Body snippet: Welcome back\n\nLog in to continue your journey\n\nEmail\nPassword\nForgot password?\nLog In\nor continue with\nGoogle\nMagic Link (Email)\n\nDon't have an account? Sign up\n\nWe use essential cookies to keep you s"
+  },
+  {
+    "device": "iPhone 15",
+    "colorScheme": "dark",
+    "routes": [
+      {
+        "route": "/dashboard",
+        "url": "/dashboard",
+        "touchViolationCount": 4,
+        "touchViolations": [
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/lab",
+        "url": "/lab",
+        "touchViolationCount": 6,
+        "touchViolations": [
+          {
+            "tag": "button",
+            "text": "All Active",
+            "width": 93.3,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "📝 Planning",
+            "width": 109.2,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "🧪 Active",
+            "width": 95.2,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "✅ Completed",
+            "width": 127.4,
+            "height": 36
+          },
+          {
+            "tag": "a",
+            "text": "Create Protocol",
+            "width": 159.4,
+            "height": 36
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/data",
+        "url": "/data",
+        "touchViolationCount": 1,
+        "touchViolations": [
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/settings",
+        "url": "/settings",
+        "touchViolationCount": 8,
+        "touchViolations": [
+          {
+            "tag": "input",
+            "text": "",
+            "width": 311,
+            "height": 40
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 311,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "UTCAmerica/Sao_PauloEurope/LisbonEurope/LondonAmerica/New_Yo",
+            "width": 311,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "en-USpt-BRes-ES",
+            "width": 311,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "SYSTEMLIGHTDARK",
+            "width": 311,
+            "height": 40
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 13,
+            "height": 16
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 311,
+            "height": 40
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      }
+    ]
+  },
+  {
+    "device": "Pixel 7",
+    "colorScheme": "light",
+    "routes": [
+      {
+        "route": "/dashboard",
+        "url": "/dashboard",
+        "touchViolationCount": 4,
+        "touchViolations": [
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/lab",
+        "url": "/lab",
+        "touchViolationCount": 6,
+        "touchViolations": [
+          {
+            "tag": "button",
+            "text": "All Active",
+            "width": 93.3,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "📝 Planning",
+            "width": 109.2,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "🧪 Active",
+            "width": 95.2,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "✅ Completed",
+            "width": 127.4,
+            "height": 36
+          },
+          {
+            "tag": "a",
+            "text": "Create Protocol",
+            "width": 159.4,
+            "height": 36
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/data",
+        "url": "/data",
+        "touchViolationCount": 1,
+        "touchViolations": [
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/settings",
+        "url": "/settings",
+        "touchViolationCount": 8,
+        "touchViolations": [
+          {
+            "tag": "input",
+            "text": "",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "UTCAmerica/Sao_PauloEurope/LisbonEurope/LondonAmerica/New_Yo",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "en-USpt-BRes-ES",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "SYSTEMLIGHTDARK",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 13,
+            "height": 16
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      }
+    ]
+  },
+  {
+    "device": "Pixel 7",
+    "colorScheme": "dark",
+    "routes": [
+      {
+        "route": "/dashboard",
+        "url": "/dashboard",
+        "touchViolationCount": 4,
+        "touchViolations": [
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "button",
+            "text": "",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/lab",
+        "url": "/lab",
+        "touchViolationCount": 6,
+        "touchViolations": [
+          {
+            "tag": "button",
+            "text": "All Active",
+            "width": 93.3,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "📝 Planning",
+            "width": 109.2,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "🧪 Active",
+            "width": 95.2,
+            "height": 36
+          },
+          {
+            "tag": "button",
+            "text": "✅ Completed",
+            "width": 127.4,
+            "height": 36
+          },
+          {
+            "tag": "a",
+            "text": "Create Protocol",
+            "width": 159.4,
+            "height": 36
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/data",
+        "url": "/data",
+        "touchViolationCount": 1,
+        "touchViolations": [
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      },
+      {
+        "route": "/settings",
+        "url": "/settings",
+        "touchViolationCount": 8,
+        "touchViolations": [
+          {
+            "tag": "input",
+            "text": "",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "UTCAmerica/Sao_PauloEurope/LisbonEurope/LondonAmerica/New_Yo",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "en-USpt-BRes-ES",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "select",
+            "text": "SYSTEMLIGHTDARK",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 13,
+            "height": 16
+          },
+          {
+            "tag": "input",
+            "text": "",
+            "width": 330,
+            "height": 40
+          },
+          {
+            "tag": "a",
+            "text": "Learn more",
+            "width": 73.2,
+            "height": 18
+          }
+        ],
+        "bottomNavPresent": true,
+        "bottomNavHeight": 84,
+        "appPaddingBottom": 96,
+        "hasPotentialOverlap": false,
+        "colorBgApp": "#faf8f5",
+        "colorTextPrimary": "#1c1410"
+      }
+    ]
+  }
+]

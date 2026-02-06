@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { LogOut, Settings, ChevronDown, PlusCircle, Microscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { triggerSelectionHaptic } from '@/lib/haptics';
 
 interface UserMenuProps {
     user: {
@@ -47,7 +48,10 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
         return (
             <div className="relative">
                 <button
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => {
+                        void triggerSelectionHaptic();
+                        setIsOpen(!isOpen);
+                    }}
                     className="flex flex-col items-center justify-center p-2 rounded-[var(--radius-button)] transition-all w-16 min-h-[48px] text-[var(--text-tertiary)]"
                 >
                     <div className="h-7 w-7 rounded-full bg-[var(--color-accent-light)] text-[var(--color-accent)] flex items-center justify-center text-xs font-bold mb-1">
@@ -107,7 +111,10 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
 
                             <div className="border-t border-[var(--color-border)] bg-[var(--color-bg-subtle)]/50 p-2">
                                 <button
-                                    onClick={handleLogout}
+                                    onClick={async () => {
+                                        void triggerSelectionHaptic();
+                                        await handleLogout();
+                                    }}
                                     disabled={isLoggingOut}
                                     className="w-full flex items-center gap-3 px-4 py-3 text-[var(--color-error)] hover:bg-[var(--color-error)]/5 rounded-[var(--radius-button)] transition-colors disabled:opacity-50"
                                 >
@@ -125,7 +132,10 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
     return (
         <div className="relative px-4 mt-auto mb-4">
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    void triggerSelectionHaptic();
+                    setIsOpen(!isOpen);
+                }}
                 className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 rounded-[var(--radius-button)] transition-all",
                     isOpen ? "bg-[var(--color-bg-subtle)]" : "hover:bg-[var(--color-bg-subtle)]"
@@ -163,7 +173,10 @@ export function UserMenu({ user, variant = 'desktop' }: UserMenuProps) {
                             <span>Settings</span>
                         </Link>
                         <button
-                            onClick={handleLogout}
+                            onClick={async () => {
+                                void triggerSelectionHaptic();
+                                await handleLogout();
+                            }}
                             disabled={isLoggingOut}
                             className="w-full flex items-center gap-3 px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors disabled:opacity-50"
                         >

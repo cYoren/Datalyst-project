@@ -173,3 +173,36 @@ export function DataPageSkeleton() {
         </div>
     );
 }
+
+// Generic form/edit page skeleton
+export function FormPageSkeleton() {
+    return (
+        <div className="space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Skeleton className="h-11 w-24 rounded-[var(--radius-button)]" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-40" />
+                        <Skeleton className="h-4 w-56" />
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    <Skeleton className="h-11 w-36 rounded-[var(--radius-button)]" />
+                    <Skeleton className="h-11 w-36 rounded-[var(--radius-button)]" />
+                </div>
+            </div>
+
+            <div className="p-5 rounded-[var(--radius-card)] bg-[var(--color-bg-card)] border border-[var(--color-border)] space-y-4">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-11 w-full rounded-[var(--radius-input)]" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-24 w-full rounded-[var(--radius-input)]" />
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-11 w-full rounded-[var(--radius-input)]" />
+                <div className="flex justify-end">
+                    <Skeleton className="h-11 w-32 rounded-[var(--radius-button)]" />
+                </div>
+            </div>
+        </div>
+    );
+}

@@ -10,6 +10,7 @@ import { UserMenu } from '@/components/ui/UserMenu';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { SWRProvider } from '@/providers/SWRProvider';
+import { triggerSelectionHaptic } from '@/lib/haptics';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -70,7 +71,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ];
 
     return (
-        <div className="min-h-screen bg-[var(--bg-app)] pb-20 sm:pb-0 sm:pl-64">
+        <div className="min-h-screen bg-[var(--bg-app)] pb-[calc(6rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] sm:pb-0 sm:pt-0 sm:pl-64">
             {/* Desktop Sidebar */}
             <aside className="hidden sm:flex fixed inset-y-0 left-0 w-64 flex-col bg-[var(--bg-card)] border-r border-[var(--color-border)] shadow-sm">
                 <div className="p-6">
@@ -131,6 +132,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                                         ? "text-[var(--color-accent)]"
                                         : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
                             )}
+                            onClick={() => {
+                                void triggerSelectionHaptic();
+                            }}
                         >
                             {isCreate ? (
                                 <div className="bg-[var(--color-accent)] rounded-[var(--radius-card)] p-3 shadow-lg shadow-[var(--color-accent)]/30">
@@ -150,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </nav>
 
             {/* Main Content */}
-            <main className="max-w-4xl mx-auto p-4 sm:p-8 animate-fade-in min-h-screen">
+            <main className="max-w-4xl mx-auto p-4 sm:p-8 animate-fade-in min-h-screen-safe">
                 <SWRProvider>
                     <ToastProvider>
                         <Breadcrumbs />

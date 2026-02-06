@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateAgent, unauthorizedResponse } from '@/lib/agent-auth';
 import { z } from 'zod';
+import { appendRateLimitHeaders, checkAgentRateLimit, rateLimitedResponse } from '@/lib/agent-rate-limit';
 
 const LogEntrySchema = z.object({
     trialId: z.string().min(1, 'trialId is required'),
@@ -27,15 +28,22 @@ export async function POST(request: NextRequest) {
         return unauthorizedResponse();
     }
 
+    const logLimit = Math.min(agent.rateLimitPerMinute, 30);
+    const rateLimit = checkAgentRateLimit(`agent:${agent.apiKeyId}:log`, logLimit);
+    if (!rateLimit.allowed) {
+        return rateLimitedResponse(rateLimit);
+    }
+    const withRateLimit = (response: NextResponse) => appendRateLimitHeaders(response, rateLimit);
+
     try {
         const body = await request.json();
         const parsed = LogEntrySchema.safeParse(body);
 
         if (!parsed.success) {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 { success: false, error: 'Invalid request', details: parsed.error.flatten() },
                 { status: 400 }
-            );
+            ));
         }
 
         const { trialId, date, entries, note } = parsed.data;
@@ -53,17 +61,17 @@ export async function POST(request: NextRequest) {
         });
 
         if (!experiment) {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 { success: false, error: `Trial not found: ${trialId}` },
                 { status: 404 }
-            );
+            ));
         }
 
         if (experiment.status !== 'ACTIVE') {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 { success: false, error: `Trial is not active (status: ${experiment.status})` },
                 { status: 400 }
-            );
+            ));
         }
 
         // Validate that all subvariableIds belong to this experiment
@@ -74,7 +82,7 @@ export async function POST(request: NextRequest) {
 
         const invalidEntries = entries.filter(e => !validSubvarIds.has(e.subvariableId));
         if (invalidEntries.length > 0) {
-            return NextResponse.json(
+            return withRateLimit(NextResponse.json(
                 {
                     success: false,
                     error: 'Invalid subvariableId(s)',
@@ -82,7 +90,7 @@ export async function POST(request: NextRequest) {
                     validIds: Array.from(validSubvarIds),
                 },
                 { status: 400 }
-            );
+            ));
         }
 
         // Group entries by habit
@@ -159,7 +167,7 @@ export async function POST(request: NextRequest) {
             results.push({ habitId, entryId: habitEntry.id });
         }
 
-        return NextResponse.json({
+        return withRateLimit(NextResponse.json({
             success: true,
             logged: {
                 trialId,
@@ -167,12 +175,12 @@ export async function POST(request: NextRequest) {
                 entriesCount: entries.length,
                 results,
             },
-        });
+        }));
     } catch (error) {
         console.error('[Agent API] Failed to log entry:', error);
-        return NextResponse.json(
+        return withRateLimit(NextResponse.json(
             { success: false, error: 'Failed to log entry' },
             { status: 500 }
-        );
+        ));
     }
 }

@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Slider } from '@/components/ui/Slider';
 import { cn } from '@/lib/utils';
 import { Check, Loader2, FlaskConical, ChevronDown, ChevronUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { triggerSelectionHaptic, triggerSuccessHaptic } from '@/lib/haptics';
 
 // Intervention Banner Component for active experiments
 const InterventionBanner = ({ assignment }: { assignment: TodayVariable['activeAssignment'] }) => {
@@ -61,9 +62,12 @@ const ComplianceToggle = ({
                 <button
                     type="button"
                     disabled={disabled}
-                    onClick={() => onChange(!checked)}
+                    onClick={() => {
+                        void triggerSelectionHaptic();
+                        onChange(!checked);
+                    }}
                     className={cn(
-                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                        "w-11 h-11 rounded border-2 flex items-center justify-center transition-all",
                         checked
                             ? "bg-emerald-500 border-emerald-500 text-white"
                             : "bg-white border-[var(--color-border)] hover:border-emerald-500"
@@ -96,12 +100,16 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
     const hasActiveExperiment = !!variable.activeAssignment;
 
     const handleBooleanClick = async (value: number) => {
+        void triggerSelectionHaptic();
         setLocalValue(value);
         await onLog(value, value === 1 ? 'Yes' : 'No', hasActiveExperiment ? followedProtocol ?? undefined : undefined);
+        void triggerSuccessHaptic();
     };
 
     const handleNumericSubmit = async () => {
+        void triggerSelectionHaptic();
         await onLog(localValue, undefined, hasActiveExperiment ? followedProtocol ?? undefined : undefined);
+        void triggerSuccessHaptic();
     };
 
     const handleSliderChange = (value: number) => {
@@ -109,7 +117,9 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
     };
 
     const handleSliderCommit = async () => {
+        void triggerSelectionHaptic();
         await onLog(localValue, undefined, hasActiveExperiment ? followedProtocol ?? undefined : undefined);
+        void triggerSuccessHaptic();
     };
 
     return (
@@ -172,7 +182,7 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
                         onClick={() => handleBooleanClick(1)}
                         disabled={isLogging}
                         className={cn(
-                            "flex-1 py-2.5 rounded-lg transition-all font-medium text-sm border-2",
+                            "flex-1 min-h-[44px] py-2.5 rounded-lg transition-all font-medium text-sm border-2",
                             isLogged && localValue === 1
                                 ? "bg-[var(--color-success)] text-white border-transparent"
                                 : localValue === 1
@@ -187,7 +197,7 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
                         onClick={() => handleBooleanClick(0)}
                         disabled={isLogging}
                         className={cn(
-                            "flex-1 py-2.5 rounded-lg transition-all font-medium text-sm border-2",
+                            "flex-1 min-h-[44px] py-2.5 rounded-lg transition-all font-medium text-sm border-2",
                             isLogged && localValue === 0
                                 ? "bg-[var(--color-success)] text-white border-transparent"
                                 : localValue === 0 && variable.todayEntry
@@ -213,7 +223,7 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
                         <button
                             onClick={handleSliderCommit}
                             disabled={isLogging}
-                            className="w-full py-2 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
+                            className="w-full min-h-[44px] py-2 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
                         >
                             Log Value
                         </button>
@@ -234,7 +244,7 @@ const VariableItem = ({ variable, onLog, isLogging, isOptimisticLogged = false }
                     <button
                         onClick={handleNumericSubmit}
                         disabled={isLogging}
-                        className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
+                        className="px-4 min-h-[44px] py-2 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
                     >
                         {isLogged ? 'Update' : 'Log'}
                     </button>
@@ -344,7 +354,10 @@ export const TodaysLogWidget = () => {
             {/* Header */}
             <div
                 className="p-4 flex items-center justify-between cursor-pointer hover:bg-[var(--color-bg-subtle)]/50 transition-colors"
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                onClick={() => {
+                    void triggerSelectionHaptic();
+                    setIsCollapsed(!isCollapsed);
+                }}
             >
                 <div className="flex items-center gap-3">
                     <div className={cn(

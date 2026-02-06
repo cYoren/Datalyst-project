@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Tag, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HABIT_TEMPLATES } from '@/lib/templates';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface Template {
     id: string;
@@ -188,8 +189,10 @@ export const TemplateSelector = ({ onSelect, selectedTemplate }: TemplateSelecto
             {isOpen && (
                 <div className="absolute z-50 w-full mt-2 bg-white rounded-lg border border-[var(--color-slate-200)] shadow-lg max-h-80 overflow-auto">
                     {isLoading && !hasStarter ? (
-                        <div className="p-4 text-center text-[var(--text-secondary)]">
-                            Loading...
+                        <div className="p-4 space-y-3">
+                            <Skeleton className="h-12 w-full rounded-lg" />
+                            <Skeleton className="h-12 w-full rounded-lg" />
+                            <Skeleton className="h-12 w-full rounded-lg" />
                         </div>
                     ) : !hasAny ? (
                         <div className="p-4 text-center text-[var(--text-secondary)]">

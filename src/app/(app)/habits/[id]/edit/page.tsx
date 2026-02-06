@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { HabitForm } from '@/components/forms/HabitForm';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { FormPageSkeleton } from '@/components/ui/Skeleton';
+import { ArrowLeft, Save } from 'lucide-react';
 
 export default function EditHabitPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
@@ -134,11 +135,7 @@ export default function EditHabitPage({ params }: { params: Promise<{ id: string
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center h-[50vh]">
-                <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
-            </div>
-        );
+        return <FormPageSkeleton />;
     }
 
     if (!habit) {
