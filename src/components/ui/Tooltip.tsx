@@ -31,7 +31,7 @@ export function Tooltip({ content, children, className = '' }: TooltipProps) {
                 onClick={() => setOpen(o => !o)}
                 onMouseEnter={() => setOpen(true)}
                 onMouseLeave={() => setOpen(false)}
-                className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors focus:outline-none"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius-button)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus:outline-none"
                 aria-label="More info"
             >
                 {children || <HelpCircle className="h-4 w-4" />}

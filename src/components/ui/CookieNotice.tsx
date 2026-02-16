@@ -27,7 +27,7 @@ export function CookieNotice() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="text-sm text-[var(--text-secondary)]">
                         We use essential cookies to keep you signed in and secure your session.
-                        <Link href="/cookies" className="ml-1 text-[var(--color-accent)] hover:underline">
+                        <Link href="/cookies" className="ml-1 inline-flex min-h-[44px] items-center text-[var(--color-accent)] hover:underline">
                             Learn more
                         </Link>
                         .

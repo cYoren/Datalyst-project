@@ -1,0 +1,77 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build iOS app"
+  lane :build do
+    sh("npx cap sync")
+    sh("cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App build")
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    increment_build_number(xcodeproj: "ios/App/App.xcodeproj")
+    build_app(
+      scheme: "App",
+      project: "ios/App/App.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./build"
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      apple_id: ENV["APPLE_ID"]
+    )
+  end
+
+  desc "Build and upload to App Store"
+  lane :release do
+    increment_build_number(xcodeproj: "ios/App/App.xcodeproj")
+    build_app(
+      scheme: "App",
+      project: "ios/App/App.xcodeproj",
+      export_method: "app-store",
+      output_directory: "./build"
+    )
+    upload_to_app_store(
+      force: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false
+    )
+  end
+end
+
+platform :android do
+  desc "Build Android AAB for Play Store"
+  lane :build_aab do
+    sh("npx cap sync")
+    sh("cd android && ./gradlew bundleRelease")
+  end
+
+  desc "Deploy to Google Play Beta (Internal Testing)"
+  lane :beta do
+    build_aab
+    upload_to_play_store(
+      track: "internal",
+      aab: "./android/app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Deploy to Google Play Production"
+  lane :release do
+    build_aab
+    upload_to_play_store(
+      track: "production",
+      aab: "./android/app/build/outputs/bundle/release/app-release.aab"
+    )
+  end
+
+  desc "Increment version code"
+  lane :increment_version do
+    increment_version_code(
+      gradle_file_path: "./android/app/build.gradle"
+    )
+  end
+end

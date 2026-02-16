@@ -250,7 +250,7 @@ export default function DashboardPage() {
                         </div>
                         <button
                             onClick={() => setNewInsightText(null)}
-                            className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-lg leading-none shrink-0"
+                            className="h-11 w-11 inline-flex items-center justify-center rounded-[var(--radius-button)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--color-bg-subtle)] text-lg leading-none shrink-0"
                         >
                             &times;
                         </button>
@@ -401,7 +401,7 @@ export default function DashboardPage() {
                             {!showArchiveAll ? (
                                 <button
                                     onClick={() => setShowArchiveAll(true)}
-                                    className="text-xs text-[var(--text-tertiary)] hover:text-red-500 transition-colors"
+                                    className="text-xs min-h-[44px] px-2 text-[var(--text-tertiary)] hover:text-red-500 transition-colors"
                                 >
                                     Archive all protocols
                                 </button>
@@ -411,13 +411,13 @@ export default function DashboardPage() {
                                     <button
                                         onClick={handleArchiveAll}
                                         disabled={isArchivingAll}
-                                        className="px-3 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 disabled:opacity-50"
+                                        className="px-3 py-1 min-h-[44px] bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 disabled:opacity-50"
                                     >
                                         {isArchivingAll ? 'Archiving...' : 'Confirm'}
                                     </button>
                                     <button
                                         onClick={() => setShowArchiveAll(false)}
-                                        className="text-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                                        className="text-xs min-h-[44px] px-2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                                     >
                                         Cancel
                                     </button>

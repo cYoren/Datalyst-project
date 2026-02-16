@@ -54,7 +54,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                     if (!props.disabled && !isLoading) {
                         void triggerSelectionHaptic();
                     }
-                    onClick?.(event);
+                    if (onClick) { onClick(event as React.MouseEvent<HTMLButtonElement>); }
                 }}
                 {...props}
             >

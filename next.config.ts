@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
+  distDir: "dist",
   // Optimize heavy package imports for better tree-shaking
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'recharts'],

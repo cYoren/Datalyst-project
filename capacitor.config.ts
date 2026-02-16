@@ -3,10 +3,9 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.datalyst.app',
   appName: 'Datalyst',
-  webDir: 'out',
+  webDir: 'dist',
   server: {
-    url: 'https://datalyst.app',
-    cleartext: true
+    androidScheme: 'https'
   }
 };
 

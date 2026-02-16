@@ -3,6 +3,7 @@ import { Crimson_Pro, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { CookieNotice } from "@/components/ui/CookieNotice";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import { ThemeSync } from "@/components/ui/ThemeSync";
 
 const crimsonPro = Crimson_Pro({
   subsets: ["latin"],
@@ -68,6 +69,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${dmSans.variable} ${crimsonPro.variable} font-[family-name:var(--font-body)]`} suppressHydrationWarning>
+        <ThemeSync />
         <ServiceWorkerRegister />
         {children}
         <CookieNotice />

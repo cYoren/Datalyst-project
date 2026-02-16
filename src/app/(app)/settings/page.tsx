@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 const TIMEZONES = ['UTC', 'America/Sao_Paulo', 'Europe/Lisbon', 'Europe/London', 'America/New_York'];
 const LOCALES = ['en-US', 'pt-BR', 'es-ES'];
 const THEMES = ['SYSTEM', 'LIGHT', 'DARK'];
+const THEME_STORAGE_KEY = 'datalyst_theme';
 
 export default function SettingsPage() {
     const { user, isLoading, refresh } = useUser();
@@ -28,13 +29,16 @@ export default function SettingsPage() {
 
     useEffect(() => {
         if (user?.profile) {
+            const selectedTheme = user.profile.theme || 'SYSTEM';
             setProfile({
                 name: user.profile.name || '',
                 timezone: user.profile.timezone || 'UTC',
                 locale: user.profile.locale || 'en-US',
-                theme: user.profile.theme || 'SYSTEM',
+                theme: selectedTheme,
                 healthDataConsent: !!user.profile.healthDataConsent,
             });
+            window.localStorage.setItem(THEME_STORAGE_KEY, selectedTheme);
+            window.dispatchEvent(new Event('datalyst-theme-change'));
         }
     }, [user]);
 
@@ -179,7 +183,7 @@ export default function SettingsPage() {
                         <label className="text-sm font-medium text-[var(--text-secondary)] space-y-2">
                             <span>Timezone</span>
                             <select
-                                className="h-10 w-full rounded-lg border border-[var(--color-slate-200)] bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)]"
+                                className="h-11 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
                                 value={profile.timezone}
                                 onChange={(event) => setProfile(prev => ({ ...prev, timezone: event.target.value }))}
                             >
@@ -191,7 +195,7 @@ export default function SettingsPage() {
                         <label className="text-sm font-medium text-[var(--text-secondary)] space-y-2">
                             <span>Locale</span>
                             <select
-                                className="h-10 w-full rounded-lg border border-[var(--color-slate-200)] bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)]"
+                                className="h-11 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
                                 value={profile.locale}
                                 onChange={(event) => setProfile(prev => ({ ...prev, locale: event.target.value }))}
                             >
@@ -203,9 +207,14 @@ export default function SettingsPage() {
                         <label className="text-sm font-medium text-[var(--text-secondary)] space-y-2">
                             <span>Theme</span>
                             <select
-                                className="h-10 w-full rounded-lg border border-[var(--color-slate-200)] bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)]"
+                                className="h-11 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
                                 value={profile.theme}
-                                onChange={(event) => setProfile(prev => ({ ...prev, theme: event.target.value }))}
+                                onChange={(event) => {
+                                    const nextTheme = event.target.value;
+                                    setProfile(prev => ({ ...prev, theme: nextTheme }));
+                                    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+                                    window.dispatchEvent(new Event('datalyst-theme-change'));
+                                }}
                             >
                                 {THEMES.map((theme) => (
                                     <option key={theme} value={theme}>{theme}</option>
@@ -231,7 +240,7 @@ export default function SettingsPage() {
                 <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                     <input
                         type="checkbox"
-                        className="mt-1 h-4 w-4 rounded border-[var(--color-slate-200)]"
+                        className="mt-1 h-11 w-11 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
                         checked={profile.healthDataConsent}
                         onChange={(event) => setProfile(prev => ({ ...prev, healthDataConsent: event.target.checked }))}
                     />

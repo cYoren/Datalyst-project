@@ -110,7 +110,7 @@ export default function LabPage() {
                         key={status}
                         onClick={() => setStatusFilter(status === 'ALL' ? null : status)}
                         className={cn(
-                            "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                            "px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-all",
                             (status === 'ALL' && statusFilter === null) || status === statusFilter
                                 ? "bg-purple-100 text-purple-800"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"

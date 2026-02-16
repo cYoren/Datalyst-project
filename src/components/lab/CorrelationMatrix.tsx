@@ -88,7 +88,7 @@ export default function CorrelationMatrix({ onCellClick }: CorrelationMatrixProp
                 </div>
                 <Link
                     href="/habits/new"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-[var(--radius-button)] text-sm font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
+                    className="inline-flex min-h-[44px] items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-[var(--radius-button)] text-sm font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
                 >
                     <PlusCircle className="h-4 w-4" suppressHydrationWarning />
                     Create Protocol

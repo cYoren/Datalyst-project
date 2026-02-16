@@ -1,0 +1,26 @@
+[
+  {
+    "device": "iPhone 15",
+    "colorScheme": "light",
+    "routes": [],
+    "error": "Login failed"
+  },
+  {
+    "device": "iPhone 15",
+    "colorScheme": "dark",
+    "routes": [],
+    "error": "Login failed"
+  },
+  {
+    "device": "Pixel 7",
+    "colorScheme": "light",
+    "routes": [],
+    "error": "Login failed"
+  },
+  {
+    "device": "Pixel 7",
+    "colorScheme": "dark",
+    "routes": [],
+    "error": "Login failed"
+  }
+]
