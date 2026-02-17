@@ -1,18 +1,14 @@
-import { redirect } from 'next/navigation';
+'use client';
+
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/Button';
 import { ArrowRight, BarChart2, CheckCircle2, Lock } from 'lucide-react';
 
-export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+// Homepage is a pure landing page — no server-side auth needed.
+// The middleware already redirects authenticated users from /login to /dashboard,
+// so users who are logged in can click "Log In" and get redirected automatically.
 
-  // If authenticated, go to dashboard
-  if (user) {
-    redirect('/dashboard');
-  }
-
+export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--color-bg-page)] flex flex-col">
       {/* Header */}
@@ -38,10 +34,10 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl sm:text-6xl font-bold text-[var(--text-primary)] mb-6 tracking-tight">
-              Master your habits through <span className="text-[var(--color-accent)]">data</span>
+              Your habits have patterns.<br /><span className="text-[var(--color-accent)]">Datalyst finds them.</span>
             </h1>
             <p className="text-xl text-[var(--text-secondary)] mb-10 leading-relaxed">
-              Datalyst helps you track, analyze, and correlate your daily habits to uncover powerful insights about your productivity and well-being.
+              Log your daily habits. After 14 days, Datalyst runs real statistical correlations — Pearson, Spearman, p-values — and tells you what&apos;s actually affecting your sleep, energy, and focus.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register" className="w-full sm:w-auto">
@@ -63,27 +59,27 @@ export default async function Home() {
               <div className="h-12 w-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
                 <BarChart2 className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Visual Analysis</h3>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Real Statistics, Not Vibes</h3>
               <p className="text-[var(--text-secondary)]">
-                Visualize your progress with intuitive charts and customizable dashboards.
+                Pearson and Spearman correlations with p-values. If caffeine is hurting your sleep at r = -0.72, p &lt; 0.05 — you&apos;ll know.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--color-border)]">
               <div className="h-12 w-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center mb-4">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Simple Tracking</h3>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Track Anything, Correlate Everything</h3>
               <p className="text-[var(--text-secondary)]">
-                Log your daily habits in seconds with our optimized interface.
+                Create protocols with multiple variables — Sleep (hours + quality), Workout, Mood. Log daily. Datalyst finds what affects what.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-[var(--bg-card)] border border-[var(--color-border)]">
               <div className="h-12 w-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4">
                 <Lock className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Total Privacy</h3>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Run Experiments</h3>
               <p className="text-[var(--text-secondary)]">
-                Your data is yours. End-to-end security for your peace of mind.
+                Spotted a correlation? Turn it into a controlled experiment. Prove causation with 30 days of data — science-grade personal optimization.
               </p>
             </div>
           </div>
